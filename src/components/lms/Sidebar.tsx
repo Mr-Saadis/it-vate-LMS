@@ -2,76 +2,143 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Award, Compass, ShieldCheck, Cpu, LogOut, ExternalLink } from 'lucide-react'
+import { signOut } from '@/lib/actions/auth'
+import {
+  LayoutDashboard,
+  Award,
+  Compass,
+  LogOut,
+  User,
+} from 'lucide-react'
 
-export function LMSSidebar() {
+interface LMSSidebarProps {
+  userName?: string
+  userRole?: string
+}
+
+const navItems = [
+  {
+    href: '/dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    href: '/certificates',
+    label: 'Certificates',
+    icon: Award,
+  },
+]
+
+export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSidebarProps) {
   const pathname = usePathname()
 
-  const navItems = [
-    { label: 'Dashboard Main', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Certificates', href: '/certificates', icon: Award },
-    { label: 'Discover Courses', href: '/discover', icon: Compass },
-    { label: 'Admin Panel', href: '/admin', icon: ShieldCheck },
-  ]
-
   return (
-    <aside className="w-64 shrink-0 bg-[#0F172A] text-slate-300 min-h-screen flex flex-col justify-between p-6 border-r border-slate-800">
-      <div className="space-y-8">
-        {/* Brand */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800 text-[#F18231]">
-            <Cpu className="h-5 w-5" />
+    <aside className="flex h-screen w-56 shrink-0 flex-col bg-[#0F172A] sticky top-0">
+      {/* Logo */}
+      <div className="border-b border-white/10 px-5 py-5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded bg-[#F18231]">
+            <span className="text-[10px] font-black text-white">IT</span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-base font-bold text-white tracking-tight">
-              IT-vate <span className="text-[#F18231]">LMS</span>
+          <div className="leading-none">
+            <span className="block text-xs font-black text-white tracking-tight">
+              IT-vate LMS
             </span>
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-              Student Secured Portal
+            <span className="block text-[9px] font-medium text-slate-500 uppercase tracking-widest">
+              Student Portal
             </span>
           </div>
-        </Link>
-
-        {/* Menu Navigation */}
-        <nav className="space-y-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3">
-            Menu Navigation
-          </span>
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
-            const Icon = item.icon
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-[#F18231] text-white shadow-sm'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            )
-          })}
-        </nav>
+        </div>
       </div>
 
-      {/* Footer Info / Logout */}
-      <div className="border-t border-slate-800 pt-4 space-y-3">
-        <div className="rounded-lg bg-slate-800/60 p-3 space-y-1">
-          <span className="text-[10px] font-bold text-[#F18231] uppercase">CPDP ID</span>
-          <p className="text-xs font-mono font-bold text-white">CPDP202607001</p>
+      {/* User Badge */}
+      <div className="border-b border-white/10 px-5 py-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F18231]/20 shrink-0">
+            <User className="h-4 w-4 text-[#F18231]" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-xs font-bold text-white">{userName}</p>
+            <span className="rounded bg-[#F18231]/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-[#F18231] tracking-wider">
+              {userRole}
+            </span>
+          </div>
         </div>
+      </div>
 
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-white transition-colors"
-        >
-          <LogOut className="h-4 w-4" />
-          Exit to Public Portfolio
-        </Link>
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        
+        {/* Student Links (hidden for admins) */}
+        {userRole !== 'admin' && (
+          <>
+            <p className="px-2 pb-2 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+              Navigation
+            </p>
+            {navItems.map(({ href, label, icon: Icon }) => {
+              const isActive = pathname === href || pathname.startsWith(href + '/')
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'bg-[#F18231] text-white'
+                      : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {label}
+                </Link>
+              )
+            })}
+
+            {/* Discover Courses — external link to courses subdomain */}
+            <a
+              href={
+                process.env.NEXT_PUBLIC_COURSES_URL ||
+                'http://localhost:3000/?domain=courses'
+              }
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-400 hover:bg-white/5 hover:text-white transition-all"
+            >
+              <Compass className="h-4 w-4 shrink-0" />
+              Discover Courses
+            </a>
+          </>
+        )}
+
+        {/* Admin panel (only for admin role) */}
+        {userRole === 'admin' && (
+          <>
+            <p className="px-2 pb-2 pt-4 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+              Admin
+            </p>
+            <Link
+              href="/admin"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${
+                pathname.startsWith('/admin')
+                  ? 'bg-[#F18231] text-white'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <LayoutDashboard className="h-4 w-4 shrink-0" />
+              Admin Panel
+            </Link>
+          </>
+        )}
+      </nav>
+
+      {/* Sign Out */}
+      <div className="border-t border-white/10 p-3">
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-400 hover:bg-white/5 hover:text-white transition-all"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            Sign Out
+          </button>
+        </form>
       </div>
     </aside>
   )

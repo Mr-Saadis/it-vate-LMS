@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { MOCK_COURSES } from '@/lib/mockData'
+import { getCourseBySlug } from '@/lib/api/courses'
 import { TrackSelector } from './TrackSelector'
 import { BookOpen } from 'lucide-react'
 
@@ -9,7 +9,7 @@ interface CoursePageProps {
 
 export default async function CourseDetailPage({ params }: CoursePageProps) {
   const { slug } = await params
-  const course = MOCK_COURSES.find((c) => c.slug === slug)
+  const course = await getCourseBySlug(slug)
 
   if (!course) {
     notFound()
