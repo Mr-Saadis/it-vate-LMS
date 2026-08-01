@@ -66,6 +66,7 @@ function CheckoutContent() {
     // Append derived values not in form fields
     fd.append('level_id', primaryLevelId)
     fd.append('track_type', track)
+    fd.append('levels', levelIds)
     fd.append('amount', String(Number(amount) + Number(discount)))
     fd.append('discount', discount)
     fd.append('total_amount', amount)

@@ -121,21 +121,37 @@ export async function signIn(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  // VULN-02 fix: sanitize redirect path
-  const redirectTo = sanitizeRedirect(formData.get('redirectTo') as string)
-
   if (!email || !password) {
     return { error: 'Email and password are required.' }
   }
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
     return { error: error.message }
   }
 
+  // Fetch the user's role to determine the correct dashboard
+  const userId = authData.user?.id
+  let role = 'student'
+  if (userId) {
+    const { data: profile } = await supabase.from('users').select('role').eq('user_id', userId).single()
+    if (profile?.role) {
+      role = profile.role
+    }
+  }
+
+  // Set the default redirect based on role
+  const fallback = role === 'admin' ? '/admin' : '/dashboard'
+  
+  // VULN-02 fix: sanitize redirect path (pass the calculated fallback)
+  let finalRedirect = sanitizeRedirect(formData.get('redirectTo') as string)
+  if (finalRedirect === '/dashboard' && fallback === '/admin') {
+    finalRedirect = '/admin'
+  }
+
   revalidatePath('/', 'layout')
-  redirect(redirectTo)
+  redirect(finalRedirect)
 }
 
 // ─── Sign Out ─────────────────────────────────────────────────────────────────

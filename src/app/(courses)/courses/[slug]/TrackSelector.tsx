@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Course, TrackType } from '@/lib/types'
 import { TRACK_OPTIONS } from '@/lib/mockData'
+import { createClient } from '@/lib/supabase/client'
 import { Check, ShieldCheck, ArrowRight } from 'lucide-react'
 
 interface TrackSelectorProps {
@@ -18,6 +19,7 @@ export function TrackSelector({ course }: TrackSelectorProps) {
   )
   const [couponCode, setCouponCode] = useState('')
   const [discountPercent, setDiscountPercent] = useState(0)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false)
 
   const calculatePricing = () => {
     const levels = course.levels || []
@@ -66,8 +68,10 @@ export function TrackSelector({ course }: TrackSelectorProps) {
 
   const pricing = calculatePricing()
 
-  const handleCheckoutRedirect = () => {
-    const params = new URLSearchParams({
+  const handleCheckoutRedirect = async () => {
+    setIsCheckingAuth(true)
+
+    const checkoutParams = new URLSearchParams({
       course_id: course.course_id,
       slug: course.slug,
       track: selectedTrack,
@@ -75,7 +79,26 @@ export function TrackSelector({ course }: TrackSelectorProps) {
       discount: pricing.discountAmount.toString(),
       levels: selectedLevelIds.join(','),
     })
-    router.push(`/checkout?${params.toString()}`)
+    const checkoutUrl = `/checkout?${checkoutParams.toString()}`
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        // Not logged in — redirect to signup with return URL
+        router.push(`/signup?redirect=${encodeURIComponent(checkoutUrl)}`)
+        return
+      }
+
+      // Logged in — proceed to checkout
+      router.push(checkoutUrl)
+    } catch {
+      // On error, just go to signup
+      router.push(`/signup?redirect=${encodeURIComponent(checkoutUrl)}`)
+    } finally {
+      setIsCheckingAuth(false)
+    }
   }
 
   return (
@@ -225,9 +248,10 @@ export function TrackSelector({ course }: TrackSelectorProps) {
 
           <button
             onClick={handleCheckoutRedirect}
-            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#F18231] py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#d96f21] transition-colors"
+            disabled={isCheckingAuth}
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#F18231] py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#d96f21] transition-colors disabled:opacity-60"
           >
-            Continue to Payment
+            {isCheckingAuth ? 'Checking...' : 'Continue to Payment'}
             <ArrowRight className="h-4 w-4" />
           </button>
 

@@ -153,3 +153,70 @@ export async function getPendingPayments() {
     return []
   }
 }
+
+// Fetch enrollment status for the current user (any status: Pending, Active, Rejected, Completed)
+export async function getUserEnrollmentStatus() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+
+    const { data, error } = await supabase
+      .from('enrollments')
+      .select(`
+        enroll_id,
+        status,
+        track_type,
+        rejected_reason,
+        enroll_no,
+        enrolled_at,
+        approved_at,
+        levels (
+          level_title,
+          courses ( name )
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error || !data) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
+// Fetch ALL enrollment statuses for the current user (for notifications)
+export async function getAllUserEnrollmentsStatus() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+
+    const { data, error } = await supabase
+      .from('enrollments')
+      .select(`
+        enroll_id,
+        status,
+        track_type,
+        rejected_reason,
+        enroll_no,
+        enrolled_at,
+        approved_at,
+        levels (
+          level_title,
+          courses ( name, slug )
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('enrolled_at', { ascending: false })
+
+    let results = data && !error ? data : []
+
+    return results
+  } catch {
+    return []
+  }
+}

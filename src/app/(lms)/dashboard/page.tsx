@@ -1,52 +1,51 @@
 import { createClient } from '@/lib/supabase/server'
-import { MOCK_COURSES, MOCK_CONTENT_ITEMS } from '@/lib/mockData'
-import { getUserEnrollments } from '@/lib/api/courses'
+import { redirect } from 'next/navigation'
+import { MOCK_CONTENT_ITEMS } from '@/lib/mockData'
+import { getUserEnrollments, getAllUserEnrollmentsStatus } from '@/lib/api/courses'
 import { DashboardClient } from './DashboardClient'
 
 export const metadata = {
   title: 'Dashboard — IT-vate LMS',
 }
 
-export default async function StudentDashboardPage() {
-  // Fetch real enrollments from Supabase
+interface PageProps {
+  searchParams: Promise<{ approved_banner?: string }>
+}
+
+export default async function StudentDashboardPage({ searchParams }: PageProps) {
+  const { approved_banner } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Try real data; fall back to mock demo data
-  let enrollments = await getUserEnrollments()
+  if (!user) {
+    redirect('/login')
+  }
 
-  // Build mock enrollment for demo purposes if DB is empty
-  const demoEnrollments =
-    enrollments.length === 0
-      ? [
-          {
-            enroll_id: 'demo-1',
-            enroll_no: 'CPDP202607001',
-            track_type: 'Expert',
-            status: 'Active',
-            levels: {
-              level_id: 'l1',
-              level_title: MOCK_COURSES[0].levels?.[0]?.level_title,
-              courses: {
-                course_id: 'c1',
-                name: MOCK_COURSES[0].name,
-                slug: MOCK_COURSES[0].slug,
-                description: MOCK_COURSES[0].description,
-                category: MOCK_COURSES[0].category,
-              },
-            },
-            _course: MOCK_COURSES[0],
-          },
-        ]
-      : enrollments
+  // 1. Fetch all enrollment statuses to understand the user's state
+  const allEnrollments = await getAllUserEnrollmentsStatus()
+
+  if (!allEnrollments || allEnrollments.length === 0) {
+    // No enrollment yet — redirect to courses page so they can enroll
+    redirect('/')
+  }
+
+  // 2. Fetch real active enrollments from Supabase
+  const activeEnrollments = await getUserEnrollments()
+
+  // 3. If they have NO active enrollments, but they have pending/rejected ones
+  if (activeEnrollments.length === 0) {
+    // Waiting area for pending/rejected enrollments
+    redirect('/enrollment-status')
+  }
 
   const userName = user?.email?.split('@')[0] ?? 'Student'
 
   return (
     <DashboardClient
-      enrollments={demoEnrollments}
+      enrollments={activeEnrollments}
       userName={userName}
       contentItems={MOCK_CONTENT_ITEMS}
+      showApprovedBanner={approved_banner === 'true'}
     />
   )
 }

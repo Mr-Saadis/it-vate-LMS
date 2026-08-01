@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ContentItem } from '@/lib/types'
 import {
   ExternalLink,
@@ -16,22 +16,42 @@ interface DashboardClientProps {
   enrollments: any[]
   userName: string
   contentItems: Record<string, ContentItem[]>
+  showApprovedBanner?: boolean
 }
 
 export function DashboardClient({
   enrollments,
   userName,
   contentItems,
+  showApprovedBanner,
 }: DashboardClientProps) {
   const [activeLevelId, setActiveLevelId] = useState<string>('l1')
   const [activeContent, setActiveContent] = useState<ContentItem | null>(
     contentItems['l1']?.[0] ?? null
   )
+  const [showBanner, setShowBanner] = useState(showApprovedBanner)
+
+  useEffect(() => {
+    if (showApprovedBanner) {
+      const timer = setTimeout(() => setShowBanner(false), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [showApprovedBanner])
 
   const levelContentItems = contentItems[activeLevelId] || []
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-10 space-y-10">
+    <div className="relative mx-auto max-w-7xl px-8 py-10 space-y-10">
+      {/* Auto-fading Approved Banner */}
+      {showBanner && (
+        <div className="absolute top-0 left-0 right-0 z-50 mx-8 mt-2 flex animate-in fade-in slide-in-from-top-4 duration-500 items-center justify-center rounded-lg bg-green-50 px-4 py-3 border border-green-200 shadow-sm transition-opacity">
+          <div className="flex items-center gap-3 text-green-800 text-sm font-semibold">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            Your request was approved by the admin! Welcome to your dashboard.
+          </div>
+        </div>
+      )}
+
       {/* Welcome Banner */}
       <div className="rounded-2xl border border-slate-200 bg-white p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">

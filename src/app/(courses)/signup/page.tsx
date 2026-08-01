@@ -170,7 +170,7 @@ function SignupFormContent() {
                   <Label htmlFor="education">
                     Education <span className="text-[#F18231]">*</span>
                   </Label>
-                  <Select value={formState.education} onValueChange={(v) => setFormState({ ...formState, education: v })}>
+                  <Select value={formState.education} onValueChange={(v) => setFormState({ ...formState, education: v as string })}>
                     <SelectTrigger id="education">
                       <SelectValue placeholder="Select Education" />
                     </SelectTrigger>

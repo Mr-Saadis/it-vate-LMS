@@ -1,6 +1,15 @@
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { getAllUserEnrollmentsStatus } from '@/lib/api/courses'
+import { NavbarClient } from './NavbarClient'
 
-export function CoursesNavbar() {
+export async function CoursesNavbar() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  // Fetch enrollments only if user is logged in
+  const enrollments = user ? await getAllUserEnrollmentsStatus() : []
+
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
@@ -19,21 +28,8 @@ export function CoursesNavbar() {
           </div>
         </Link>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="text-xs font-semibold text-[#0F172A] hover:text-[#F18231] transition-colors"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-lg bg-[#F18231] px-4 py-2 text-xs font-bold text-white hover:bg-[#d96f21] transition-colors"
-          >
-            Get Started
-          </Link>
-        </div>
+        {/* Right Actions & Notifications */}
+        <NavbarClient user={user} enrollments={enrollments} />
       </div>
     </header>
   )
