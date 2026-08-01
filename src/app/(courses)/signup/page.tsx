@@ -11,9 +11,10 @@ import {
   Mail,
   Lock,
   Phone,
-  GraduationCap,
   ArrowRight,
   Cpu,
+  BookOpen,
+  ShieldCheck,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -104,7 +105,7 @@ function SignupFormContent() {
     required = true
   ) => (
     <div className="space-y-1.5">
-      <Label htmlFor={id}>
+      <Label htmlFor={id} className="text-xs font-semibold text-slate-700">
         {label} {required && <span className="text-[#F18231]">*</span>}
       </Label>
       <div className="relative">
@@ -118,165 +119,266 @@ function SignupFormContent() {
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          className="pl-9"
+          className="pl-9 bg-slate-50/50 border-slate-200 focus-visible:ring-[#F18231] h-10 text-sm"
         />
       </div>
     </div>
   )
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-12 lg:px-8 space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#0F172A] text-[#F18231] mx-auto">
-          <Cpu className="h-6 w-6" />
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50/60 flex flex-col justify-between -mt-16 z-50 relative">
 
-      <Card className="shadow-sm">
-        <CardHeader className="text-center pb-4">
-          <CardTitle className="text-2xl font-bold text-[#0F172A]">
-            Create Your IT-vate Student Account
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Complete your technical onboarding profile to access courses &amp; the LMS platform.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* Section 1: Personal Credentials */}
-            <div className="space-y-4">
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#F18231]">
-                Personal Credentials
+      {/* ── NAVY BLUE LMS TOP HEADER ── */}
+      <header className="sticky top-0 z-50 bg-slate-900 text-white border-b border-slate-800 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+          {/* Logo & Platform Name */}
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F18231] text-white font-black text-sm shadow-xs">
+              IT
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold tracking-tight text-white leading-tight">
+                IT-vate Solutions
               </span>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {field('Full Name', 'name', 'text', formState.name, (v) => setFormState({ ...formState, name: v }), <User className="h-4 w-4" />, 'Muhammad Ali')}
-                {field('Email Address', 'email', 'email', formState.email, (v) => setFormState({ ...formState, email: v }), <Mail className="h-4 w-4" />, 'you@example.com')}
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {field('Password', 'password', 'password', formState.password, (v) => setFormState({ ...formState, password: v }), <Lock className="h-4 w-4" />, 'Min. 8 characters')}
-                {field('Phone Number', 'phone', 'tel', formState.phone, (v) => setFormState({ ...formState, phone: v }), <Phone className="h-4 w-4" />, '+92 300 0000000', false)}
-              </div>
-            </div>
-
-            {/* Section 2: Academic & Role */}
-            <div className="space-y-4 border-t border-slate-100 pt-5">
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#F18231]">
-                Academic Background
+              <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
+                ACADEMY &amp; LMS
               </span>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="education">
-                    Education <span className="text-[#F18231]">*</span>
-                  </Label>
-                  <Select value={formState.education} onValueChange={(v) => setFormState({ ...formState, education: v })}>
-                    <SelectTrigger id="education">
-                      <SelectValue placeholder="Select Education" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Bachelor of Science (EE / CS)">Bachelor of Science (EE / CS)</SelectItem>
-                      <SelectItem value="Bachelor of Engineering (EE / CE)">Bachelor of Engineering (EE / CE)</SelectItem>
-                      <SelectItem value="Master of Science (EE / CS)">Master of Science (EE / CS)</SelectItem>
-                      <SelectItem value="Diploma in Electronics">Diploma in Electronics</SelectItem>
-                      <SelectItem value="Self-Taught / Bootcamp">Self-Taught / Bootcamp</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="role">Account Role</Label>
-                  <Select value={formState.role} onValueChange={(v) => setFormState({ ...formState, role: v })}>
-                    <SelectTrigger id="role">
-                      <SelectValue placeholder="Select Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">Student</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
             </div>
+          </Link>
 
-            {/* Section 3: Work Experience */}
-            <div className="space-y-3 border-t border-slate-100 pt-5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#F18231]">
-                  Work Experience (Optional)
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addExperience}
-                  className="h-7 text-[11px]"
-                >
-                  <Plus className="h-3 w-3 mr-1" /> Add Experience
-                </Button>
-              </div>
-
-              {experiences.map((exp, idx) => (
-                <div key={exp.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-slate-500">
-                      Experience {idx + 1}
-                    </span>
-                    {experiences.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeExperience(exp.id)}
-                        className="text-slate-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <Input
-                      type="text"
-                      value={exp.experience}
-                      placeholder="e.g. Embedded Firmware Engineer"
-                      onChange={(e) => updateExperience(exp.id, 'experience', e.target.value)}
-                    />
-                    <Input
-                      type="text"
-                      value={exp.experience_dates}
-                      placeholder="e.g. 2022 – Present"
-                      onChange={(e) => updateExperience(exp.id, 'experience_dates', e.target.value)}
-                    />
-                  </div>
-                </div>
-              ))}
+          {/* Center LMS Badge */}
+          <div className="hidden md:flex items-center gap-6 text-xs text-slate-300 font-medium">
+            <div className="flex items-center gap-1.5">
+              <BookOpen className="h-4 w-4 text-[#F18231]" />
+              <span>Interactive Embedded Labs</span>
             </div>
+            <div className="h-3 w-px bg-slate-700" />
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              <span>CPDP Certified Engineering Tracks</span>
+            </div>
+          </div>
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="w-full bg-[#F18231] hover:bg-[#d96f21] text-white py-6"
+          {/* Right Direct Login Link */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-400 hidden sm:inline">Already registered?</span>
+            <Link
+              href={`/login?redirect=${encodeURIComponent(redirectTarget)}`}
+              className="font-semibold text-white bg-slate-800 hover:bg-slate-700 px-3.5 py-1.5 rounded-lg transition-colors border border-slate-700"
             >
-              {isPending ? 'Creating Account...' : 'Create Account & Continue'}
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="justify-center border-t border-slate-100 pt-4">
-          <p className="text-xs text-slate-500">
-            Already have an account?{' '}
-            <Link href={`/login?redirect=${encodeURIComponent(redirectTarget)}`} className="font-semibold text-[#F18231] hover:underline">
-              Sign in
+              Sign In
             </Link>
-          </p>
-        </CardFooter>
-      </Card>
+          </div>
+        </div>
+      </header>
+
+      {/* ── CENTERED MAIN CONTENT ── */}
+      <main className="flex-1 my-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto space-y-6">
+
+          {/* Top Header Title */}
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F18231]/10 border border-[#F18231]/20 text-[#F18231] text-xs font-semibold">
+              <Cpu className="h-3.5 w-3.5" />
+              Student Technical Onboarding
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Create Your LMS Student Account
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+              Set up your profile to access course modules, hardware simulation labs, and certifications.
+            </p>
+          </div>
+
+          {/* Card Container */}
+          <Card className="border-slate-200 shadow-xs bg-white rounded-2xl overflow-hidden">
+
+            <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-4 px-6">
+              <CardTitle className="text-base font-bold text-slate-800 flex items-center justify-between">
+                <span>Registration Form</span>
+                <span className="text-[11px] font-normal text-slate-500">Step 1 of 1</span>
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Fields marked with <span className="text-[#F18231] font-bold">*</span> are required.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+
+                {/* ── Section 1: Personal Credentials ── */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#F18231]/10 text-[10px] font-bold text-[#F18231]">
+                      1
+                    </span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#F18231]">
+                      Personal Credentials
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {field('Full Name', 'name', 'text', formState.name, (v) => setFormState({ ...formState, name: v }), <User className="h-4 w-4" />, 'Muhammad Ali')}
+                    {field('Email Address', 'email', 'email', formState.email, (v) => setFormState({ ...formState, email: v }), <Mail className="h-4 w-4" />, 'you@example.com')}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {field('Password', 'password', 'password', formState.password, (v) => setFormState({ ...formState, password: v }), <Lock className="h-4 w-4" />, 'Min. 8 characters')}
+                    {field('Phone Number', 'phone', 'tel', formState.phone, (v) => setFormState({ ...formState, phone: v }), <Phone className="h-4 w-4" />, '+92 300 0000000', false)}
+                  </div>
+                </div>
+
+                {/* ── Section 2: Academic Background ── */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#F18231]/10 text-[10px] font-bold text-[#F18231]">
+                      2
+                    </span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#F18231]">
+                      Academic Background
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="education" className="text-xs font-semibold text-slate-700">
+                        Education Level <span className="text-[#F18231]">*</span>
+                      </Label>
+                      <Select value={formState.education} onValueChange={(v) => v && setFormState({ ...formState, education: v })}>
+                        <SelectTrigger id="education" className="bg-slate-50/50 border-slate-200 h-10 text-sm">
+                          <SelectValue placeholder="Select Education" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Bachelor of Science (EE / CS)">Bachelor of Science (EE / CS)</SelectItem>
+                          <SelectItem value="Bachelor of Engineering (EE / CE)">Bachelor of Engineering (EE / CE)</SelectItem>
+                          <SelectItem value="Master of Science (EE / CS)">Master of Science (EE / CS)</SelectItem>
+                          <SelectItem value="Diploma in Electronics">Diploma in Electronics</SelectItem>
+                          <SelectItem value="Self-Taught / Bootcamp">Self-Taught / Bootcamp</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="role" className="text-xs font-semibold text-slate-700">Account Role</Label>
+                      <Select value={formState.role} onValueChange={(v) => v && setFormState({ ...formState, role: v })}>
+                        <SelectTrigger id="role" className="bg-slate-50/50 border-slate-200 h-10 text-sm">
+                          <SelectValue placeholder="Select Role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="student">Student</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Section 3: Work Experience ── */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#F18231]/10 text-[10px] font-bold text-[#F18231]">
+                        3
+                      </span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#F18231]">
+                        Work Experience (Optional)
+                      </span>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addExperience}
+                      className="h-7 border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Plus className="h-3 w-3 mr-1 text-[#F18231]" /> Add Experience
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3 pt-1">
+                    {experiences.map((exp, idx) => (
+                      <div key={exp.id} className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            Experience Entry #{idx + 1}
+                          </span>
+                          {experiences.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeExperience(exp.id)}
+                              className="text-slate-400 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <Input
+                            type="text"
+                            value={exp.experience}
+                            placeholder="e.g. Embedded Firmware Engineer"
+                            onChange={(e) => updateExperience(exp.id, 'experience', e.target.value)}
+                            className="bg-white border-slate-200 text-xs h-9"
+                          />
+                          <Input
+                            type="text"
+                            value={exp.experience_dates}
+                            placeholder="e.g. 2022 – Present"
+                            onChange={(e) => updateExperience(exp.id, 'experience_dates', e.target.value)}
+                            className="bg-white border-slate-200 text-xs h-9"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Submit Action */}
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full bg-[#F18231] hover:bg-[#d96f21] text-white py-6 text-sm font-semibold rounded-xl shadow-xs transition-colors mt-4 cursor-pointer"
+                >
+                  {isPending ? 'Creating Student Account...' : 'Complete Account Registration'}
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </form>
+            </CardContent>
+
+            <CardFooter className="justify-center border-t border-slate-100 py-4 bg-slate-50/50">
+              <p className="text-xs text-slate-500">
+                Already registered?{' '}
+                <Link href={`/login?redirect=${encodeURIComponent(redirectTarget)}`} className="font-semibold text-[#F18231] hover:underline">
+                  Sign in to your LMS Dashboard
+                </Link>
+              </p>
+            </CardFooter>
+          </Card>
+
+        </div>
+      </main>
+
+      {/* ── FOOTER ── */}
+      <footer className="border-t border-slate-200 bg-white py-4 text-center">
+        <p className="text-[11px] text-slate-500">
+          © {new Date().getFullYear()} IT-vate Solutions · All rights reserved.
+        </p>
+      </footer>
+
     </div>
   )
 }
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={<div className="p-12 text-center text-xs text-slate-500">Loading...</div>}>
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="h-6 w-6 rounded-full border-2 border-[#F18231] border-t-transparent animate-spin" />
+      </div>
+    }>
       <SignupFormContent />
     </Suspense>
   )
