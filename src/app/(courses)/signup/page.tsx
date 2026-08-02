@@ -15,6 +15,7 @@ import {
   Cpu,
   BookOpen,
   ShieldCheck,
+  Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -144,41 +145,7 @@ function SignupFormContent() {
               <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
                 ACADEMY &amp; LMS
               </span>
-<<<<<<< HEAD
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="education">
-                    Education <span className="text-[#F18231]">*</span>
-                  </Label>
-                  <Select value={formState.education} onValueChange={(v) => setFormState({ ...formState, education: v as string })}>
-                    <SelectTrigger id="education">
-                      <SelectValue placeholder="Select Education" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Bachelor of Science (EE / CS)">Bachelor of Science (EE / CS)</SelectItem>
-                      <SelectItem value="Bachelor of Engineering (EE / CE)">Bachelor of Engineering (EE / CE)</SelectItem>
-                      <SelectItem value="Master of Science (EE / CS)">Master of Science (EE / CS)</SelectItem>
-                      <SelectItem value="Diploma in Electronics">Diploma in Electronics</SelectItem>
-                      <SelectItem value="Self-Taught / Bootcamp">Self-Taught / Bootcamp</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="role">Account Role</Label>
-                  <Select value={formState.role} onValueChange={(v) => setFormState({ ...formState, role: v })}>
-                    <SelectTrigger id="role">
-                      <SelectValue placeholder="Select Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">Student</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-=======
->>>>>>> Ammar
+
             </div>
           </Link>
 
@@ -375,10 +342,19 @@ function SignupFormContent() {
                 <Button
                   type="submit"
                   disabled={isPending}
-                  className="w-full bg-[#F18231] hover:bg-[#d96f21] text-white py-6 text-sm font-semibold rounded-xl shadow-xs transition-colors mt-4 cursor-pointer"
+                  className="w-full bg-[#F18231] hover:bg-[#d96f21] text-white py-6 text-sm font-semibold rounded-xl shadow-xs transition-colors mt-4 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {isPending ? 'Creating Student Account...' : 'Complete Account Registration'}
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      Complete Account Registration
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>

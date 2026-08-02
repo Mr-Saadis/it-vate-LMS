@@ -3,14 +3,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Course, TrackType } from '@/lib/types'
-<<<<<<< HEAD
-import { TRACK_OPTIONS } from '@/lib/mockData'
-import { createClient } from '@/lib/supabase/client'
-import { Check, ShieldCheck, ArrowRight } from 'lucide-react'
-=======
 import { TRACK_OPTIONS, MOCK_COURSES } from '@/lib/mockData'
-import { Check, ShieldCheck, ArrowRight, Lock, ChevronDown, X } from 'lucide-react'
->>>>>>> Ammar
+import { createClient } from '@/lib/supabase/client'
+import { Check, ShieldCheck, ArrowRight, Lock, ChevronDown, X, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface TrackSelectorProps {
   course: Course
@@ -27,12 +23,9 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
   )
   const [couponCode, setCouponCode] = useState('')
   const [discountPercent, setDiscountPercent] = useState(0)
-<<<<<<< HEAD
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
-=======
   const [showCourseModal, setShowCourseModal] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
->>>>>>> Ammar
 
   // Reset level selection when course changes
   useEffect(() => {
@@ -93,28 +86,23 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
   const applyCoupon = () => {
     if (couponCode.trim().toUpperCase() === 'ITVATE10') {
       setDiscountPercent(10)
+      toast.success('Coupon applied successfully! 10% discount.')
     } else if (couponCode.trim().toUpperCase() === 'CPDP20') {
       setDiscountPercent(20)
+      toast.success('Coupon applied successfully! 20% discount.')
     } else {
-      alert('Invalid Coupon Code. Try "ITVATE10" or "CPDP20"')
+      toast.error('Invalid Coupon Code. Try "ITVATE10" or "CPDP20"')
     }
   }
 
   const pricing = calculatePricing()
 
-<<<<<<< HEAD
   const handleCheckoutRedirect = async () => {
     setIsCheckingAuth(true)
 
     const checkoutParams = new URLSearchParams({
-      course_id: course.course_id,
-      slug: course.slug,
-=======
-  const handleCheckoutRedirect = () => {
-    const params = new URLSearchParams({
       course_id: activeCourse.course_id,
       slug: activeCourse.slug,
->>>>>>> Ammar
       track: selectedTrack,
       amount: pricing.finalPrice.toString(),
       discount: pricing.discountAmount.toString(),
@@ -312,15 +300,20 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
           {/* CTA Button - Full Width, No Scale */}
           <button
             onClick={handleCheckoutRedirect}
-<<<<<<< HEAD
             disabled={isCheckingAuth}
-            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#F18231] py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#d96f21] transition-colors disabled:opacity-60"
-=======
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#F18231] py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#d96f21] transition-colors"
->>>>>>> Ammar
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#F18231] py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#d96f21] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isCheckingAuth ? 'Checking...' : 'Continue to Payment'}
-            <ArrowRight className="h-4 w-4" />
+            {isCheckingAuth ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Checking...
+              </>
+            ) : (
+              <>
+                Continue to Payment
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </button>
 
           {/* Security Badge */}

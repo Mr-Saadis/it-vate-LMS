@@ -3,12 +3,8 @@
 @import "../../node_modules/tw-animate-css/dist/tw-animate.css";
 
 @theme {
-<<<<<<< HEAD
-  --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif;
-=======
   --font-sans: var(--font-poppins), 'Poppins', ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-poppins), 'Poppins', ui-sans-serif, system-ui, sans-serif;
->>>>>>> Ammar
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -137,11 +133,7 @@
 }
 
 body {
-<<<<<<< HEAD
-  font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
-=======
   font-family: var(--font-poppins), 'Poppins', ui-sans-serif, system-ui, sans-serif;
->>>>>>> Ammar
   min-height: 100vh;
 }
 
@@ -230,4 +222,24 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+/* Custom Themed Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--navy-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--navy-secondary);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--orange-accent);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--navy-secondary) var(--navy-dark);
 }

@@ -53,7 +53,7 @@ export function DashboardClient({
       )}
 
       {/* Welcome Banner */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-colors">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <span className="rounded-md bg-[#0F172A] px-2.5 py-0.5 text-xs font-bold text-white">
@@ -63,21 +63,21 @@ export function DashboardClient({
               Verified CPDP Account
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-[#0F172A]">
+          <h1 className="text-2xl font-bold text-[#0F172A] dark:text-white">
             Welcome back, {userName}!
           </h1>
-          <p className="text-xs text-slate-600">
+          <p className="text-xs text-slate-600 dark:text-slate-400">
             Access your course lectures, Google Drive resources, and starter
             firmware repositories.
           </p>
         </div>
 
         {enrollments[0]?.enroll_no && (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shrink-0 space-y-1">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 shrink-0 space-y-1 transition-colors">
             <span className="text-[11px] font-bold text-[#F18231] uppercase tracking-wider">
               Permanent Enrollment ID
             </span>
-            <div className="font-mono text-base font-extrabold text-[#0F172A]">
+            <div className="font-mono text-base font-extrabold text-[#0F172A] dark:text-white">
               {enrollments[0].enroll_no}
             </div>
           </div>
@@ -86,15 +86,25 @@ export function DashboardClient({
 
       {/* Enrolled Courses */}
       <div className="space-y-6">
-        <h2 className="text-lg font-bold text-[#0F172A]">
+        <h2 className="text-lg font-bold text-[#0F172A] dark:text-white">
           Enrolled Courses &amp; Active Levels
         </h2>
 
         {enrollments.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
-            <p className="text-sm text-slate-500">
-              No active enrollments yet. Browse courses to get started.
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 border-dashed bg-white dark:bg-slate-900 py-16 px-6 text-center shadow-sm transition-colors">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 mb-4">
+              <Layers className="h-8 w-8" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">No Active Enrollments</h3>
+            <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+              You haven't enrolled in any courses yet. Browse our engineering tracks to start your learning journey.
             </p>
+            <a
+              href="/"
+              className="inline-flex items-center justify-center rounded-lg bg-[#F18231] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#d96f21] transition-colors"
+            >
+              Browse Courses
+            </a>
           </div>
         ) : (
           enrollments.map((item) => {

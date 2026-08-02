@@ -4,7 +4,7 @@ import { useState, useTransition, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from '@/lib/actions/auth'
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Zap, Cpu, Award } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Zap, Cpu, Award, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 // ── Left Panel Features (Refined Light/Balanced Badges) ────────────────────────
@@ -255,10 +255,19 @@ function LoginFormContent() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#F18231] px-4 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#d96f21] transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#F18231] px-4 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#d96f21] transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-2"
               >
-                {isPending ? 'Signing in…' : 'Sign In to Account'}
-                <ArrowRight className="h-4 w-4" />
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Signing in…
+                  </>
+                ) : (
+                  <>
+                    Sign In to Account
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </button>
             </form>
 

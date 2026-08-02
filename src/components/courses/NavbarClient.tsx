@@ -84,19 +84,19 @@ export function NavbarClient({ user, enrollments }: NavbarClientProps) {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
+                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 aria-label="View enrollment requests"
               >
                 <Bell className="h-4 w-4 text-slate-600" />
                 {/* Notification Badge */}
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#F18231] text-[9px] font-bold text-white shadow-sm ring-2 ring-white">
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#F18231] text-[9px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900">
                   {enrollments.length}
                 </span>
               </button>
 
               {/* Dropdown Menu */}
               {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 rounded-xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2">
+                <div className="absolute right-0 mt-2 w-80 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2">
                   <div className="px-3 py-2 border-b border-slate-100 mb-2">
                     <h3 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">
                       Your Enrollment Requests
@@ -113,7 +113,7 @@ export function NavbarClient({ user, enrollments }: NavbarClientProps) {
                         <button
                           key={req.enroll_id}
                           onClick={() => handleRequestClick(req)}
-                          className="w-full flex items-start gap-3 rounded-lg p-2.5 text-left hover:bg-slate-50 transition-colors group"
+                          className="w-full flex items-start gap-3 rounded-lg p-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
                         >
                           <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
                             isActive ? 'bg-green-100 text-green-600' :
@@ -125,16 +125,16 @@ export function NavbarClient({ user, enrollments }: NavbarClientProps) {
                             {isRejected && <XCircle className="h-4 w-4" />}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="truncate text-xs font-bold text-[#0F172A]">
+                            <p className="truncate text-xs font-bold text-[#0F172A] dark:text-slate-200">
                               {courseName}
                             </p>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                               {req.track_type} Track
                             </p>
                             <span className={`inline-block mt-1.5 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                              isActive ? 'bg-green-100 text-green-700' :
-                              isPending ? 'bg-amber-100 text-amber-700' :
-                              'bg-red-100 text-red-700'
+                              isActive ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' :
+                              isPending ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' :
+                              'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300'
                             }`}>
                               {isActive ? 'Approved' : req.status}
                             </span>
@@ -163,7 +163,7 @@ export function NavbarClient({ user, enrollments }: NavbarClientProps) {
         <>
           <Link
             href="/login"
-            className="text-xs font-semibold text-[#0F172A] hover:text-[#F18231] transition-colors"
+            className="text-xs font-semibold text-[#0F172A] dark:text-slate-200 hover:text-[#F18231] transition-colors"
           >
             Sign In
           </Link>
