@@ -16,10 +16,11 @@ interface Enrollment {
 
 interface NavbarClientProps {
   user: any
+  userRole?: string
   enrollments: Enrollment[]
 }
 
-export function NavbarClient({ user, enrollments }: NavbarClientProps) {
+export function NavbarClient({ user, userRole = 'student', enrollments }: NavbarClientProps) {
   const [notifOpen, setNotifOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -163,13 +164,15 @@ export function NavbarClient({ user, enrollments }: NavbarClientProps) {
             )}
 
             {/* Dashboard link — desktop only */}
-            <Link
-              href="/dashboard"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-[#F18231] transition-colors"
-            >
-              <LayoutDashboard className="h-3.5 w-3.5" />
-              Dashboard
-            </Link>
+            {(userRole === 'admin' || enrollments.length > 0) && (
+              <Link
+                href="/dashboard"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-[#F18231] transition-colors"
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                Dashboard
+              </Link>
+            )}
 
             {/* Sign Out — desktop only */}
             <button
@@ -212,15 +215,19 @@ export function NavbarClient({ user, enrollments }: NavbarClientProps) {
         <div className="sm:hidden absolute top-14 inset-x-0 z-50 border-b border-slate-200 bg-white/98 backdrop-blur-sm shadow-lg px-4 py-4 space-y-1">
           {user ? (
             <>
-              <Link
-                href="/dashboard"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-[#F18231] transition-colors"
-              >
-                <LayoutDashboard className="h-4 w-4" />
-                Dashboard
-              </Link>
-              <div className="h-px bg-slate-100" />
+              {(userRole === 'admin' || enrollments.length > 0) && (
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-[#F18231] transition-colors"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                  <div className="h-px bg-slate-100" />
+                </>
+              )}
               <button
                 onClick={handleSignOut}
                 className="w-full flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors"
