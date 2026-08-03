@@ -46,9 +46,9 @@ const securityHeaders = [
       // Fonts
       "font-src 'self' https://fonts.gstatic.com",
       // Images: self + Supabase Storage + data URIs
-      `img-src 'self' data: blob: ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://xwcwnhverffffcttojwd.supabase.co'}`,
+      `img-src 'self' data: blob: ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://xwcwnhverffffcttojwd.supabase.co'} https://lh3.googleusercontent.com https://googleusercontent.com`,
       // Connect: Supabase API calls (auth, DB, storage)
-      `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://xwcwnhverffffcttojwd.supabase.co'} wss://*.supabase.co`,
+      `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://xwcwnhverffffcttojwd.supabase.co'} wss://*.supabase.co https://accounts.google.com https://oauth2.googleapis.com`,
       // Frames: YouTube nocookie only (for video embeds)
       "frame-src https://www.youtube-nocookie.com",
       // Form submissions: self only

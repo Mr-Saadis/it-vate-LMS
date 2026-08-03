@@ -4,7 +4,7 @@ import { useState, useTransition, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { signIn } from '@/lib/actions/auth'
+import { signIn, signInWithGoogle } from '@/lib/actions/auth'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Zap, Cpu, Award, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -53,9 +53,21 @@ function LoginFormContent() {
   const redirectTarget = searchParams.get('redirect') || '/dashboard'
 
   const [isPending, startTransition] = useTransition()
+  const [isGooglePending, startGoogleTransition] = useTransition()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
+
+  const handleGoogleSignIn = () => {
+    startGoogleTransition(async () => {
+      const result = await signInWithGoogle(redirectTarget)
+      if ('error' in result && result.error) {
+        toast.error(result.error)
+      } else if ('url' in result && result.url) {
+        window.location.href = result.url
+      }
+    })
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -170,22 +182,19 @@ function LoginFormContent() {
             </div>
 
             {/* OAuth Buttons */}
-            <div className="grid grid-cols-2 gap-3">
+            <div>
               <button
                 type="button"
-                onClick={() => toast.info('GitHub OAuth coming soon')}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors shadow-2xs"
+                onClick={handleGoogleSignIn}
+                disabled={isGooglePending}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors shadow-2xs disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <GithubIcon className="h-4 w-4" />
-                GitHub
-              </button>
-              <button
-                type="button"
-                onClick={() => toast.info('Google OAuth coming soon')}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors shadow-2xs"
-              >
-                <GoogleIcon className="h-4 w-4" />
-                Google
+                {isGooglePending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <GoogleIcon className="h-4 w-4" />
+                )}
+                {isGooglePending ? 'Redirecting...' : 'Continue with Google'}
               </button>
             </div>
 
