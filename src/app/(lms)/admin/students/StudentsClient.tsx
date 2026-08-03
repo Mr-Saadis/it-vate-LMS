@@ -120,41 +120,39 @@ export function StudentsClient({ students }: StudentsClientProps) {
   const selected = selectedId ? students.find((s) => s.id === selectedId) ?? null : null
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC]">
+    <div className="mx-auto max-w-7xl px-6 py-10 space-y-8">
       {/* ── Page Header ── */}
-      <div className="border-b border-slate-200 bg-white px-6 py-5 lg:px-10">
-        <div className="mx-auto max-w-7xl flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="rounded bg-[#0F172A] px-2 py-0.5 text-[10px] font-bold tracking-widest text-white uppercase">Admin</span>
-              <span className="text-xs text-slate-400 font-medium">/ Students</span>
-            </div>
-            <h1 className="text-xl font-bold text-[#0F172A] tracking-tight">Enrolled Students</h1>
-            <p className="text-xs text-slate-500 mt-0.5">Only students with active enrollments are shown.</p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="rounded bg-[#0F172A] px-2 py-0.5 text-[10px] font-bold tracking-widest text-white uppercase">Admin</span>
+            <span className="text-xs text-slate-400 font-medium">/ Students</span>
           </div>
+          <h1 className="text-xl font-bold text-[#0F172A] tracking-tight">Enrolled Students</h1>
+          <p className="text-[11px] text-slate-500 mt-1">Only students with active enrollments are shown.</p>
+        </div>
 
-          {/* Stats Row */}
-          <div className="flex items-center gap-3 flex-wrap">
+        {/* Stats Row */}
+        <div className="flex items-center gap-3 flex-wrap">
             {[
-              { label: 'Total Enrolled', value: students.length, icon: <Users className="h-3.5 w-3.5" />, color: 'text-slate-700' },
-              { label: 'Active', value: activeCount, icon: <CheckCircle2 className="h-3.5 w-3.5" />, color: 'text-emerald-600' },
-              { label: 'Pending', value: pendingCount, icon: <Clock className="h-3.5 w-3.5" />, color: 'text-amber-600' },
-              { label: 'Enrollments', value: totalEnrollments, icon: <Layers className="h-3.5 w-3.5" />, color: 'text-blue-600' },
+              { label: 'Total Enrolled', value: students.length, icon: <Users className="h-4 w-4" />, color: 'text-slate-700' },
+              { label: 'Active', value: activeCount, icon: <CheckCircle2 className="h-4 w-4" />, color: 'text-emerald-600' },
+              { label: 'Pending', value: pendingCount, icon: <Clock className="h-4 w-4" />, color: 'text-amber-600' },
+              { label: 'Enrollments', value: totalEnrollments, icon: <Layers className="h-4 w-4" />, color: 'text-blue-600' },
             ].map((stat) => (
-              <div key={stat.label} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5">
+              <div key={stat.label} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm shrink-0">
                 <span className={stat.color}>{stat.icon}</span>
                 <div>
-                  <p className="text-[10px] font-medium text-slate-400 leading-none">{stat.label}</p>
-                  <p className={`text-sm font-bold ${stat.color} leading-tight`}>{stat.value}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{stat.label}</p>
+                  <p className={`text-sm font-extrabold ${stat.color} leading-tight`}>{stat.value}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </div>
-
+        
       {/* ── Body ── */}
-      <div className="mx-auto max-w-7xl px-4 py-6 lg:px-10 lg:py-8">
+      <div>
         <div className={`flex gap-6 transition-all duration-300 ${selected ? 'lg:flex-row' : ''}`}>
 
           {/* ── Left: Table Panel ── */}

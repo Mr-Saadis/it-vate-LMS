@@ -220,3 +220,38 @@ export async function getAllUserEnrollmentsStatus() {
     return []
   }
 }
+
+// Fetch ALL courses (active and inactive) with their levels for Admin
+export async function getAllCoursesWithLevelsAdmin(): Promise<Course[]> {
+  try {
+    const supabase = await createClient()
+    // Verify admin role
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+    const { data: profile } = await supabase.from('users').select('role').eq('user_id', user.id).single()
+    if (profile?.role !== 'admin') return []
+
+    const { data, error } = await supabase
+      .from('courses')
+      .select(`
+        *,
+        levels (
+          level_id,
+          no,
+          level_title,
+          level_description,
+          price,
+          code,
+          is_active,
+          course_id
+        )
+      `)
+      .order('name')
+
+    if (error || !data) return []
+    return data as Course[]
+  } catch {
+    return []
+  }
+}
+
