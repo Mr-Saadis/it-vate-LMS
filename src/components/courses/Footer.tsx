@@ -8,7 +8,7 @@ import { FaGithub, FaLinkedin, FaYoutube } from 'react-icons/fa'
 
 export function DarkFooter() {
   const pathname = usePathname()
-  
+
   // Hide footer on login and signup pages
   if (pathname === '/login' || pathname === '/signup' || pathname === '/complete-profile') {
     return null
@@ -19,19 +19,19 @@ export function DarkFooter() {
       {/* Compact Main Footer Container */}
       <div className="mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-10">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          
+
           {/* Column 1: Brand & Social */}
           <div className="space-y-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
-                <Image src="/logo1.jpg" alt="IT-vate Icon" width={28} height={28} className="object-cover" />
-              </div>
+              <Image src="/logo2.png" alt="IT-vate Icon" width={28} height={28} className="object-cover" />
+              {/* <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
+              </div> */}
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-white tracking-tight">IT-vate Solutions</span>
                 <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Platform & LMS</span>
               </div>
             </div>
-            
+
             <p className="text-xs text-slate-400 leading-relaxed pr-2">
               Empowering hardware & firmware engineers with accredited CPDP technical education and industry-grade track systems.
             </p>
@@ -162,8 +162,8 @@ export function DarkFooter() {
           <p>
             © {new Date().getFullYear()} IT-vate Solutions. All rights reserved.
           </p>
-          
-          
+
+
         </div>
 
       </div>
