@@ -98,8 +98,14 @@ export async function signUp(formData: FormData) {
     if (expError) console.error('Experience insert error:', expError)
   }
 
+  let finalRedirect = redirectTo
+  if (finalRedirect === '/dashboard') {
+    // New user, no enrollments yet. Redirect to home to browse courses.
+    finalRedirect = '/'
+  }
+
   revalidatePath('/', 'layout')
-  redirect(redirectTo)
+  redirect(finalRedirect)
 }
 
 // ─── Sign In With Google (OAuth) ──────────────────────────────────────────────
@@ -198,8 +204,14 @@ export async function completeProfile(formData: FormData) {
     await supabase.from('experiences').insert(expRows)
   }
 
+  let finalRedirect = redirectTo
+  if (finalRedirect === '/dashboard') {
+    // After profile completion (new oauth user), they have no enrollments.
+    finalRedirect = '/'
+  }
+
   revalidatePath('/', 'layout')
-  redirect(redirectTo)
+  redirect(finalRedirect)
 }
 
 // ─── Sign In (Email/Password) ─────────────────────────────────────────────────
@@ -228,10 +240,17 @@ export async function signIn(formData: FormData) {
     }
   }
 
-  const fallback = role === 'admin' ? '/admin' : '/dashboard'
   let finalRedirect = sanitizeRedirect(formData.get('redirectTo') as string)
-  if (finalRedirect === '/dashboard' && fallback === '/admin') {
-    finalRedirect = '/admin'
+  if (finalRedirect === '/dashboard') {
+    if (role === 'admin') {
+      finalRedirect = '/admin'
+    } else {
+      // Check if student has enrollments
+      const { data: enrolls } = await supabase.from('enrollments').select('enroll_id').eq('user_id', userId).limit(1)
+      if (!enrolls || enrolls.length === 0) {
+        finalRedirect = '/'
+      }
+    }
   }
 
   revalidatePath('/', 'layout')

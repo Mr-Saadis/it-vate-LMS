@@ -35,8 +35,22 @@ export async function GET(request: Request) {
         }
       }
 
-      // Profile is complete — send to intended destination
-      return NextResponse.redirect(`${origin}${next}`)
+      // Profile is complete — check where to send them
+      let finalRedirect = next
+      if (finalRedirect === '/dashboard' && user) {
+        const { data: profile } = await supabase.from('users').select('role').eq('user_id', user.id).single()
+        if (profile?.role === 'admin') {
+          finalRedirect = '/admin'
+        } else {
+          // Check enrollments
+          const { data: enrolls } = await supabase.from('enrollments').select('enroll_id').eq('user_id', user.id).limit(1)
+          if (!enrolls || enrolls.length === 0) {
+            finalRedirect = '/'
+          }
+        }
+      }
+
+      return NextResponse.redirect(`${origin}${finalRedirect}`)
     }
   }
 
