@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { Course, Level } from '@/lib/types'
-import { Plus, Edit2, ShieldCheck, ChevronDown, ChevronUp, Layers, Save, X, Loader2, Trash2 } from 'lucide-react'
+import { Plus, Edit2, ShieldCheck, ChevronDown, ChevronUp, Layers, Save, X, Loader2, Trash2, BookOpen, Clock, BarChart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useEffect } from 'react'
 import { createCourseAction, updateCourseAction, createLevelAction, updateLevelAction, deleteCourseAction, deleteLevelAction } from '@/lib/actions/courses'
+import { createClassroomLinkAction, deleteClassroomLinkAction } from '@/lib/actions/content_items'
 
 interface AdminCoursesClientProps {
   initialCourses: Course[]
@@ -27,23 +29,20 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
   const [deleteInput, setDeleteInput] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   
-  // Expanded courses for showing levels
-  const [expandedCourses, setExpandedCourses] = useState<Record<string, boolean>>({})
-
   // Modals state
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
 
   const [isLevelModalOpen, setIsLevelModalOpen] = useState(false)
-  const [editingLevel, setEditingLevel] = useState<{ level: Level | null, courseId: string } | null>(null)
 
-  // Toggle levels view
-  const toggleCourseExpanded = (courseId: string) => {
-    setExpandedCourses(prev => ({
-      ...prev,
-      [courseId]: !prev[courseId]
-    }))
-  }
+  // Link Modal state
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false)
+  const [linkTarget, setLinkTarget] = useState<{ levelId: string, courseSlug: string, levelNo: number } | null>(null)
+  const [linkForm, setLinkForm] = useState({
+    year: new Date().getFullYear().toString(),
+    month: String(new Date().getMonth() + 1).padStart(2, '0'),
+    url: ''
+  })
 
   // Generate ID helper
   const generateId = (prefix: string) => `${prefix}-${Math.random().toString(36).substring(2, 9)}`
@@ -174,18 +173,16 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
     try {
       if (deletingItem.type === 'course') {
         const res = await deleteCourseAction(deletingItem.id)
-        if (res.success) {
-          toast.success('Course deleted successfully')
-        } else {
-          toast.error(res.error || 'Failed to delete course')
-        }
-      } else {
+        if (res.success) toast.success('Course deleted')
+        else toast.error(res.error || 'Failed to delete course')
+      } else if (deletingItem.type === 'level') {
         const res = await deleteLevelAction(deletingItem.id)
-        if (res.success) {
-          toast.success('Level deleted successfully')
-        } else {
-          toast.error(res.error || 'Failed to delete level')
-        }
+        if (res.success) toast.success('Level deleted')
+        else toast.error(res.error || 'Failed to delete level')
+      } else if (deletingItem.type === 'link') {
+        const res = await deleteClassroomLinkAction(deletingItem.id)
+        if (res.success) toast.success('Link deleted')
+        else toast.error(res.error || 'Failed to delete link')
       }
       setDeletingItem(null)
       setDeleteInput('')
@@ -197,6 +194,15 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
     }
   }
 
+  const openAddLink = (levelId: string, courseSlug: string, levelNo: number) => {
+    setLinkTarget({ levelId, courseSlug, levelNo })
+    setLinkForm({
+      year: new Date().getFullYear().toString(),
+      month: String(new Date().getMonth() + 1).padStart(2, '0'),
+      url: ''
+    })
+    setIsLinkModalOpen(true)
+  }
   return (
     <div className="mx-auto max-w-7xl px-6 py-10 space-y-8">
       {/* Header */}
@@ -228,87 +234,95 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
             <p className="text-xs text-slate-500 mt-1">Get started by creating your first course.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {courses.map((course) => (
-              <div key={course.course_id} className="rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col overflow-hidden transition-all duration-200 hover:shadow-md">
-                <div className="p-4 flex-1 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-[#0F172A] leading-tight pr-2">
-                        {course.name}
-                      </h3>
-                      <span className="mt-1 block text-[10px] font-bold uppercase text-[#F18231]">
-                        {course.category}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button variant="ghost" size="icon" onClick={() => openEditCourse(course)} className="h-7 w-7 text-slate-400 hover:text-[#F18231]">
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => { setDeletingItem({ type: 'course', id: course.course_id, name: course.name }); setDeleteInput(''); }} className="h-7 w-7 text-slate-400 hover:text-red-500 hover:bg-red-50">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
+              <div
+                key={course.course_id}
+                className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#F18231]/50 hover:shadow-xl focus-within:ring-2 focus-within:ring-[#F18231]/40 h-full"
+              >
+                <Link href={`/admin/courses/${course.course_id}`} className="block space-y-4">
+                  {/* Category badge + level count */}
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-[#F18231]">
+                      <BookOpen className="h-3.5 w-3.5 text-[#F18231]" />
+                      {course.category || 'Engineering'}
+                    </span>
+                    <span className="rounded-full bg-slate-50 border border-slate-200/80 px-2 py-0.5 text-[11px] font-bold text-slate-600">
+                      {course.levels?.length ?? 0} Levels
+                    </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 line-clamp-1">{course.description}</p>
-                  
-                  <div className="flex items-center gap-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider pt-1">
-                    <div className="flex items-center gap-1">
-                      <Layers className="h-3.5 w-3.5 text-[#F18231]" />
-                      {course.levels?.length || 0} Levels
-                    </div>
-                    {!course.is_active && (
-                      <span className="text-red-500">
-                        Inactive
-                      </span>
-                    )}
-                  </div>
-                </div>
 
-                <div className="border-t border-slate-100 bg-slate-50/50">
-                  <button 
-                    onClick={() => toggleCourseExpanded(course.course_id)}
-                    className="w-full flex items-center justify-between px-4 py-2.5 text-[11px] font-bold text-slate-500 hover:text-[#F18231] hover:bg-[#F18231]/5 transition-colors"
-                  >
-                    <span>Manage Levels</span>
-                    {expandedCourses[course.course_id] ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  </button>
-                  
-                  {expandedCourses[course.course_id] && (
-                    <div className="px-4 pb-4 space-y-2 animate-in slide-in-from-top-1 duration-200">
-                      <div className="space-y-1.5">
-                        {course.levels?.sort((a, b) => a.no - b.no).map((level) => (
-                          <div key={level.level_id} className="flex items-center justify-between rounded-md border border-slate-100 bg-white px-3 py-2">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[9px] font-extrabold uppercase text-slate-400">LVL {level.no}</span>
-                                <span className="text-xs font-semibold text-[#0F172A]">{level.level_title}</span>
-                              </div>
-                              <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
-                                <span>{level.code}</span>
-                                <span>•</span>
-                                <span>PKR {level.price}</span>
-                                {!level.is_active && <span className="text-red-400 font-semibold">(Inactive)</span>}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Button variant="ghost" size="sm" onClick={() => openEditLevel(level, course.course_id)} className="h-6 px-2 text-[10px] text-slate-400 hover:text-[#F18231]">
-                                Edit
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => { setDeletingItem({ type: 'level', id: level.level_id, name: level.level_title }); setDeleteInput(''); }} className="h-6 px-2 text-[10px] text-slate-400 hover:text-red-500 hover:bg-red-50">
-                                Delete
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <Button variant="ghost" size="sm" onClick={() => openAddLevel(course.course_id)} className="w-full h-7 text-[10px] text-[#F18231] border border-[#F18231]/20 border-dashed hover:bg-[#F18231]/10 hover:text-[#d96f21] mt-1">
-                        <Plus className="h-3 w-3 mr-1" />
-                        Add Level
-                      </Button>
+                  {/* Title + description */}
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-bold text-[#0F172A] group-hover:text-[#F18231] transition-colors leading-snug">
+                      {course.name}
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
+                      {course.description}
+                    </p>
+                  </div>
+
+                  {/* Micro-Badges & Course Metadata */}
+                  <div className="flex items-center gap-4 text-slate-500 pt-1">
+                    <div className="flex items-center gap-1 text-[11px] font-medium">
+                      <Clock className="h-3.5 w-3.5 text-slate-400" />
+                      <span>8–12 Weeks</span>
                     </div>
-                  )}
+                    <div className="flex items-center gap-1 text-[11px] font-medium">
+                      <BarChart className="h-3.5 w-3.5 text-slate-400" />
+                      <span>Interm. to Adv.</span>
+                    </div>
+                  </div>
+
+                  {/* Level list curriculum breakdown */}
+                  <div className="space-y-2 border-t border-slate-100 pt-3">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                      Curriculum Levels:
+                    </span>
+                    <ul className="space-y-1.5">
+                      {course.levels?.sort((a, b) => a.no - b.no).map((lvl) => (
+                        <li
+                          key={lvl.level_id}
+                          className="flex items-center justify-between text-xs text-slate-700 bg-slate-50 rounded-lg px-2.5 py-1.5 group/level"
+                        >
+                          <span className="truncate pr-2 font-medium">Level {lvl.no}: {lvl.level_title}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="font-bold text-[#0F172A]">
+                              PKR {lvl.price.toLocaleString()}
+                            </span>
+                            <button 
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingItem({ type: 'level', id: lvl.level_id, name: lvl.level_title }); setDeleteInput(''); }} 
+                              className="text-slate-300 hover:text-red-500 transition-colors hidden group-hover/level:block"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                      <button 
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); openAddLevel(course.course_id); }}
+                        className="w-full flex items-center justify-center gap-1 text-[10px] font-bold text-[#F18231] py-1.5 rounded-lg border border-dashed border-[#F18231]/30 hover:bg-[#F18231]/5 transition-colors"
+                      >
+                        <Plus className="h-3 w-3" /> Add Level
+                      </button>
+                    </ul>
+                  </div>
+                </Link>
+
+                {/* Mandatory Primary Full-Width Action Button with Focus Ring */}
+                <div className="pt-5 flex items-center gap-2">
+                  <Button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); openEditCourse(course); }}
+                    className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-xl bg-[#0F172A] h-[40px] text-xs font-semibold text-white transition-colors hover:bg-[#F18231] shadow-sm focus-visible:ring-2 focus-visible:ring-[#F18231] focus-visible:outline-none"
+                  >
+                    Edit Course
+                  </Button>
+                  <Button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingItem({ type: 'course', id: course.course_id, name: course.name }); setDeleteInput(''); }}
+                    className="inline-flex items-center justify-center rounded-xl bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300 transition-colors h-[40px] px-3 shadow-sm focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             ))}

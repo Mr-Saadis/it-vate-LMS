@@ -40,9 +40,17 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
   const [isPending, startTransition] = useTransition()
   const [actionTarget, setActionTarget] = useState<string | null>(null)
   const [rejectPaymentTarget, setRejectPaymentTarget] = useState<Payment | null>(null)
+  const [approvePaymentTarget, setApprovePaymentTarget] = useState<Payment | null>(null)
   const [rejectReason, setRejectReason] = useState('')
 
-  const handleApprove = (payment: Payment) => {
+  const handleApproveClick = (payment: Payment) => {
+    setApprovePaymentTarget(payment)
+  }
+
+  const handleApproveConfirm = () => {
+    if (!approvePaymentTarget) return
+    const payment = approvePaymentTarget
+    setApprovePaymentTarget(null)
     setActionTarget(payment.payment_id)
     const fd = new FormData()
     fd.append('payment_id', payment.payment_id)
@@ -155,6 +163,73 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
             >
               <XCircle className="h-5 w-5" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Payment Dialog */}
+      {approvePaymentTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
+          <div
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 shrink-0">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-[#0F172A]">Approve Payment</h3>
+                <p className="text-xs text-slate-500">Confirm student enrollment batch.</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <p className="text-sm text-slate-600">
+                Approving this payment will generate a new enrollment for the current month.
+              </p>
+              
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Target Classroom Batch ID
+                </label>
+                <div className="font-mono text-sm font-bold text-[#0F172A] mb-1">
+                  {(() => {
+                    // Extract first letters of course name or default to CRS
+                    const courseName = (approvePaymentTarget as any).enrollments?.[0]?.level?.course?.name || ''
+                    const code = courseName ? courseName.split(' ').map((w: string) => w[0]).join('').toUpperCase() : 'CRS'
+                    
+                    const now = new Date()
+                    const year = now.getFullYear()
+                    const month = String(now.getMonth() + 1).padStart(2, '0')
+                    const levelNo = (approvePaymentTarget as any).enrollments?.[0]?.level?.no || 1
+                    
+                    return `${code}${year}${month}L${levelNo}`
+                  })()}
+                </div>
+                <p className="text-[10px] text-[#F18231] font-semibold">
+                  Please ensure this Classroom Link exists in the Courses page before approving.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setApprovePaymentTarget(null)}
+                  disabled={isPending}
+                  className="text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleApproveConfirm}
+                  disabled={isPending}
+                  className="text-xs font-semibold bg-[#F18231] hover:bg-[#d96f21]"
+                >
+                  {isPending ? 'Approving...' : 'Confirm Approval'}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -306,12 +381,17 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                         <div className="flex items-center gap-2">
                           <Button
                             size="sm"
-                            onClick={() => handleApprove(p)}
-                            disabled={isProcessing}
-                            className="h-8 bg-green-600 hover:bg-green-700 text-[11px]"
+                            variant="outline"
+                            onClick={() => handleApproveClick(p)}
+                            disabled={actionTarget !== null}
+                            className="h-7 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800"
                           >
-                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                            {isProcessing ? '...' : 'Approve'}
+                            {isPending && actionTarget === p.payment_id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                            )}
+                            Approve
                           </Button>
                           <Button
                             variant="destructive"

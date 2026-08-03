@@ -243,7 +243,13 @@ export async function getAllCoursesWithLevelsAdmin(): Promise<Course[]> {
           price,
           code,
           is_active,
-          course_id
+          course_id,
+          content_items (
+            content_items_id,
+            title,
+            url,
+            content_type
+          )
         )
       `)
       .order('name')
@@ -254,4 +260,41 @@ export async function getAllCoursesWithLevelsAdmin(): Promise<Course[]> {
     return []
   }
 }
+export async function getCourseByIdAdmin(id: string): Promise<Course | null> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+    const { data: profile } = await supabase.from('users').select('role').eq('user_id', user.id).single()
+    if (profile?.role !== 'admin') return null
 
+    const { data, error } = await supabase
+      .from('courses')
+      .select(`
+        *,
+        levels (
+          level_id,
+          no,
+          level_title,
+          level_description,
+          price,
+          code,
+          is_active,
+          course_id,
+          content_items (
+            content_items_id,
+            title,
+            url,
+            content_type
+          )
+        )
+      `)
+      .eq('course_id', id)
+      .single()
+
+    if (error || !data) return null
+    return data as Course
+  } catch {
+    return null
+  }
+}
