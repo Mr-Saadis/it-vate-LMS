@@ -53,7 +53,10 @@ export async function getAllStudents() {
         name,
         email,
         role,
-        enrollments (
+        phone_number,
+        education,
+        created_at,
+        enrollments!inner (
           enroll_id,
           track_type,
           status,
@@ -70,11 +73,14 @@ export async function getAllStudents() {
 
     if (error || !data) return []
 
-    // Map to the expected UI format
+    // Map to the expected UI format — inner join ensures only enrolled students are returned
     return data.map((user) => ({
       id: user.user_id,
       name: user.name,
       email: user.email,
+      phone: (user as any).phone_number,
+      education: (user as any).education,
+      joined_at: (user as any).created_at,
       enrollments: (user.enrollments || []).map((enr: any) => ({
         course: enr.levels?.courses?.name || 'Unknown Course',
         track: enr.track_type || 'Unknown',
