@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { LMSSidebar } from '@/components/lms/Sidebar'
 import { SidebarProvider } from '@/components/lms/SidebarContext'
+import { LMSHeader } from '@/components/lms/LMSHeader'
+import { getAllUserEnrollmentsStatus } from '@/lib/api/courses'
 
 export const metadata = {
   title: 'IT-vate LMS — Student Dashboard',
@@ -32,12 +34,18 @@ export default async function LMSLayout({
 
   const userName = profile?.name ?? user.email ?? 'Student'
   const userRole = profile?.role ?? 'student'
+  
+  // Fetch enrollments for the notification bell
+  const enrollments = await getAllUserEnrollmentsStatus() || []
 
   return (
     <SidebarProvider>
       <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans text-[#0F172A]">
         <LMSSidebar userName={userName} userRole={userRole} />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <div className="flex-1 flex flex-col min-w-0">
+          <LMSHeader enrollments={enrollments} />
+          <main className="flex-1 overflow-y-auto">{children}</main>
+        </div>
       </div>
     </SidebarProvider>
   )

@@ -212,7 +212,8 @@ export async function getAllUserEnrollmentsStatus() {
         levels (
           level_title,
           courses ( name, slug )
-        )
+        ),
+        payments ( total_amount )
       `)
       .eq('user_id', user.id)
       .order('enrolled_at', { ascending: false })

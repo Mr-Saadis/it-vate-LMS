@@ -16,6 +16,7 @@ import {
   X,
   ChevronRight,
   BookOpen,
+  Bell,
 } from 'lucide-react'
 
 interface LMSSidebarProps {
@@ -33,6 +34,11 @@ const navItems = [
     href: '/certificates',
     label: 'Certificates',
     icon: Award,
+  },
+  {
+    href: '/dashboard/notifications',
+    label: 'Notifications',
+    icon: Bell,
   },
 ]
 
