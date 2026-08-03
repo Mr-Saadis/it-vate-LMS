@@ -100,7 +100,7 @@ export default async function CoursesLandingPage() {
 
       {/* 1. Hero Section (Compact Split Layout with High-Readability Contrast) */}
 
-      <section className="relative overflow-hidden border-b border-slate-800 bg-[#0b1120] px-6 py-12 lg:px-8 lg:py-16">
+      <section className="relative overflow-hidden border-b border-slate-800 bg-[#0b1120] px-4 md:px-6 py-10 md:py-12 lg:px-8 lg:py-16">
 
         {/* Subtle grid mesh overlay */}
 
@@ -240,7 +240,7 @@ export default async function CoursesLandingPage() {
 
       {/* 2. Course Catalog Section (Equal Height Cards & Micro-Badges) */}
 
-      <section id="catalog" className="bg-slate-50/50 py-16 px-6 lg:px-8">
+      <section id="catalog" className="bg-slate-50/50 py-12 md:py-16 px-4 md:px-6 lg:px-8">
 
         <div className="mx-auto max-w-7xl">
 
@@ -432,7 +432,7 @@ export default async function CoursesLandingPage() {
 
       {/* 3. Track System Section (Interactive Cards with Accessible Focus Rings) */}
 
-      <section id="tracks" className="border-t border-slate-200 bg-slate-100/60 py-16 px-6 lg:px-8">
+      <section id="tracks" className="border-t border-slate-200 bg-slate-100/60 py-12 md:py-16 px-4 md:px-6 lg:px-8">
 
         <div className="mx-auto max-w-7xl">
 

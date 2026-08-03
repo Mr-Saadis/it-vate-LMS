@@ -283,12 +283,6 @@ function LoginFormContent() {
           </div>
         </div>
 
-        {/* ── EVEN & BALANCED FOOTER ── */}
-        <footer className="border-t border-slate-200/80 bg-slate-50/50 px-6 py-4 text-center">
-          <p className="text-[11px] text-slate-500">
-            © {new Date().getFullYear()} IT-vate Solutions · All rights reserved.
-          </p>
-        </footer>
       </div>
 
     </div>

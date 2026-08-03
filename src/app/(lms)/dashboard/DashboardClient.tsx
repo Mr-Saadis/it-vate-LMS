@@ -41,7 +41,7 @@ export function DashboardClient({
   const levelContentItems = contentItems[activeLevelId] || []
 
   return (
-    <div className="relative mx-auto max-w-7xl px-8 py-10 space-y-10">
+    <div className="relative mx-auto max-w-7xl px-4 md:px-8 py-6 md:py-10 space-y-8 md:space-y-10">
       {/* Auto-fading Approved Banner */}
       {showBanner && (
         <div className="absolute top-0 left-0 right-0 z-50 mx-8 mt-2 flex animate-in fade-in slide-in-from-top-4 duration-500 items-center justify-center rounded-lg bg-green-50 px-4 py-3 border border-green-200 shadow-sm transition-opacity">
@@ -53,7 +53,7 @@ export function DashboardClient({
       )}
 
       {/* Welcome Banner */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-colors">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-colors">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <span className="rounded-md bg-[#0F172A] px-2.5 py-0.5 text-xs font-bold text-white">
@@ -118,7 +118,7 @@ export function DashboardClient({
             return (
               <div
                 key={item.enroll_id}
-                className="rounded-xl border border-slate-200 bg-white p-6 space-y-6"
+                className="rounded-xl border border-slate-200 bg-white p-4 md:p-6 space-y-6"
               >
                 {/* Course Header */}
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 border-b border-slate-100 pb-4">
@@ -140,7 +140,7 @@ export function DashboardClient({
                     href="https://classroom.google.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#0F172A] px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors"
+                    className="inline-flex items-center justify-center w-full md:w-auto gap-2 rounded-lg bg-[#0F172A] px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors"
                   >
                     Join Google Classroom
                     <ExternalLink className="h-3.5 w-3.5 text-[#F18231]" />
@@ -213,7 +213,7 @@ export function DashboardClient({
       </div>
 
       {/* Content Player */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-6">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 md:p-6 space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2">
             <Layers className="h-5 w-5 text-[#F18231]" />
@@ -274,7 +274,7 @@ export function DashboardClient({
           </div>
 
           {/* Player Stage */}
-          <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-6 flex flex-col justify-center space-y-4">
+          <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4 md:p-6 flex flex-col justify-center space-y-4">
             {activeContent ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
