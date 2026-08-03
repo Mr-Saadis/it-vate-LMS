@@ -58,7 +58,9 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
 
     if (errorParam === 'duplicate') {
       if (errorMsg) {
-        setValidationError(decodeURIComponent(errorMsg))
+        const decodedMsg = decodeURIComponent(errorMsg)
+        setValidationError(decodedMsg)
+        toast.error(decodedMsg, { duration: 6000 })
       } else {
         let levelNames = ''
         if (duplicateLevels) {
@@ -70,7 +72,9 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
             levelNames = names.join(', ')
           }
         }
-        setValidationError(`You have already enrolled in: ${levelNames || 'one or more selected levels'}. Please choose different levels.`)
+        const fallbackMsg = `You have already enrolled in: ${levelNames || 'one or more selected levels'}. Please choose different levels.`
+        setValidationError(fallbackMsg)
+        toast.error(fallbackMsg, { duration: 6000 })
       }
       
       // Clean up the URL
@@ -175,7 +179,9 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
       )
       
       if (!validation.isValid) {
-        setValidationError(validation.errorMessage || 'Invalid track selection.')
+        const errMsg = validation.errorMessage || 'Invalid track selection.'
+        setValidationError(errMsg)
+        toast.error(errMsg, { duration: 6000 })
         setIsCheckingAuth(false)
         return
       }

@@ -59,19 +59,54 @@ export function validateTrackSelection(
   }
 
   // 4. Fast Track Consecutive Levels Rule
-  if (requestedTrack === 'Fast' && requestedLevelIds.length > 1 && allCourseLevels.length > 0) {
-    const selectedNos = allCourseLevels
+  if (requestedTrack === 'Fast' && allCourseLevels.length > 0) {
+    const ownedNos = existingEnrollments
+      .map((e) => allCourseLevels.find((l) => l.level_id === e.level_id)?.no)
+      .filter((n): n is number => n !== undefined)
+
+    const requestedNos = allCourseLevels
       .filter((l) => requestedLevelIds.includes(l.level_id))
       .map((l) => l.no)
       .sort((a, b) => a - b)
-    
-    for (let i = 1; i < selectedNos.length; i++) {
-      if (selectedNos[i] - selectedNos[i - 1] !== 1) {
-        return {
-          isValid: false,
-          errorType: 'FastConflict',
-          errorMessage: 'You must select consecutive levels in the Fast track (e.g., Level 1 and 2). You cannot skip levels.',
+
+    if (requestedNos.length > 0) {
+      if (ownedNos.length === 0) {
+        // First time purchase: must be consecutive
+        for (let i = 1; i < requestedNos.length; i++) {
+          if (requestedNos[i] - requestedNos[i - 1] !== 1) {
+            return {
+              isValid: false,
+              errorType: 'FastConflict',
+              errorMessage: 'You must select consecutive levels in the Fast track (e.g., Level 1 and 2). You cannot skip levels.',
+            }
+          }
         }
+      } else {
+        // Subsequent purchase
+        const maxOwned = Math.max(...ownedNos)
+        const ascendingRequested = requestedNos.filter((n) => n > maxOwned)
+
+        if (ascendingRequested.length > 0) {
+          // Must start exactly at maxOwned + 1
+          if (ascendingRequested[0] !== maxOwned + 1) {
+            return {
+              isValid: false,
+              errorType: 'FastConflict',
+              errorMessage: `You must purchase Level ${maxOwned + 1} before skipping to higher levels.`,
+            }
+          }
+          // Must be consecutive
+          for (let i = 1; i < ascendingRequested.length; i++) {
+            if (ascendingRequested[i] - ascendingRequested[i - 1] !== 1) {
+              return {
+                isValid: false,
+                errorType: 'FastConflict',
+                errorMessage: 'Higher levels must be purchased consecutively. You cannot skip levels.',
+              }
+            }
+          }
+        }
+        // Descending requested (n < maxOwned) have no consecutive restrictions.
       }
     }
   }

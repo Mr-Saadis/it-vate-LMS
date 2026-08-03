@@ -25,7 +25,7 @@ interface LMSSidebarProps {
 const navItems = [
   {
     href: '/dashboard',
-    label: 'Dashboard',
+    label: 'Analytics',
     icon: LayoutDashboard,
   },
   {
@@ -96,20 +96,6 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
           </button>
         </div>
 
-      {/* User Badge */}
-      <div className="border-b border-white/10 px-5 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F18231]/20 shrink-0">
-            <User className="h-4 w-4 text-[#F18231]" />
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-xs font-bold text-white">{userName}</p>
-            <span className="rounded bg-[#F18231]/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-[#F18231] tracking-wider">
-              {userRole}
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">

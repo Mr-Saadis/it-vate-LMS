@@ -79,9 +79,13 @@ export async function getUserEnrollments() {
           level_id,
           no,
           level_title,
+          level_description,
           price,
+          started_at,
+          ended_at,
           course_id,
-          courses ( course_id, name, slug, description )
+          courses ( course_id, name, slug, description ),
+          content_items (*)
         )
       `)
       .eq('user_id', user.id)
@@ -218,5 +222,49 @@ export async function getAllUserEnrollmentsStatus() {
     return results
   } catch {
     return []
+  }
+}
+
+// Fetch a specific level and its content items (only if the user is actively enrolled)
+export async function getLevelWithContents(levelId: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+
+    // First check if user is actively enrolled in this level
+    const { data: enrollment, error: enrollError } = await supabase
+      .from('enrollments')
+      .select('enroll_id')
+      .eq('user_id', user.id)
+      .eq('level_id', levelId)
+      .eq('status', 'Active')
+      .maybeSingle()
+
+    if (enrollError || !enrollment) {
+      return null // Not enrolled or not active
+    }
+
+    // Now fetch the level with its contents and course info
+    const { data: level, error: levelError } = await supabase
+      .from('levels')
+      .select(`
+        *,
+        courses ( name, slug, description ),
+        content_items (*)
+      `)
+      .eq('level_id', levelId)
+      .maybeSingle()
+
+    if (levelError || !level) return null
+
+    // Sort content items by order_no
+    if (level.content_items) {
+      level.content_items.sort((a: any, b: any) => a.order_no - b.order_no)
+    }
+
+    return level
+  } catch {
+    return null
   }
 }
