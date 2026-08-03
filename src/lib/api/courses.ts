@@ -89,7 +89,7 @@ export async function getUserEnrollments() {
         )
       `)
       .eq('user_id', user.id)
-      .eq('status', 'Active')
+      .in('status', ['Active', 'Completed'])
 
     if (error || !data) return []
     return data

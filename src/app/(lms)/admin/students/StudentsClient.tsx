@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import Link from 'next/link'
 import {
   Users,
@@ -16,11 +16,16 @@ import {
   Layers,
   X,
 } from 'lucide-react'
+import { toggleEnrollmentCompletionAction } from '@/lib/actions/admin'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 interface Enrollment {
+  enroll_id: string
   course: string
   track: string
   status: string
+  is_completed: boolean
   enrollment_date: string
 }
 
@@ -96,6 +101,21 @@ export function StudentsClient({ students }: StudentsClientProps) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'pending' | 'inactive'>('all')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  const handleToggleCompletion = (enrollId: string, currentStatus: boolean) => {
+    startTransition(async () => {
+      try {
+        const res = await toggleEnrollmentCompletionAction(enrollId, !currentStatus)
+        if (res.error) throw new Error(res.error)
+        toast.success(currentStatus ? 'Marked as incomplete' : 'Marked as completed')
+        router.refresh()
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to toggle completion status')
+      }
+    })
+  }
 
   const totalEnrollments = students.reduce((s, st) => s + st.enrollments.length, 0)
   const activeCount = students.filter((s) => s.enrollments.some((e) => e.status === 'Active')).length
@@ -343,13 +363,26 @@ export function StudentsClient({ students }: StudentsClientProps) {
                           </p>
                           <StatusBadge status={enr.status} />
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <TrackBadge track={enr.track} />
-                          <span className="text-[10px] text-slate-400">
-                            {new Date(enr.enrollment_date).toLocaleDateString('en-PK', {
-                              day: '2-digit', month: 'short', year: 'numeric',
-                            })}
-                          </span>
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <TrackBadge track={enr.track} />
+                            <span className="text-[10px] text-slate-400">
+                              {new Date(enr.enrollment_date).toLocaleDateString('en-PK', {
+                                day: '2-digit', month: 'short', year: 'numeric',
+                              })}
+                            </span>
+                          </div>
+                          
+                          <label className="flex items-center gap-1.5 cursor-pointer bg-white border border-slate-200 px-2 py-1 rounded-md shadow-sm">
+                            <input
+                              type="checkbox"
+                              checked={enr.is_completed}
+                              onChange={() => handleToggleCompletion(enr.enroll_id, enr.is_completed)}
+                              disabled={isPending}
+                              className="h-3 w-3 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 disabled:opacity-50"
+                            />
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Completed</span>
+                          </label>
                         </div>
                       </div>
                     ))}

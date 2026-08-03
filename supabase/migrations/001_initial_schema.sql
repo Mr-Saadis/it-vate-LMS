@@ -53,14 +53,32 @@ CREATE TABLE IF NOT EXISTS public.levels (
   updated_at        TIMESTAMPTZ DEFAULT now()
 );
 
+-- ─── CONTENT ITEMS TABLE ─────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.content_items (
+  content_items_id UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  level_id         UUID        NOT NULL REFERENCES public.levels(level_id) ON DELETE CASCADE,
+  title            TEXT        NOT NULL,
+  content_type     TEXT        NOT NULL CHECK (content_type IN ('video', 'pdf', 'drive', 'link', 'code')),
+  url              TEXT,
+  drive_file_id    TEXT,
+  youtube_id       TEXT,
+  is_free          BOOLEAN     NOT NULL DEFAULT false,
+  order_no         SMALLINT    NOT NULL DEFAULT 1,
+  is_completed     BOOLEAN     DEFAULT false,
+  created_at       TIMESTAMPTZ DEFAULT now(),
+  updated_at       TIMESTAMPTZ DEFAULT now()
+);
+
 -- ─── ENROLLMENTS TABLE ───────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.enrollments (
   enroll_id       UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id         UUID        NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
   level_id        UUID        NOT NULL REFERENCES public.levels(level_id),
+  content_items_id UUID       REFERENCES public.content_items(content_items_id),
   track_type      TEXT        NOT NULL CHECK (track_type IN ('Expert', 'Progressive', 'Fast', 'Premium')),
   status          TEXT        NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Active', 'Completed', 'Rejected')),
-  enroll_no       TEXT        UNIQUE,   -- e.g. CPDP202607001 (assigned on approval)
+  enroll_no       TEXT,       -- e.g. PDAT202607L1 (assigned on approval)
+  is_completed    BOOLEAN     DEFAULT false,
   enrolled_at     TIMESTAMPTZ DEFAULT now(),
   approved_at     TIMESTAMPTZ,
   rejected_reason TEXT,
@@ -100,20 +118,7 @@ CREATE TABLE IF NOT EXISTS public.payment_courses (
   PRIMARY KEY (payment_id, course_id)
 );
 
--- ─── CONTENT ITEMS TABLE ─────────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.content_items (
-  content_items_id UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
-  level_id         UUID        NOT NULL REFERENCES public.levels(level_id) ON DELETE CASCADE,
-  title            TEXT        NOT NULL,
-  content_type     TEXT        NOT NULL CHECK (content_type IN ('video', 'pdf', 'drive', 'link', 'code')),
-  url              TEXT,
-  drive_file_id    TEXT,
-  youtube_id       TEXT,
-  is_free          BOOLEAN     NOT NULL DEFAULT false,
-  order_no         SMALLINT    NOT NULL DEFAULT 1,
-  created_at       TIMESTAMPTZ DEFAULT now(),
-  updated_at       TIMESTAMPTZ DEFAULT now()
-);
+
 
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES

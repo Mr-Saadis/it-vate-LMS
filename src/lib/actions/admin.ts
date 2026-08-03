@@ -23,43 +23,51 @@ async function requireAdmin(supabase: Awaited<ReturnType<typeof createClient>>) 
   return { user, error: null }
 }
 
-// VULN-07 fix: generate CPDP enrollment number using DB-level uniqueness
-// Uses a DB function or retries on conflict to prevent race conditions
-async function generateEnrollNo(
-  supabase: Awaited<ReturnType<typeof createClient>>
-): Promise<string> {
-  const now = new Date()
-  const yyyy = now.getFullYear().toString()
-  const mm = String(now.getMonth() + 1).padStart(2, '0')
-  const prefix = `CPDP${yyyy}${mm}`
+// Helper: compute batch ID
+async function computeBatchId(supabase: Awaited<ReturnType<typeof createClient>>, levelId: string) {
+  // 1. Get course slug and level no
+  const { data: levelData } = await supabase
+    .from('levels')
+    .select('no, courses(slug)')
+    .eq('level_id', levelId)
+    .single()
 
-  // Use a loop with optimistic generation + uniqueness check
-  // Max 5 attempts to handle concurrent approvals
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const { count } = await supabase
-      .from('enrollments')
-      .select('*', { count: 'exact', head: true })
-      .like('enroll_no', `${prefix}%`)
+  if (!levelData) return { batchId: null, contentItemId: null }
 
-    const seq = String((count ?? 0) + 1 + attempt).padStart(3, '0')
-    const candidate = `${prefix}${seq}`
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const slug = (levelData.courses as any)?.slug?.toUpperCase() || 'CRS'
+  const levelNo = levelData.no
 
-    // Check if this ID already exists (handles concurrent approvals)
-    const { data: existing } = await supabase
-      .from('enrollments')
-      .select('enroll_id')
-      .eq('enroll_no', candidate)
-      .maybeSingle()
+  // 2. Get latest content item created_at
+  const { data: latestItem } = await supabase
+    .from('content_items')
+    .select('content_items_id, created_at')
+    .eq('level_id', levelId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-    if (!existing) {
-      return candidate // Unique — safe to use
-    }
-    // ID already taken — retry with next sequence
-  }
+  const dateToUse = latestItem?.created_at ? new Date(latestItem.created_at) : new Date()
+  const year = dateToUse.getFullYear().toString()
+  const month = String(dateToUse.getMonth() + 1).padStart(2, '0')
 
-  // Last resort: append timestamp microseconds for uniqueness
-  const fallback = `${prefix}${Date.now().toString().slice(-6)}`
-  return fallback
+  const batchId = `${slug}${year}${month}L${levelNo}`
+  return { batchId, contentItemId: latestItem?.content_items_id || null }
+}
+
+export async function getBatchPreviewAction(enrollId: string) {
+  const supabase = await createClient()
+
+  const { data: enrollData } = await supabase
+    .from('enrollments')
+    .select('level_id')
+    .eq('enroll_id', enrollId)
+    .single()
+
+  if (!enrollData?.level_id) return 'UNKNOWN'
+
+  const { batchId } = await computeBatchId(supabase, enrollData.level_id)
+  return batchId || 'UNKNOWN'
 }
 
 // ─── Approve Payment ──────────────────────────────────────────────────────────
@@ -80,8 +88,23 @@ export async function approvePayment(formData: FormData) {
     return { error: 'Missing payment_id or enroll_id.' }
   }
 
-  // VULN-07 fix: generate unique enrollment number with conflict detection
-  const enrollNo = await generateEnrollNo(supabase)
+  // 1. Get the level_id for this enrollment
+  const { data: currentEnroll } = await supabase
+    .from('enrollments')
+    .select('level_id')
+    .eq('enroll_id', enrollId)
+    .single()
+
+  if (!currentEnroll) {
+    return { error: 'Enrollment not found.' }
+  }
+
+  // 2. Compute Batch ID dynamically
+  const { batchId, contentItemId } = await computeBatchId(supabase, currentEnroll.level_id)
+
+  if (!batchId) {
+    return { error: 'Failed to generate batch ID.' }
+  }
 
   // Update payment status → Verified
   const { error: payErr } = await supabase
@@ -91,16 +114,23 @@ export async function approvePayment(formData: FormData) {
 
   if (payErr) return { error: payErr.message }
 
-  // Update enrollment status → Active + assign enroll_no
+  // Update enrollment status → Active + assign enroll_no and content_items_id
   const { error: enrollErr } = await supabase
     .from('enrollments')
-    .update({ status: 'Active', enroll_no: enrollNo, approved_at: new Date().toISOString() })
+    .update({ 
+      status: 'Active', 
+      enroll_no: batchId, 
+      content_items_id: contentItemId,
+      approved_at: new Date().toISOString() 
+    })
     .eq('enroll_id', enrollId)
 
-  if (enrollErr) return { error: enrollErr.message }
+  if (enrollErr) {
+    return { error: enrollErr.message }
+  }
 
   revalidatePath('/admin')
-  return { success: true, enrollNo }
+  return { success: true, enrollNo: batchId }
 }
 
 // ─── Reject Payment ──────────────────────────────────────────────────────────
@@ -133,5 +163,46 @@ export async function rejectPayment(formData: FormData) {
     .eq('enroll_id', enrollId)
 
   revalidatePath('/admin')
+  return { success: true }
+}
+// ─── Completion Toggles ────────────────────────────────────────────────────────
+
+export async function toggleContentItemCompletionAction(itemId: string, isCompleted: boolean) {
+  const supabase = await createClient()
+  const { user, error: authError } = await requireAdmin(supabase)
+  
+  if (authError || !user) {
+    return { error: authError || 'Unauthenticated' }
+  }
+
+  const { error } = await supabase
+    .from('content_items')
+    .update({ is_completed: isCompleted })
+    .eq('content_items_id', itemId)
+
+  if (error) return { error: error.message }
+  
+  revalidatePath('/admin')
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function toggleEnrollmentCompletionAction(enrollId: string, isCompleted: boolean) {
+  const supabase = await createClient()
+  const { user, error: authError } = await requireAdmin(supabase)
+  
+  if (authError || !user) {
+    return { error: authError || 'Unauthenticated' }
+  }
+
+  const { error } = await supabase
+    .from('enrollments')
+    .update({ is_completed: isCompleted })
+    .eq('enroll_id', enrollId)
+
+  if (error) return { error: error.message }
+  
+  revalidatePath('/admin/students')
+  revalidatePath('/dashboard')
   return { success: true }
 }

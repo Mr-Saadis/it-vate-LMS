@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createContentItemAction, deleteClassroomLinkAction } from '@/lib/actions/content_items'
-
+import { toggleContentItemCompletionAction } from '@/lib/actions/admin'
 const getAvatarHue = (name: string) => {
   let hash = 0
   for (let i = 0; i < name.length; i++) {
@@ -195,6 +195,18 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
         toast.error(error.message || `Failed to delete ${deletingItem.type}`)
       } finally {
         setIsDeleting(false)
+      }
+    })
+  }
+
+  const handleToggleContentItemCompletion = (itemId: string, currentStatus: boolean) => {
+    startTransition(async () => {
+      try {
+        const res = await toggleContentItemCompletionAction(itemId, !currentStatus)
+        if (res.error) throw new Error(res.error)
+        toast.success(currentStatus ? 'Marked as incomplete' : 'Marked as completed')
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to toggle completion status')
       }
     })
   }
@@ -472,14 +484,26 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                               </a>
                             )}
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => { setDeletingItem({ type: 'link', id: item.content_items_id, name: item.title }); setDeleteInput(''); }} 
-                            className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50 ml-2 shrink-0"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                          <div className="flex items-center gap-1 shrink-0 ml-2">
+                            <label className="flex items-center gap-1.5 cursor-pointer mr-2">
+                              <input
+                                type="checkbox"
+                                checked={!!item.is_completed}
+                                onChange={() => handleToggleContentItemCompletion(item.content_items_id, !!item.is_completed)}
+                                disabled={isPending}
+                                className="h-4 w-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 disabled:opacity-50"
+                              />
+                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Completed</span>
+                            </label>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => { setDeletingItem({ type: 'link', id: item.content_items_id, name: item.title }); setDeleteInput(''); }} 
+                              className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
                       ))
                     )}

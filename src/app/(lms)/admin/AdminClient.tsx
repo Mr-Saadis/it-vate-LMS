@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { approvePayment, rejectPayment } from '@/lib/actions/admin'
+import { approvePayment, rejectPayment, getBatchPreviewAction } from '@/lib/actions/admin'
 import {
   CheckCircle2,
   XCircle,
@@ -43,9 +43,12 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
   const [rejectPaymentTarget, setRejectPaymentTarget] = useState<Payment | null>(null)
   const [approvePaymentTarget, setApprovePaymentTarget] = useState<Payment | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [batchPreview, setBatchPreview] = useState<string | null>(null)
 
   const handleApproveClick = (payment: Payment) => {
     setApprovePaymentTarget(payment)
+    setBatchPreview(null)
+    getBatchPreviewAction(payment.enroll_id).then(setBatchPreview).catch(() => setBatchPreview('UNKNOWN'))
   }
 
   const handleApproveConfirm = () => {
@@ -195,21 +198,16 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                   Target Classroom Batch ID
                 </label>
                 <div className="font-mono text-sm font-bold text-[#0F172A] mb-1">
-                  {(() => {
-                    // Extract first letters of course name or default to CRS
-                    const courseName = (approvePaymentTarget as any).enrollments?.[0]?.level?.course?.name || ''
-                    const code = courseName ? courseName.split(' ').map((w: string) => w[0]).join('').toUpperCase() : 'CRS'
-
-                    const now = new Date()
-                    const year = now.getFullYear()
-                    const month = String(now.getMonth() + 1).padStart(2, '0')
-                    const levelNo = (approvePaymentTarget as any).enrollments?.[0]?.level?.no || 1
-
-                    return `${code}${year}${month}L${levelNo}`
-                  })()}
+                  {batchPreview === null ? (
+                    <span className="flex items-center gap-2 text-slate-400">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Fetching...
+                    </span>
+                  ) : (
+                    batchPreview
+                  )}
                 </div>
                 <p className="text-[10px] text-[#F18231] font-semibold">
-                  Please ensure this Classroom Link exists in the Courses page before approving.
+                  This ID is derived from the latest content uploaded for this level.
                 </p>
               </div>
 
@@ -418,7 +416,7 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
         </div>
       )}
 
-      {/* Generated CPDP IDs */}
+      {/* Generated PDAT IDs */}
       {Object.keys(generatedIds).length > 0 && (
         <div className="rounded-xl border border-green-200 bg-green-50 p-5 space-y-3">
           <h3 className="text-xs font-bold text-green-800 uppercase tracking-wider">

@@ -20,18 +20,18 @@ export async function fetchPendingPayments() {
   return MOCK_PENDING_PAYMENTS
 }
 
-export async function approvePaymentAndGenerateCPDP(paymentId: string, seqIndex: number) {
+export async function approvePaymentAndGeneratePDAT(paymentId: string, seqIndex: number) {
   const date = new Date()
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const seqNo = String(seqIndex + 1).padStart(3, '0')
-  const cpdpId = `CPDP${year}${month}${seqNo}`
+  const pdatId = `PDAT${year}${month}${seqNo}`
 
   try {
     const res = await fetch('/api/admin/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ payment_id: paymentId, enroll_no: cpdpId }),
+      body: JSON.stringify({ payment_id: paymentId, enroll_no: pdatId }),
     })
     if (res.ok) {
       return await res.json()
@@ -40,7 +40,7 @@ export async function approvePaymentAndGenerateCPDP(paymentId: string, seqIndex:
     console.warn('API approve error fallback:', err)
   }
 
-  return { success: true, payment_id: paymentId, enroll_no: cpdpId }
+  return { success: true, payment_id: paymentId, enroll_no: pdatId }
 }
 
 export async function getAllStudents() {
@@ -61,6 +61,7 @@ export async function getAllStudents() {
           track_type,
           status,
           enrolled_at,
+          is_completed,
           levels (
             courses (
               name
@@ -82,9 +83,11 @@ export async function getAllStudents() {
       education: (user as any).education,
       joined_at: (user as any).created_at,
       enrollments: (user.enrollments || []).map((enr: any) => ({
+        enroll_id: enr.enroll_id,
         course: enr.levels?.courses?.name || 'Unknown Course',
         track: enr.track_type || 'Unknown',
         status: enr.status || 'Inactive',
+        is_completed: !!enr.is_completed,
         enrollment_date: enr.enrolled_at || new Date().toISOString(),
       })),
     }))

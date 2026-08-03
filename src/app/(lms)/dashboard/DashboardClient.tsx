@@ -80,7 +80,9 @@ export function DashboardClient({
     enrolledLevelsData[level.level_id] = {
       started_at: level.started_at,
       ended_at: level.ended_at,
-      content_items: level.content_items || []
+      content_items: level.content_items || [],
+      status: enroll.status,
+      is_completed: enroll.is_completed
     }
 
     if (!courseGroups[courseId]) {
@@ -268,6 +270,37 @@ export function DashboardClient({
               
               const sortedLevels = [...(course.levels || [])].sort((a, b) => a.no - b.no)
 
+              let nextUnlockableLevelId: string | null = null
+              
+              if (trackType === 'Progressive') {
+                // Find highest completed level number
+                let highestCompletedNo = 0
+                for (const lvlId of ownedLevels) {
+                  const levelData = enrolledLevelsData[lvlId]
+                  if (!levelData) continue
+                  
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const isCompleted = levelData.status === 'Completed' ||
+                                      levelData.is_completed === true ||
+                                      levelData.content_items?.some((i: any) => i.is_completed === true)
+                                      
+                  if (isCompleted) {
+                    const l = sortedLevels.find(s => s.level_id === lvlId)
+                    if (l && l.no > highestCompletedNo) {
+                      highestCompletedNo = l.no
+                    }
+                  }
+                }
+                
+                // Find the exact next level in sequence
+                if (highestCompletedNo > 0) {
+                  const nextLvl = sortedLevels.find(s => s.no === highestCompletedNo + 1)
+                  if (nextLvl && !ownedLevels.includes(nextLvl.level_id)) {
+                    nextUnlockableLevelId = nextLvl.level_id
+                  }
+                }
+              }
+
               return (
                 <div key={courseId} className="rounded-[20px] border border-slate-200 bg-white p-6 shadow-sm space-y-8 overflow-hidden relative">
                   {/* Subtle background decoration */}
@@ -316,6 +349,7 @@ export function DashboardClient({
                     {sortedLevels.map((lvl) => {
                       const isOwned = ownedLevels.includes(lvl.level_id)
                       const isActive = activeLevelId === lvl.level_id
+                      const isNextUnlockable = lvl.level_id === nextUnlockableLevelId
                       
                       let bgClass = 'bg-slate-100 border-slate-200'
                       let textClass = 'text-slate-500'
@@ -331,15 +365,32 @@ export function DashboardClient({
                           textClass = 'text-[#F18231]'
                           icon = <CheckCircle2 className="h-4 w-4" />
                         }
+                      } else if (isNextUnlockable) {
+                        bgClass = 'bg-orange-50 border-orange-400 ring-2 ring-[#F18231]/30 hover:bg-[#F18231] group'
+                        textClass = 'text-[#F18231] group-hover:text-white transition-colors'
+                        icon = <Lock className="h-4 w-4 group-hover:text-white transition-colors" />
                       }
 
                       return (
                         <div key={lvl.level_id} className="flex items-center gap-3 shrink-0">
                           {/* Level Box */}
                           <div
-                            onClick={() => handleLevelClick(courseId, lvl.level_id, isOwned)}
+                            onClick={() => {
+                              if (isOwned) {
+                                handleLevelClick(courseId, lvl.level_id, isOwned)
+                              } else if (isNextUnlockable) {
+                                const checkoutParams = new URLSearchParams({
+                                  course_id: course.course_id,
+                                  slug: course.slug,
+                                  track: 'Progressive',
+                                  amount: lvl.price.toString(),
+                                  levels: lvl.level_id,
+                                })
+                                router.push(`/checkout?${checkoutParams.toString()}`)
+                              }
+                            }}
                             className={`flex flex-col justify-center w-40 h-24 rounded-xl border-2 p-3 transition-all ${
-                              isOwned ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'
+                              (isOwned || isNextUnlockable) ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'
                             } ${bgClass}`}
                           >
                             <div className={`flex items-center justify-between mb-2 ${textClass}`}>
@@ -348,9 +399,18 @@ export function DashboardClient({
                               </span>
                               {icon}
                             </div>
-                            <p className={`text-xs font-semibold leading-tight line-clamp-2 ${isOwned ? 'text-[#0F172A]' : 'text-slate-500'}`}>
-                              {lvl.level_title}
-                            </p>
+                            {isNextUnlockable ? (
+                               <div className="flex flex-col gap-0.5">
+                                 <p className="text-[10px] text-[#F18231] group-hover:text-orange-100 transition-colors line-clamp-1">{lvl.level_title}</p>
+                                 <p className="text-xs font-bold leading-tight text-[#F18231] group-hover:text-white transition-colors flex items-center gap-1">
+                                   Unlock Now <ArrowRight className="h-3 w-3" />
+                                 </p>
+                               </div>
+                            ) : (
+                               <p className={`text-xs font-semibold leading-tight line-clamp-2 ${isOwned ? 'text-[#0F172A]' : 'text-slate-500'}`}>
+                                 {lvl.level_title}
+                               </p>
+                            )}
                           </div>
 
                           {/* Certificate Button */}
