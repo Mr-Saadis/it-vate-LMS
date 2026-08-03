@@ -10,6 +10,14 @@ export async function CoursesNavbar() {
 
   // Fetch enrollments only if user is logged in
   const enrollments = user ? await getAllUserEnrollmentsStatus() : []
+  let userRole = 'student'
+
+  if (user) {
+    const { data: userData } = await supabase.from('users').select('role').eq('user_id', user.id).single()
+    if (userData?.role) {
+      userRole = userData.role
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95 relative">
@@ -22,7 +30,7 @@ export async function CoursesNavbar() {
 
         {/* Right Actions & Notifications */}
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <NavbarClient user={user} enrollments={enrollments as any} />
+        <NavbarClient user={user} userRole={userRole} enrollments={enrollments as any} />
       </div>
     </header>
   )
