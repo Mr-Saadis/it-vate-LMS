@@ -10,7 +10,7 @@ export function DarkFooter() {
   const pathname = usePathname()
   
   // Hide footer on login and signup pages
-  if (pathname === '/login' || pathname === '/signup') {
+  if (pathname === '/login' || pathname === '/signup' || pathname === '/complete-profile') {
     return null
   }
 
