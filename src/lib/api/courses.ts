@@ -98,8 +98,8 @@ export async function getUserEnrollments() {
   }
 }
 
-// Fetch all pending payments (admin only)
-export async function getPendingPayments() {
+// Fetch all payments (admin only)
+export async function getAllAdminPayments() {
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -110,6 +110,7 @@ export async function getPendingPayments() {
           enroll_id,
           track_type,
           status,
+          rejected_reason,
           users ( name, email ),
           levels (
             level_title,
@@ -117,8 +118,7 @@ export async function getPendingPayments() {
           )
         )
       `)
-      .eq('status', 'Pending')
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
 
     if (error || !data) return []
 
@@ -153,7 +153,7 @@ export async function getPendingPayments() {
 
     return paymentsWithSignedUrls
   } catch (err) {
-    console.error('Pending payments fetch error:', err)
+    console.error('All payments fetch error:', err)
     return []
   }
 }
@@ -225,45 +225,79 @@ export async function getAllUserEnrollmentsStatus() {
   }
 }
 
-// Fetch a specific level and its content items (only if the user is actively enrolled)
-export async function getLevelWithContents(levelId: string) {
+// Fetch ALL courses (active and inactive) with their levels for Admin
+export async function getAllCoursesWithLevelsAdmin(): Promise<Course[]> {
+  try {
+    const supabase = await createClient()
+    // Verify admin role
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+    const { data: profile } = await supabase.from('users').select('role').eq('user_id', user.id).single()
+    if (profile?.role !== 'admin') return []
+
+    const { data, error } = await supabase
+      .from('courses')
+      .select(`
+        *,
+        levels (
+          level_id,
+          no,
+          level_title,
+          level_description,
+          price,
+          code,
+          is_active,
+          course_id,
+          content_items (
+            content_items_id,
+            title,
+            url,
+            content_type
+          )
+        )
+      `)
+      .order('name')
+
+    if (error || !data) return []
+    return data as Course[]
+  } catch {
+    return []
+  }
+}
+export async function getCourseByIdAdmin(id: string): Promise<Course | null> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return null
+    const { data: profile } = await supabase.from('users').select('role').eq('user_id', user.id).single()
+    if (profile?.role !== 'admin') return null
 
-    // First check if user is actively enrolled in this level
-    const { data: enrollment, error: enrollError } = await supabase
-      .from('enrollments')
-      .select('enroll_id')
-      .eq('user_id', user.id)
-      .eq('level_id', levelId)
-      .eq('status', 'Active')
-      .maybeSingle()
-
-    if (enrollError || !enrollment) {
-      return null // Not enrolled or not active
-    }
-
-    // Now fetch the level with its contents and course info
-    const { data: level, error: levelError } = await supabase
-      .from('levels')
+    const { data, error } = await supabase
+      .from('courses')
       .select(`
         *,
-        courses ( name, slug, description ),
-        content_items (*)
+        levels (
+          level_id,
+          no,
+          level_title,
+          level_description,
+          price,
+          code,
+          is_active,
+          course_id,
+          content_items (
+            content_items_id,
+            title,
+            url,
+            content_type
+          )
+        )
       `)
-      .eq('level_id', levelId)
-      .maybeSingle()
+      .eq('course_id', id)
+      .single()
 
-    if (levelError || !level) return null
-
-    // Sort content items by order_no
-    if (level.content_items) {
-      level.content_items.sort((a: any, b: any) => a.order_no - b.order_no)
-    }
-
-    return level
+    if (error || !data) return null
+    return data as Course
   } catch {
     return null
   }

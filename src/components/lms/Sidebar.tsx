@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  BookOpen,
 } from 'lucide-react'
 
 interface LMSSidebarProps {
@@ -165,6 +166,17 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
             >
               <Users className="h-4 w-4 shrink-0" />
               Students
+            </Link>
+            <Link
+              href="/admin/courses"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${
+                pathname.startsWith('/admin/courses')
+                  ? 'bg-[#F18231] text-white'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <BookOpen className="h-4 w-4 shrink-0" />
+              Courses
             </Link>
             {/* Nested student name when on detail page */}
             {isOnStudentDetail && activeStudentName && (
