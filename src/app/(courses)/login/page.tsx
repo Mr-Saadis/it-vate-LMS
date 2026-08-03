@@ -3,6 +3,7 @@
 import { useState, useTransition, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { signIn } from '@/lib/actions/auth'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Zap, Cpu, Award, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -83,8 +84,8 @@ function LoginFormContent() {
         {/* Top Logo Header */}
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F18231] text-white font-black text-base shadow-sm">
-              IT
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm">
+              <Image src="/logo1.jpg" alt="IT-vate Icon" width={40} height={40} className="object-cover" />
             </div>
             <div className="flex flex-col">
               <span className="text-base font-bold text-white tracking-tight leading-tight">
@@ -146,8 +147,8 @@ function LoginFormContent() {
         {/* Mobile Header View */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 lg:hidden bg-slate-50">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F18231] text-white font-bold text-xs">
-              IT
+            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
+              <Image src="/logo1.jpg" alt="IT-vate Icon" width={32} height={32} className="object-cover" />
             </div>
             <span className="text-sm font-bold text-slate-900 tracking-tight">IT-vate Solutions</span>
           </Link>
