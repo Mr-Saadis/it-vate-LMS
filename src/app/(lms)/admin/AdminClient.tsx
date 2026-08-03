@@ -26,6 +26,7 @@ interface Payment {
   status: string
   payment_proof: string
   created_at: string
+  rejected_reason?: string | null
 }
 
 interface AdminClientProps {
@@ -86,7 +87,9 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
         toast.info('Payment rejected')
         setPayments((prev) =>
           prev.map((p) =>
-            p.payment_id === rejectPaymentTarget.payment_id ? { ...p, status: 'Rejected' } : p
+            p.payment_id === rejectPaymentTarget.payment_id 
+              ? { ...p, status: 'Rejected', rejected_reason: rejectReason.trim() } 
+              : p
           )
         )
         setRejectPaymentTarget(null)
@@ -367,29 +370,99 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
             Processed ({processed.length})
           </h2>
           <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-            <table className="min-w-full divide-y divide-slate-100 text-xs">
-              <tbody>
-                {processed.map((p) => (
-                  <tr key={p.payment_id} className="px-4 py-3 flex items-center justify-between">
-                    <td className="px-4 py-3 flex-1">
-                      <p className="font-semibold text-[#0F172A]">{p.user_name}</p>
-                      <p className="text-slate-400">{p.course_name}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
-                          p.status === 'Verified'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-xs">
+                <thead className="bg-slate-50">
+                  <tr>
+                    {[
+                      'Student',
+                      'Course / Track',
+                      'Amount',
+                      'Transaction Ref',
+                      'Submitted',
+                      'Proof',
+                      'Status',
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-left font-bold text-[11px] uppercase tracking-wider text-slate-500"
                       >
-                        {p.status}
-                      </span>
-                    </td>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {processed.map((p) => (
+                    <tr key={p.payment_id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-4">
+                        <p className="font-semibold text-[#0F172A]">{p.user_name}</p>
+                        <p className="text-slate-400">{p.user_email}</p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="font-semibold text-[#0F172A] max-w-[150px] truncate">
+                          {p.course_name}
+                        </p>
+                        <span className="rounded bg-orange-50 px-1.5 py-0.5 text-[10px] font-bold text-[#F18231]">
+                          {p.track_type} Track
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="font-extrabold text-[#0F172A]">
+                          PKR {p.total_amount.toLocaleString()}
+                        </p>
+                        {p.discount > 0 && (
+                          <p className="text-green-600">
+                            -{p.discount} disc.
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] text-[#0F172A]">
+                          {p.transaction_reference}
+                        </code>
+                      </td>
+                      <td className="px-4 py-4 text-slate-500">
+                        {new Date(p.created_at).toLocaleDateString('en-PK', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </td>
+                      <td className="px-4 py-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedProofUrl(p.payment_proof)}
+                          className="h-8 text-[11px]"
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          View
+                        </Button>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div>
+                          <span
+                            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                              p.status === 'Verified'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
+                            }`}
+                          >
+                            {p.status}
+                          </span>
+                          {p.status === 'Rejected' && p.rejected_reason && (
+                            <p className="mt-1.5 text-[10px] text-red-600 max-w-[150px] leading-tight">
+                              <span className="font-semibold">Reason:</span> {p.rejected_reason}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

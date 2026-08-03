@@ -94,8 +94,8 @@ export async function getUserEnrollments() {
   }
 }
 
-// Fetch all pending payments (admin only)
-export async function getPendingPayments() {
+// Fetch all payments (admin only)
+export async function getAllAdminPayments() {
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -106,6 +106,7 @@ export async function getPendingPayments() {
           enroll_id,
           track_type,
           status,
+          rejected_reason,
           users ( name, email ),
           levels (
             level_title,
@@ -113,8 +114,7 @@ export async function getPendingPayments() {
           )
         )
       `)
-      .eq('status', 'Pending')
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
 
     if (error || !data) return []
 
@@ -149,7 +149,7 @@ export async function getPendingPayments() {
 
     return paymentsWithSignedUrls
   } catch (err) {
-    console.error('Pending payments fetch error:', err)
+    console.error('All payments fetch error:', err)
     return []
   }
 }
