@@ -3,15 +3,13 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { headers } from 'next/headers'
 
 // VULN-02 fix: only allow relative paths as redirect destinations
-// Prevents open redirect to external attacker-controlled URLs
 function sanitizeRedirect(redirectTo: string | null | undefined): string {
   const fallback = '/dashboard'
   if (!redirectTo) return fallback
 
-  // Must be a relative path starting with /
-  // Reject absolute URLs, protocol-relative URLs, or anything suspicious
   if (
     redirectTo.startsWith('http://') ||
     redirectTo.startsWith('https://') ||
@@ -21,7 +19,6 @@ function sanitizeRedirect(redirectTo: string | null | undefined): string {
     return fallback
   }
 
-  // Reject paths with unexpected characters (basic allowlist)
   if (!/^\/[a-zA-Z0-9\-_/?=&%#.]+$/.test(redirectTo)) {
     return fallback
   }
@@ -29,7 +26,7 @@ function sanitizeRedirect(redirectTo: string | null | undefined): string {
   return redirectTo
 }
 
-// ─── Sign Up ─────────────────────────────────────────────────────────────────
+// ─── Sign Up (Email/Password) ─────────────────────────────────────────────────
 export async function signUp(formData: FormData) {
   const supabase = await createClient()
 
@@ -39,14 +36,10 @@ export async function signUp(formData: FormData) {
   const phone = formData.get('phone') as string
   const education = formData.get('education') as string
 
-  // VULN-02 fix: do NOT allow user-supplied 'role' to be anything other than 'student'
-  // Prevents privilege escalation via crafted form submission
+  // VULN-02 fix: never trust user-supplied role
   const role = 'student'
-
-  // VULN-02 fix: sanitize redirect path
   const redirectTo = sanitizeRedirect(formData.get('redirectTo') as string)
 
-  // Input validation
   if (!email || !password || !name) {
     return { error: 'Name, email, and password are required.' }
   }
@@ -54,22 +47,19 @@ export async function signUp(formData: FormData) {
     return { error: 'Password must be at least 8 characters.' }
   }
 
-  // Parse experience array (JSON string)
   let experiences: { experience: string; experience_dates: string }[] = []
   try {
     const raw = formData.get('experiences') as string
     if (raw) {
       const parsed = JSON.parse(raw)
-      // Validate it's actually an array of objects
       if (Array.isArray(parsed)) {
         experiences = parsed
           .filter((e) => typeof e.experience === 'string')
-          .slice(0, 10) // max 10 experience entries
+          .slice(0, 10)
       }
     }
   } catch { /* ignore malformed JSON */ }
 
-  // 1. Create Supabase Auth user
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
@@ -85,21 +75,19 @@ export async function signUp(formData: FormData) {
   const userId = authData.user?.id
   if (!userId) return { error: 'User creation failed.' }
 
-  // 2. Insert user profile
   const { error: profileError } = await supabase.from('users').insert({
     user_id: userId,
     email,
     name,
     phone_number: phone,
     education,
-    role, 
+    role,
   })
 
   if (profileError) {
     console.error('Profile insert error:', profileError)
   }
 
-  // 3. Insert experience rows
   if (experiences.length > 0) {
     const expRows = experiences.map((exp) => ({
       user_id: userId,
@@ -114,7 +102,107 @@ export async function signUp(formData: FormData) {
   redirect(redirectTo)
 }
 
-// ─── Sign In ─────────────────────────────────────────────────────────────────
+// ─── Sign In With Google (OAuth) ──────────────────────────────────────────────
+export async function signInWithGoogle(redirectTo?: string) {
+  const supabase = await createClient()
+  const headersList = await headers()
+  const origin = headersList.get('origin') ?? 'http://localhost:3000'
+
+  // After Google OAuth, always hit our callback route first so we can
+  // check whether the user's profile is complete before redirecting.
+  const callbackUrl = `${origin}/auth/callback?next=${encodeURIComponent(redirectTo ?? '/dashboard')}`
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: callbackUrl,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  // Return the Google OAuth URL — client will do window.location.href = url
+  return { url: data.url }
+}
+
+// ─── Complete Profile (after Google OAuth) ────────────────────────────────────
+export async function completeProfile(formData: FormData) {
+  const supabase = await createClient()
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    return { error: 'Not authenticated. Please sign in again.' }
+  }
+
+  const phone = formData.get('phone') as string
+  const education = formData.get('education') as string
+  const redirectTo = sanitizeRedirect(formData.get('redirectTo') as string)
+
+  // Name & email come from Google OAuth user metadata
+  const name = (user.user_metadata?.full_name as string) ?? user.email?.split('@')[0] ?? 'User'
+  const email = user.email ?? ''
+
+  let experiences: { experience: string; experience_dates: string }[] = []
+  try {
+    const raw = formData.get('experiences') as string
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        experiences = parsed
+          .filter((e) => typeof e.experience === 'string')
+          .slice(0, 10)
+      }
+    }
+  } catch { /* ignore */ }
+
+  // Check if profile row already exists (upsert-safe)
+  const { data: existing } = await supabase
+    .from('users')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (existing) {
+    await supabase.from('users').update({
+      phone_number: phone,
+      education,
+      updated_at: new Date().toISOString(),
+    }).eq('user_id', user.id)
+  } else {
+    const { error: profileError } = await supabase.from('users').insert({
+      user_id: user.id,
+      email,
+      name,
+      phone_number: phone,
+      education,
+      role: 'student',
+    })
+    if (profileError) {
+      console.error('Profile insert error:', profileError)
+      return { error: 'Failed to save profile. Please try again.' }
+    }
+  }
+
+  if (experiences.length > 0) {
+    const expRows = experiences.map((exp) => ({
+      user_id: user.id,
+      experience: exp.experience,
+      experience_dates: exp.experience_dates,
+    }))
+    await supabase.from('experiences').insert(expRows)
+  }
+
+  revalidatePath('/', 'layout')
+  redirect(redirectTo)
+}
+
+// ─── Sign In (Email/Password) ─────────────────────────────────────────────────
 export async function signIn(formData: FormData) {
   const supabase = await createClient()
 
@@ -131,7 +219,6 @@ export async function signIn(formData: FormData) {
     return { error: error.message }
   }
 
-  // Fetch the user's role to determine the correct dashboard
   const userId = authData.user?.id
   let role = 'student'
   if (userId) {
@@ -141,10 +228,7 @@ export async function signIn(formData: FormData) {
     }
   }
 
-  // Set the default redirect based on role
   const fallback = role === 'admin' ? '/admin' : '/dashboard'
-  
-  // VULN-02 fix: sanitize redirect path (pass the calculated fallback)
   let finalRedirect = sanitizeRedirect(formData.get('redirectTo') as string)
   if (finalRedirect === '/dashboard' && fallback === '/admin') {
     finalRedirect = '/admin'
