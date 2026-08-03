@@ -355,15 +355,24 @@ export function DashboardClient({
                       let textClass = 'text-slate-500'
                       let icon = <Hash className="h-4 w-4" />
 
+                      const levelData = enrolledLevelsData[lvl.level_id]
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      const isCompleted = levelData && (
+                        levelData.status === 'Completed' || 
+                        levelData.is_completed === true || 
+                        levelData.content_items?.some((i: any) => i.is_completed === true)
+                      )
+
                       if (isOwned) {
-                        if (isActive) {
-                          bgClass = 'bg-orange-50 border-[#F18231] hover:border-[#F18231]'
-                          textClass = 'text-[#F18231]'
-                          icon = <Clock className="h-4 w-4" />
-                        } else {
-                          bgClass = 'bg-orange-50 border-orange-300 hover:border-[#F18231]'
-                          textClass = 'text-[#F18231]'
+                        bgClass = isActive 
+                          ? 'bg-orange-50 border-[#F18231] hover:border-[#F18231]' 
+                          : 'bg-orange-50 border-orange-300 hover:border-[#F18231]'
+                        textClass = 'text-[#F18231]'
+                        
+                        if (isCompleted) {
                           icon = <CheckCircle2 className="h-4 w-4" />
+                        } else {
+                          icon = <Clock className="h-4 w-4" />
                         }
                       } else if (isNextUnlockable) {
                         bgClass = 'bg-orange-50 border-orange-400 ring-2 ring-[#F18231]/30 hover:bg-[#F18231] group'
@@ -415,24 +424,26 @@ export function DashboardClient({
 
                           {/* Certificate Button */}
                           <div className="flex flex-col items-center justify-center w-12 gap-1">
-                            <div className={`h-0.5 w-full ${isOwned ? 'bg-[#F18231]' : 'bg-slate-200'}`} />
+                            <div className={`h-0.5 w-full ${isCompleted ? 'bg-[#F18231]' : isOwned ? 'bg-orange-200/50' : 'bg-slate-200'}`} />
                             <button
-                              title={`Certificate for Level ${lvl.no}`}
+                              title={isCompleted ? `View Certificate for Level ${lvl.no}` : `Complete Level ${lvl.no} to unlock certificate`}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (isOwned) {
+                                if (isCompleted) {
                                   // Can optionally route to certificate view if needed
                                 }
                               }}
                               className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all shrink-0 ${
-                                isOwned
+                                isCompleted
                                   ? 'border-[#F18231] bg-orange-50 text-[#F18231] shadow-sm hover:scale-110'
+                                  : isOwned
+                                  ? 'border-orange-200 bg-orange-50/30 text-orange-300 cursor-not-allowed'
                                   : 'border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed'
                               }`}
                             >
                               <Award className="h-4 w-4" />
                             </button>
-                            <div className={`h-0.5 w-full ${isOwned ? 'bg-[#F18231]' : 'bg-slate-200'}`} />
+                            <div className={`h-0.5 w-full ${isCompleted ? 'bg-[#F18231]' : isOwned ? 'bg-orange-200/50' : 'bg-slate-200'}`} />
                           </div>
                         </div>
                       )
