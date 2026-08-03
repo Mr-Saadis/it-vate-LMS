@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { MOCK_CONTENT_ITEMS } from '@/lib/mockData'
-import { getUserEnrollments, getAllUserEnrollmentsStatus } from '@/lib/api/courses'
+import { getUserEnrollments, getAllUserEnrollmentsStatus, getActiveCourses } from '@/lib/api/courses'
+import { getUserFullProfile } from '@/lib/api/users'
 import { DashboardClient } from './DashboardClient'
 
 export const metadata = {
-  title: 'Dashboard — IT-vate LMS',
+  title: 'Analytics — IT-vate LMS',
 }
 
 interface PageProps {
@@ -21,7 +21,7 @@ export default async function StudentDashboardPage({ searchParams }: PageProps) 
     redirect('/login')
   }
 
-  // 1. Fetch all enrollment statuses to understand the user's state
+  // Fetch all enrollment statuses to understand the user's state
   const allEnrollments = await getAllUserEnrollmentsStatus()
 
   if (!allEnrollments || allEnrollments.length === 0) {
@@ -29,22 +29,30 @@ export default async function StudentDashboardPage({ searchParams }: PageProps) 
     redirect('/')
   }
 
-  // 2. Fetch real active enrollments from Supabase
+  // Fetch real active enrollments from Supabase
   const activeEnrollments = await getUserEnrollments()
 
-  // 3. If they have NO active enrollments, but they have pending/rejected ones
+  // If they have NO active enrollments, but they have pending/rejected ones
   if (activeEnrollments.length === 0) {
     // Waiting area for pending/rejected enrollments
     redirect('/enrollment-status')
   }
 
-  const userName = user?.email?.split('@')[0] ?? 'Student'
+  // Fetch all active courses to build the full timeline
+  const activeCourses = await getActiveCourses()
+
+  // Fetch full user profile
+  const userProfile = await getUserFullProfile()
+  const userName = userProfile?.name || user?.email?.split('@')[0] || 'Student'
 
   return (
     <DashboardClient
       enrollments={activeEnrollments}
+      allCourses={activeCourses}
+      userProfile={userProfile}
       userName={userName}
-      contentItems={MOCK_CONTENT_ITEMS}
+      userEmail={userProfile?.email || user.email || ''}
+      userJoinedAt={userProfile?.created_at || user.created_at}
       showApprovedBanner={approved_banner === 'true'}
     />
   )
