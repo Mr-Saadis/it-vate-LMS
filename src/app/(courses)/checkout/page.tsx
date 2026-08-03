@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { submitPayment } from '@/lib/actions/payment'
 import { createClient } from '@/lib/supabase/client'
+import { validateTrackSelection } from '@/lib/validations'
 import { MOCK_COURSES } from '@/lib/mockData'
 import {
   Building2,
@@ -38,17 +39,48 @@ function CheckoutContent() {
   // Pick the first level id for enrollment (or the selected levels for Fast Track)
   const primaryLevelId = levelIds.split(',')[0] || course.levels?.[0]?.level_id || ''
 
-  // Auth check — redirect to login if no session
+  // Auth check & Duplicate check — redirect to login if no session, or back to course if duplicate
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setIsAuthChecking(false)
+    const checkAuthAndDuplicates = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
       if (!user) {
+        setIsAuthChecking(false)
         const currentUrl = `/checkout?${searchParams.toString()}`
         router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`)
+        return
       }
-    })
-  }, [router, searchParams])
+
+      // Check for mutual exclusivity & duplicates
+      if (levelIds && courseId) {
+        const requestedLevelIds = levelIds.split(',')
+        const { data: existingEnrollments } = await supabase
+          .from('enrollments')
+          .select('level_id, track_type, status, levels!inner(course_id, level_title)')
+          .eq('user_id', user.id)
+          .eq('levels.course_id', courseId)
+          .neq('status', 'Rejected')
+
+        const validation = validateTrackSelection(
+          (existingEnrollments as any) || [], 
+          track as any, 
+          requestedLevelIds,
+          course.levels || []
+        )
+        
+        if (!validation.isValid) {
+          const encodedErrorMsg = encodeURIComponent(validation.errorMessage || 'Invalid track selection.')
+          router.push(`/courses/${slug}?error=duplicate&error_msg=${encodedErrorMsg}`)
+          return
+        }
+      }
+
+      setIsAuthChecking(false)
+    }
+
+    checkAuthAndDuplicates()
+  }, [router, searchParams, levelIds, slug])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

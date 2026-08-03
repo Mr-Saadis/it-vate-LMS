@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Course, TrackType } from '@/lib/types'
 import { TRACK_OPTIONS, MOCK_COURSES } from '@/lib/mockData'
 import { createClient } from '@/lib/supabase/client'
-import { Check, ShieldCheck, ArrowRight, Lock, ChevronDown, X, Loader2 } from 'lucide-react'
+import { Check, ShieldCheck, ArrowRight, Lock, ChevronDown, X, Loader2, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
+import { validateTrackSelection } from '@/lib/validations'
 
 interface TrackSelectorProps {
   course: Course
@@ -14,6 +15,7 @@ interface TrackSelectorProps {
 
 export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   // --- State ---
   const [activeCourse, setActiveCourse] = useState<Course>(initialCourse)
@@ -25,6 +27,7 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
   const [discountPercent, setDiscountPercent] = useState(0)
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [showCourseModal, setShowCourseModal] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
   const modalRef = useRef<HTMLDivElement>(null)
 
   // Reset level selection when course changes
@@ -46,6 +49,38 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showCourseModal])
+
+  // --- Duplicate Error Handling (from checkout redirect) ---
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    const errorMsg = searchParams.get('error_msg')
+    const duplicateLevels = searchParams.get('duplicate_levels')
+
+    if (errorParam === 'duplicate') {
+      if (errorMsg) {
+        setValidationError(decodeURIComponent(errorMsg))
+      } else {
+        let levelNames = ''
+        if (duplicateLevels) {
+          const dupIds = duplicateLevels.split(',')
+          const names = initialCourse.levels
+            ?.filter((l) => dupIds.includes(l.level_id))
+            .map((l) => l.level_title)
+          if (names && names.length > 0) {
+            levelNames = names.join(', ')
+          }
+        }
+        setValidationError(`You have already enrolled in: ${levelNames || 'one or more selected levels'}. Please choose different levels.`)
+      }
+      
+      // Clean up the URL
+      const currentUrl = new URL(window.location.href)
+      currentUrl.searchParams.delete('error')
+      currentUrl.searchParams.delete('error_msg')
+      currentUrl.searchParams.delete('duplicate_levels')
+      window.history.replaceState({}, '', currentUrl.toString())
+    }
+  }, [searchParams, initialCourse])
 
   // --- Pricing ---
   const calculatePricing = () => {
@@ -98,6 +133,7 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
   const pricing = calculatePricing()
 
   const handleCheckoutRedirect = async () => {
+    setValidationError(null)
     setIsCheckingAuth(true)
 
     const checkoutParams = new URLSearchParams({
@@ -120,13 +156,37 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
         return
       }
 
-      // Logged in — proceed to checkout
+      // --- Pre-Checkout Validation (Mutual Exclusivity, Duplicates & Fast Track Consecutive) ---
+      // Fetch all enrollments for this specific course by joining with levels
+      const { data: existingEnrollments, error } = await supabase
+        .from('enrollments')
+        .select('level_id, track_type, status, levels!inner(course_id, level_title)')
+        .eq('user_id', user.id)
+        .eq('levels.course_id', activeCourse.course_id)
+        .neq('status', 'Rejected') // Allow re-enrolling if previously rejected
+        
+      if (error) console.error("Supabase Error:", error)
+
+      const validation = validateTrackSelection(
+        (existingEnrollments as any) || [], 
+        selectedTrack, 
+        selectedLevelIds, 
+        activeCourse.levels || []
+      )
+      
+      if (!validation.isValid) {
+        setValidationError(validation.errorMessage || 'Invalid track selection.')
+        setIsCheckingAuth(false)
+        return
+      }
+
+      // Logged in & validation passed — proceed to checkout
       router.push(checkoutUrl)
     } catch {
       // On error, just go to signup
       router.push(`/signup?redirect=${encodeURIComponent(checkoutUrl)}`)
     } finally {
-      setIsCheckingAuth(false)
+      // setIsCheckingAuth(false) will be handled by the next page or if we error out
     }
   }
 
@@ -135,6 +195,28 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
 
       {/* ── 3. Enrollment Track Selection (col-span-8, 2×2 grid) ── */}
       <div className="lg:col-span-8 space-y-6">
+        
+        {/* Premium Error Banner */}
+        {validationError && (
+          <div className="animate-in fade-in slide-in-from-top-4 flex items-start gap-4 rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-orange-50 p-5 shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div className="flex-1 space-y-1">
+              <h3 className="text-sm font-bold text-red-900">Track Selection Blocked</h3>
+              <p className="text-xs font-medium text-red-700 leading-relaxed">
+                {validationError}
+              </p>
+            </div>
+            <button
+              onClick={() => setValidationError(null)}
+              className="rounded-lg p-1.5 text-red-400 hover:bg-red-100/50 hover:text-red-600 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-[#F18231]">
             Custom Enrollment

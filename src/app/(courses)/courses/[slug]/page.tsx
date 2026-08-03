@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 import { getCourseBySlug } from '@/lib/api/courses'
 import { TrackSelector } from './TrackSelector'
 import { Cpu, CheckCircle2 } from 'lucide-react'
@@ -83,7 +84,9 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
       </div>
 
       {/* 3 & 4. Interactive 4-Track System & Sticky Summary Sidebar */}
-      <TrackSelector course={course} />
+      <Suspense fallback={<div className="h-96 w-full animate-pulse bg-slate-100 rounded-xl"></div>}>
+        <TrackSelector course={course} />
+      </Suspense>
 
     </div>
   )
