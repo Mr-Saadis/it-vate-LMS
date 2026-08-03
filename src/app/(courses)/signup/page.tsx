@@ -242,7 +242,7 @@ function SignupFormContent() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="education" className="text-xs font-semibold text-slate-700">
                         Education Level <span className="text-[#F18231]">*</span>
@@ -258,19 +258,6 @@ function SignupFormContent() {
                           <SelectItem value="Diploma in Electronics">Diploma in Electronics</SelectItem>
                           <SelectItem value="Self-Taught / Bootcamp">Self-Taught / Bootcamp</SelectItem>
                           <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="role" className="text-xs font-semibold text-slate-700">Account Role</Label>
-                      <Select value={formState.role} onValueChange={(v) => v && setFormState({ ...formState, role: v })}>
-                        <SelectTrigger id="role" className="bg-slate-50/50 border-slate-200 h-10 text-sm">
-                          <SelectValue placeholder="Select Role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="student">Student</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -342,17 +329,17 @@ function SignupFormContent() {
                 <Button
                   type="submit"
                   disabled={isPending}
-                  className="w-full bg-[#F18231] hover:bg-[#d96f21] text-white py-6 text-sm font-semibold rounded-xl shadow-xs transition-colors mt-4 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full bg-[#F18231] hover:bg-[#d96f21] text-white h-12 md:h-14 py-0 text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors mt-4 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Account...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" />
+                      <span>Creating Account...</span>
                     </>
                   ) : (
                     <>
-                      Complete Account Registration
-                      <ArrowRight className="h-4 w-4 ml-2" />
+                      <span className="truncate">Complete Account Registration</span>
+                      <ArrowRight className="h-4 w-4 ml-2 shrink-0" />
                     </>
                   )}
                 </Button>
@@ -371,13 +358,6 @@ function SignupFormContent() {
 
         </div>
       </main>
-
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-slate-200 bg-white py-4 text-center">
-        <p className="text-[11px] text-slate-500">
-          © {new Date().getFullYear()} IT-vate Solutions · All rights reserved.
-        </p>
-      </footer>
 
     </div>
   )

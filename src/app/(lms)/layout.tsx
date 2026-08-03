@@ -33,7 +33,7 @@ export default async function LMSLayout({
   const userRole = profile?.role ?? 'student'
 
   return (
-    <div className="flex min-h-screen bg-slate-50 font-sans text-[#0F172A]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans text-[#0F172A]">
       <LMSSidebar userName={userName} userRole={userRole} />
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
