@@ -7,10 +7,14 @@ import {
   Search,
   GraduationCap,
   BookOpen,
-  User,
-  ChevronDown,
-  ChevronUp,
-  Eye,
+  ChevronRight,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  SlidersHorizontal,
+  ArrowUpRight,
+  Layers,
+  X,
 } from 'lucide-react'
 
 interface Enrollment {
@@ -24,6 +28,9 @@ interface Student {
   id: string
   name: string
   email: string
+  phone?: string
+  education?: string
+  joined_at?: string
   enrollments: Enrollment[]
 }
 
@@ -31,286 +38,341 @@ interface StudentsClientProps {
   students: Student[]
 }
 
-export function StudentsClient({ students }: StudentsClientProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
-  const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set())
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+}
 
-  const toggleExpand = (id: string) => {
-    setExpandedStudents((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+function getAvatarHue(name: string) {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  // Constrain to a palette of warm/cool tones, avoiding generic primaries
+  const hues = [215, 262, 172, 31, 340, 197, 148, 25]
+  return hues[Math.abs(hash) % hues.length]
+}
+
+function StatusBadge({ status }: { status: string }) {
+  if (status === 'Active')
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+        <CheckCircle2 className="h-2.5 w-2.5" /> Active
+      </span>
+    )
+  if (status === 'Pending')
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+        <Clock className="h-2.5 w-2.5" /> Pending
+      </span>
+    )
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+      <XCircle className="h-2.5 w-2.5" /> {status}
+    </span>
+  )
+}
+
+function TrackBadge({ track }: { track: string }) {
+  const styles: Record<string, string> = {
+    Expert: 'bg-violet-50 border-violet-200 text-violet-700',
+    Progressive: 'bg-blue-50 border-blue-200 text-blue-700',
+    Fast: 'bg-orange-50 border-orange-200 text-orange-700',
+    Premium: 'bg-yellow-50 border-yellow-200 text-yellow-700',
   }
+  const cls = styles[track] ?? 'bg-slate-50 border-slate-200 text-slate-600'
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold ${cls}`}>
+      {track}
+    </span>
+  )
+}
+
+// ── Main Component ─────────────────────────────────────────────────────────────
+export function StudentsClient({ students }: StudentsClientProps) {
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'all' | 'active' | 'pending' | 'inactive'>('all')
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  const totalEnrollments = students.reduce((s, st) => s + st.enrollments.length, 0)
+  const activeCount = students.filter((s) => s.enrollments.some((e) => e.status === 'Active')).length
+  const pendingCount = students.filter((s) => s.enrollments.some((e) => e.status === 'Pending')).length
 
   const filtered = useMemo(() => {
     return students.filter((s) => {
-      const matchesSearch =
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.enrollments.some((e) =>
-          e.course.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+      const q = search.toLowerCase()
+      const matchSearch =
+        s.name.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q) ||
+        s.enrollments.some((e) => e.course.toLowerCase().includes(q))
 
-      if (statusFilter === 'all') return matchesSearch
-      if (statusFilter === 'active')
-        return matchesSearch && s.enrollments.some((e) => e.status === 'Active')
-      return matchesSearch && s.enrollments.every((e) => e.status !== 'Active')
+      if (!matchSearch) return false
+      if (filter === 'active') return s.enrollments.some((e) => e.status === 'Active')
+      if (filter === 'pending') return s.enrollments.some((e) => e.status === 'Pending')
+      if (filter === 'inactive') return s.enrollments.every((e) => e.status !== 'Active' && e.status !== 'Pending')
+      return true
     })
-  }, [students, searchQuery, statusFilter])
+  }, [students, search, filter])
 
-  const totalEnrollments = students.reduce((sum, s) => sum + s.enrollments.length, 0)
-  const activeCount = students.filter((s) =>
-    s.enrollments.some((e) => e.status === 'Active')
-  ).length
+  const selected = selectedId ? students.find((s) => s.id === selectedId) ?? null : null
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-8 py-6 md:py-10 space-y-8 md:space-y-10">
-      {/* ── Header ── */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 md:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 overflow-hidden">
-        <div className="space-y-2 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="rounded-md bg-[#0F172A] px-2.5 py-0.5 text-xs font-bold text-white">
-              ADMIN
-            </span>
-            <span className="text-xs font-semibold text-slate-500">
-              Students Management
-            </span>
+    <div className="min-h-screen bg-[#F8F9FC]">
+      {/* ── Page Header ── */}
+      <div className="border-b border-slate-200 bg-white px-6 py-5 lg:px-10">
+        <div className="mx-auto max-w-7xl flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="rounded bg-[#0F172A] px-2 py-0.5 text-[10px] font-bold tracking-widest text-white uppercase">Admin</span>
+              <span className="text-xs text-slate-400 font-medium">/ Students</span>
+            </div>
+            <h1 className="text-xl font-bold text-[#0F172A] tracking-tight">Enrolled Students</h1>
+            <p className="text-xs text-slate-500 mt-0.5">Only students with active enrollments are shown.</p>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A]">
-            Enrolled Students
-          </h1>
-          <p className="text-xs text-slate-600">
-            Overview of all students currently enrolled across courses.
-          </p>
-        </div>
 
-        {/* Stat Cards */}
-        <div className="grid grid-cols-3 gap-2 md:flex md:items-center md:gap-3 shrink-0">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-2 md:px-4 py-3 text-center min-w-0 md:min-w-[90px] overflow-hidden">
-            <Users className="h-4 w-4 text-[#F18231] mx-auto mb-1" />
-            <p className="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-tight md:tracking-wider">
-              Students
-            </p>
-            <p className="text-lg md:text-xl font-extrabold text-[#0F172A]">
-              {students.length}
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-2 md:px-4 py-3 text-center min-w-0 md:min-w-[90px] overflow-hidden">
-            <BookOpen className="h-4 w-4 text-[#F18231] mx-auto mb-1" />
-            <p className="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-tight md:tracking-wider">
-              Enrollments
-            </p>
-            <p className="text-lg md:text-xl font-extrabold text-[#0F172A]">
-              {totalEnrollments}
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-2 md:px-4 py-3 text-center min-w-0 md:min-w-[90px] overflow-hidden">
-            <GraduationCap className="h-4 w-4 text-green-600 mx-auto mb-1" />
-            <p className="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-tight md:tracking-wider">
-              Active
-            </p>
-            <p className="text-lg md:text-xl font-extrabold text-green-700">
-              {activeCount}
-            </p>
+          {/* Stats Row */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {[
+              { label: 'Total Enrolled', value: students.length, icon: <Users className="h-3.5 w-3.5" />, color: 'text-slate-700' },
+              { label: 'Active', value: activeCount, icon: <CheckCircle2 className="h-3.5 w-3.5" />, color: 'text-emerald-600' },
+              { label: 'Pending', value: pendingCount, icon: <Clock className="h-3.5 w-3.5" />, color: 'text-amber-600' },
+              { label: 'Enrollments', value: totalEnrollments, icon: <Layers className="h-3.5 w-3.5" />, color: 'text-blue-600' },
+            ].map((stat) => (
+              <div key={stat.label} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5">
+                <span className={stat.color}>{stat.icon}</span>
+                <div>
+                  <p className="text-[10px] font-medium text-slate-400 leading-none">{stat.label}</p>
+                  <p className={`text-sm font-bold ${stat.color} leading-tight`}>{stat.value}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* ── Search & Filter Bar ── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search by name, email, or course…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F18231]/40 focus:border-[#F18231] transition-all"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          {(['all', 'active', 'inactive'] as const).map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setStatusFilter(filter)}
-              className={`rounded-lg px-4 py-2.5 text-xs font-semibold capitalize transition-all ${
-                statusFilter === filter
-                  ? 'bg-[#0F172A] text-white'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* ── Body ── */}
+      <div className="mx-auto max-w-7xl px-4 py-6 lg:px-10 lg:py-8">
+        <div className={`flex gap-6 transition-all duration-300 ${selected ? 'lg:flex-row' : ''}`}>
 
-      {/* ── Students List ── */}
-      {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 border-dashed bg-white py-16 px-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-4">
-            <Users className="h-8 w-8" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 mb-2">No Students Found</h3>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
-            {searchQuery
-              ? 'Try adjusting your search or filter criteria.'
-              : 'No students are enrolled yet.'}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((student) => {
-            const isExpanded = expandedStudents.has(student.id)
-            const hasMultiple = student.enrollments.length > 1
-            const visibleEnrollments = isExpanded
-              ? student.enrollments
-              : student.enrollments.slice(0, 1)
+          {/* ── Left: Table Panel ── */}
+          <div className={`flex-1 min-w-0 flex flex-col gap-4 ${selected ? 'lg:max-w-[55%]' : ''}`}>
 
-            return (
-              <div
-                key={student.id}
-                className="rounded-xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 transition-colors"
-              >
-                {/* Student Row */}
-                <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 overflow-hidden">
-                  {/* Top: Avatar + Info + Count/Expand (always in a row) */}
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-[#F18231]/10 shrink-0">
-                      <User className="h-4 w-4 sm:h-5 sm:w-5 text-[#F18231]" />
-                    </div>
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                      <Link
-                        href={`/admin/students/${student.id}`}
-                        className="text-xs sm:text-sm font-bold text-[#0F172A] truncate block hover:text-[#F18231] transition-colors"
-                      >
-                        {student.name}
-                      </Link>
-                      <p className="text-[10px] sm:text-[11px] text-slate-400 truncate">
-                        {student.email}
-                      </p>
-                    </div>
-                    {/* Count + Expand + View — always far right */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="rounded-md bg-[#0F172A] px-2 sm:px-2.5 py-1 text-center whitespace-nowrap">
-                        <span className="text-[9px] sm:text-[10px] font-bold text-white">
-                          {student.enrollments.length}{' '}
-                          {student.enrollments.length === 1 ? 'Course' : 'Courses'}
-                        </span>
-                      </div>
-                      {hasMultiple && (
-                        <button
-                          onClick={() => toggleExpand(student.id)}
-                          className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 sm:px-2.5 py-1.5 text-[10px] sm:text-[11px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-[#0F172A] transition-colors whitespace-nowrap"
+            {/* Search + Filter */}
+            <div className="flex flex-col sm:flex-row items-stretch gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search name, email or course…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs text-[#0F172A] placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F18231]/30 focus:border-[#F18231] transition-all"
+                />
+              </div>
+              <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 shadow-sm">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-slate-400 ml-1" />
+                {(['all', 'active', 'pending', 'inactive'] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold capitalize transition-all ${
+                      filter === f
+                        ? 'bg-[#0F172A] text-white shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Result count */}
+            <p className="text-[11px] text-slate-400 font-medium">
+              {filtered.length} student{filtered.length !== 1 ? 's' : ''} found
+              {search && ` for "${search}"`}
+            </p>
+
+            {/* Students List */}
+            {filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white py-20 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 mb-3">
+                  <Users className="h-6 w-6 text-slate-300" />
+                </div>
+                <p className="text-sm font-semibold text-slate-600">No students found</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  {search ? 'Try a different search term or clear the filter.' : 'No enrolled students yet.'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filtered.map((student) => {
+                  const hue = getAvatarHue(student.name)
+                  const initials = getInitials(student.name)
+                  const isActive = student.enrollments.some((e) => e.status === 'Active')
+                  const isPending = !isActive && student.enrollments.some((e) => e.status === 'Pending')
+                  const isSelected = selectedId === student.id
+
+                  return (
+                    <button
+                      key={student.id}
+                      onClick={() => setSelectedId(isSelected ? null : student.id)}
+                      className={`group w-full text-left rounded-xl border bg-white px-4 py-3.5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-px ${
+                        isSelected
+                          ? 'border-[#F18231] ring-1 ring-[#F18231]/20 shadow-md'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {/* Avatar */}
+                        <div
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm"
+                          style={{ background: `hsl(${hue}, 60%, 50%)` }}
                         >
-                          {isExpanded ? (
-                            <>
-                              <ChevronUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              Less
-                            </>
-                          ) : (
-                            <>
-                              <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              All
-                            </>
+                          {initials}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-[#0F172A] truncate">
+                              {student.name}
+                            </span>
+                            {isActive && (
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" title="Has active enrollment" />
+                            )}
+                            {isPending && (
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" title="Has pending enrollment" />
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-400 truncate">{student.email}</p>
+                        </div>
+
+                        {/* Right: enrollments count + courses preview */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {/* First course name (desktop only) */}
+                          {student.enrollments[0] && (
+                            <span className="hidden md:inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-200 px-2 py-1 text-[10px] font-medium text-slate-600 max-w-[160px] truncate">
+                              <BookOpen className="h-3 w-3 text-[#F18231] shrink-0" />
+                              <span className="truncate">{student.enrollments[0].course}</span>
+                            </span>
                           )}
-                        </button>
-                      )}
-                      <Link
-                        href={`/admin/students/${student.id}`}
-                        className="flex items-center gap-1 rounded-lg bg-[#F18231] px-2 sm:px-2.5 py-1.5 text-[10px] sm:text-[11px] font-semibold text-white hover:bg-[#e0741f] transition-colors whitespace-nowrap"
-                      >
-                        <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                        <span className="hidden sm:inline">Detail</span>
-                      </Link>
+                          {student.enrollments.length > 1 && (
+                            <span className="rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                              +{student.enrollments.length - 1}
+                            </span>
+                          )}
+                          <ChevronRight className={`h-4 w-4 text-slate-300 transition-transform duration-200 group-hover:text-[#F18231] ${isSelected ? 'rotate-90 text-[#F18231]' : ''}`} />
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── Right: Detail Panel ── */}
+          {selected && (
+            <div className="lg:w-[42%] shrink-0">
+              <div className="sticky top-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                {/* Panel Header */}
+                <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm"
+                      style={{ background: `hsl(${getAvatarHue(selected.name)}, 60%, 50%)` }}
+                    >
+                      {getInitials(selected.name)}
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="text-sm font-bold text-[#0F172A] truncate">{selected.name}</h2>
+                      <p className="text-[11px] text-slate-400 truncate">{selected.email}</p>
                     </div>
                   </div>
-
-                  {/* Course Pills — below on mobile, inline on desktop; hidden when expanded */}
-                  {!isExpanded && (
-                    <div className="flex flex-wrap items-center gap-2 sm:pl-[52px] overflow-hidden">
-                      {visibleEnrollments.map((enrollment, idx) => (
-                        <div
-                          key={idx}
-                          className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border border-slate-100 bg-slate-50 px-2 sm:px-3 py-1.5 sm:py-2 max-w-full overflow-hidden"
-                        >
-                          <BookOpen className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#F18231] shrink-0" />
-                          <span className="text-[10px] sm:text-xs font-semibold text-[#0F172A] truncate">
-                            {enrollment.course}
-                          </span>
-                          <span className="rounded bg-orange-50 px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[10px] font-bold text-[#F18231] shrink-0">
-                            {enrollment.track}
-                          </span>
-                          <span
-                            className={`rounded px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[10px] font-bold uppercase shrink-0 ${
-                              enrollment.status === 'Active'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-slate-100 text-slate-500'
-                            }`}
-                          >
-                            {enrollment.status}
-                          </span>
-                        </div>
-                      ))}
-                      {hasMultiple && (
-                        <span className="text-[10px] font-bold text-slate-400 shrink-0">
-                          +{student.enrollments.length - 1} more
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                      href={`/admin/students/${selected.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#F18231] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#d96f21] transition-colors"
+                    >
+                      Full Profile
+                      <ArrowUpRight className="h-3 w-3" />
+                    </Link>
+                    <button
+                      onClick={() => setSelectedId(null)}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Expanded Enrollment Details */}
-                {isExpanded && hasMultiple && (
-                  <div className="border-t border-slate-100 bg-slate-50/50 px-4 sm:px-5 py-3">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                      All Enrollments
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {student.enrollments.map((enrollment, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-start sm:items-center justify-between gap-2 sm:gap-3 rounded-lg border border-slate-200 bg-white p-3"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-semibold text-[#0F172A] truncate">
-                              {enrollment.course}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                              <span className="rounded bg-orange-50 px-1.5 py-0.5 text-[9px] font-bold text-[#F18231]">
-                                {enrollment.track} Track
-                              </span>
-                              <span className="text-[9px] text-slate-400">
-                                {new Date(enrollment.enrollment_date).toLocaleDateString(
-                                  'en-PK',
-                                  { day: '2-digit', month: 'short', year: 'numeric' }
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                          <span
-                            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase shrink-0 ${
-                              enrollment.status === 'Active'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-slate-100 text-slate-500'
-                            }`}
-                          >
-                            {enrollment.status}
+                {/* Meta Info */}
+                <div className="grid grid-cols-2 gap-px bg-slate-100 border-b border-slate-100">
+                  {[
+                    { label: 'Phone', value: selected.phone || '—' },
+                    { label: 'Education', value: selected.education || '—' },
+                    {
+                      label: 'Member Since',
+                      value: selected.joined_at
+                        ? new Date(selected.joined_at).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : '—',
+                    },
+                    { label: 'Enrollments', value: `${selected.enrollments.length} course${selected.enrollments.length !== 1 ? 's' : ''}` },
+                  ].map((item) => (
+                    <div key={item.label} className="bg-white px-4 py-3">
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{item.label}</p>
+                      <p className="text-xs font-semibold text-[#0F172A] mt-0.5 truncate">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Enrollments List */}
+                <div className="p-5 space-y-3">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Enrollments</p>
+                  <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
+                    {selected.enrollments.map((enr, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded-xl border border-slate-100 bg-slate-50/60 p-3.5 space-y-2"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-xs font-semibold text-[#0F172A] leading-snug flex-1 min-w-0">
+                            {enr.course}
+                          </p>
+                          <StatusBadge status={enr.status} />
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <TrackBadge track={enr.track} />
+                          <span className="text-[10px] text-slate-400">
+                            {new Date(enr.enrollment_date).toLocaleDateString('en-PK', {
+                              day: '2-digit', month: 'short', year: 'numeric',
+                            })}
                           </span>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                )}
+                </div>
+
+                {/* Footer */}
+                <div className="border-t border-slate-100 px-5 py-3">
+                  <Link
+                    href={`/admin/students/${selected.id}`}
+                    className="flex items-center justify-center gap-1.5 w-full rounded-xl border border-[#0F172A] bg-[#0F172A] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#1e293b] transition-colors"
+                  >
+                    View Full Student Profile
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               </div>
-            )
-          })}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
