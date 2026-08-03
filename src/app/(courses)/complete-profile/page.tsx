@@ -132,9 +132,9 @@ function CompleteProfileContent() {
         {/* Logo */}
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm">
-              <Image src="/logo1.jpg" alt="IT-vate Icon" width={40} height={40} className="object-cover" />
-            </div>
+            <Image src="/logo2.png" alt="IT-vate Icon" width={40} height={40} className="object-cover" />
+            {/* <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm">
+            </div> */}
             <div className="flex flex-col">
               <span className="text-base font-bold text-white tracking-tight leading-tight">IT-vate Solutions</span>
               <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">PLATFORM &amp; LMS</span>
@@ -187,9 +187,9 @@ function CompleteProfileContent() {
         {/* Mobile Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 lg:hidden bg-slate-50 shrink-0">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
-              <Image src="/logo1.jpg" alt="IT-vate Icon" width={32} height={32} className="object-cover" />
-            </div>
+            <Image src="/logo2.png" alt="IT-vate Icon" width={32} height={32} className="object-cover" />
+            {/* <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
+            </div> */}
             <span className="text-sm font-bold text-slate-900 tracking-tight">IT-vate Solutions</span>
           </Link>
         </div>

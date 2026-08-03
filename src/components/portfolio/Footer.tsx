@@ -19,9 +19,9 @@ export function PortfolioFooter() {
           {/* Col 1: Brand Info */}
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white text-[#F18231]">
-                <Image src="/logo1.jpg" alt="IT-vate Icon" width={40} height={40} className="object-cover" />
-              </div>
+              <Image src="/logo2.png" alt="IT-vate Icon" width={40} height={40} className="object-cover" />
+              {/* <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white text-[#F18231]">
+              </div> */}
               <span className="text-xl font-bold tracking-tight text-white">
                 IT-vate <span className="text-[#F18231]">Solutions</span>
               </span>
