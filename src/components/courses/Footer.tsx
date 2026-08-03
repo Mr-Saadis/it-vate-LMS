@@ -1,8 +1,19 @@
+'use client'
+
 import Link from 'next/link'
+import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { Activity } from 'lucide-react'
 import { FaGithub, FaLinkedin, FaYoutube } from 'react-icons/fa'
 
 export function DarkFooter() {
+  const pathname = usePathname()
+  
+  // Hide footer on login and signup pages
+  if (pathname === '/login' || pathname === '/signup') {
+    return null
+  }
+
   return (
     <footer className="border-t border-slate-800 bg-[#0b1120] text-slate-300">
       {/* Compact Main Footer Container */}
@@ -12,8 +23,8 @@ export function DarkFooter() {
           {/* Column 1: Brand & Social */}
           <div className="space-y-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F18231] shadow-sm">
-                <span className="text-xs font-black text-white">IT</span>
+              <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
+                <Image src="/logo1.jpg" alt="IT-vate Icon" width={28} height={28} className="object-cover" />
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-white tracking-tight">IT-vate Solutions</span>

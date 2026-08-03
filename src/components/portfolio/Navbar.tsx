@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Cpu, BookOpen, User } from 'lucide-react'
 
@@ -17,21 +18,11 @@ export function PortfolioNavbar() {
   ]
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6 lg:px-8">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#0F172A] text-white shadow-sm transition-transform group-hover:scale-105">
-            <Cpu className="h-6 w-6 text-[#F18231]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-bold tracking-tight text-[#0F172A]">
-              IT-vate <span className="text-[#F18231]">Solutions</span>
-            </span>
-            <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
-              Engineering & EdTech
-            </span>
-          </div>
+        <Link href="/" className="flex items-center group">
+          <Image src="/logo_h_c.png" alt="IT-vate Solutions" width={130} height={40} className="object-contain" />
         </Link>
 
         {/* Navigation Links */}

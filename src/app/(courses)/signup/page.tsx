@@ -127,53 +127,7 @@ function SignupFormContent() {
   )
 
   return (
-    <div className="min-h-screen bg-slate-50/60 flex flex-col justify-between -mt-16 z-50 relative">
-
-      {/* ── NAVY BLUE LMS TOP HEADER ── */}
-      <header className="sticky top-0 z-50 bg-slate-900 text-white border-b border-slate-800 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-
-          {/* Logo & Platform Name */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F18231] text-white font-black text-sm shadow-xs">
-              IT
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-tight text-white leading-tight">
-                IT-vate Solutions
-              </span>
-              <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
-                ACADEMY &amp; LMS
-              </span>
-
-            </div>
-          </Link>
-
-          {/* Center LMS Badge */}
-          <div className="hidden md:flex items-center gap-6 text-xs text-slate-300 font-medium">
-            <div className="flex items-center gap-1.5">
-              <BookOpen className="h-4 w-4 text-[#F18231]" />
-              <span>Interactive Embedded Labs</span>
-            </div>
-            <div className="h-3 w-px bg-slate-700" />
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" />
-              <span>CPDP Certified Engineering Tracks</span>
-            </div>
-          </div>
-
-          {/* Right Direct Login Link */}
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-400 hidden sm:inline">Already registered?</span>
-            <Link
-              href={`/login?redirect=${encodeURIComponent(redirectTarget)}`}
-              className="font-semibold text-white bg-slate-800 hover:bg-slate-700 px-3.5 py-1.5 rounded-lg transition-colors border border-slate-700"
-            >
-              Sign In
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-50/60 flex flex-col justify-between z-50 relative">
 
       {/* ── CENTERED MAIN CONTENT ── */}
       <main className="flex-1 my-8 px-4 sm:px-6 lg:px-8">

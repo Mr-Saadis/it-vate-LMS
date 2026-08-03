@@ -1,7 +1,17 @@
+'use client'
+
 import Link from 'next/link'
+import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { Cpu, Mail, Phone, MapPin } from 'lucide-react'
 
 export function PortfolioFooter() {
+  const pathname = usePathname()
+
+  if (pathname === '/login' || pathname === '/signup') {
+    return null
+  }
+
   return (
     <footer className="border-t border-slate-200 bg-[#0F172A] text-slate-300">
       <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
@@ -9,8 +19,8 @@ export function PortfolioFooter() {
           {/* Col 1: Brand Info */}
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800 text-[#F18231]">
-                <Cpu className="h-6 w-6" />
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white text-[#F18231]">
+                <Image src="/logo1.jpg" alt="IT-vate Icon" width={40} height={40} className="object-cover" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">
                 IT-vate <span className="text-[#F18231]">Solutions</span>
