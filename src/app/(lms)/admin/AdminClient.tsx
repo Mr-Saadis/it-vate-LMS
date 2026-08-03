@@ -8,6 +8,7 @@ import {
   Eye,
   ShieldCheck,
   Cpu,
+  Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -95,8 +96,8 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
         toast.info('Payment rejected')
         setPayments((prev) =>
           prev.map((p) =>
-            p.payment_id === rejectPaymentTarget.payment_id 
-              ? { ...p, status: 'Rejected', rejected_reason: rejectReason.trim() } 
+            p.payment_id === rejectPaymentTarget.payment_id
+              ? { ...p, status: 'Rejected', rejected_reason: rejectReason.trim() }
               : p
           )
         )
@@ -188,7 +189,7 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
               <p className="text-sm text-slate-600">
                 Approving this payment will generate a new enrollment for the current month.
               </p>
-              
+
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Target Classroom Batch ID
@@ -198,12 +199,12 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                     // Extract first letters of course name or default to CRS
                     const courseName = (approvePaymentTarget as any).enrollments?.[0]?.level?.course?.name || ''
                     const code = courseName ? courseName.split(' ').map((w: string) => w[0]).join('').toUpperCase() : 'CRS'
-                    
+
                     const now = new Date()
                     const year = now.getFullYear()
                     const month = String(now.getMonth() + 1).padStart(2, '0')
                     const levelNo = (approvePaymentTarget as any).enrollments?.[0]?.level?.no || 1
-                    
+
                     return `${code}${year}${month}L${levelNo}`
                   })()}
                 </div>
@@ -519,11 +520,10 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                       <td className="px-4 py-4">
                         <div>
                           <span
-                            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
-                              p.status === 'Verified'
+                            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${p.status === 'Verified'
                                 ? 'bg-green-100 text-green-700'
                                 : 'bg-red-100 text-red-700'
-                            }`}
+                              }`}
                           >
                             {p.status}
                           </span>

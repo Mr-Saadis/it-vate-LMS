@@ -34,7 +34,7 @@ export function CertificateClient({
       const canvas = await html2canvas(certificateRef.current, {
         scale: 2, // High resolution
         backgroundColor: '#ffffff',
-      })
+      } as any)
       
       const imgData = canvas.toDataURL('image/jpeg', 1.0)
       

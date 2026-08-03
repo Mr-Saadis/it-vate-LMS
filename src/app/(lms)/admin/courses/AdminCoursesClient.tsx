@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { createCourseAction, updateCourseAction, createLevelAction, updateLevelAction, deleteCourseAction, deleteLevelAction } from '@/lib/actions/courses'
-import { createClassroomLinkAction, deleteClassroomLinkAction } from '@/lib/actions/content_items'
+
 
 interface AdminCoursesClientProps {
   initialCourses: Course[]
@@ -34,6 +34,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
 
   const [isLevelModalOpen, setIsLevelModalOpen] = useState(false)
+  const [editingLevel, setEditingLevel] = useState<{ level: Level | null, courseId: string } | null>(null)
 
   // Link Modal state
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false)
@@ -76,7 +77,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
     setCourseForm({
       name: course.name,
       description: course.description,
-      category: course.category,
+      category: course.category || '',
       slug: course.slug,
       is_active: course.is_active
     })
@@ -98,7 +99,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
       level_description: level.level_description || '',
       price: level.price,
       no: level.no,
-      code: level.code,
+      code: level.code || '',
       is_active: level.is_active
     })
     setEditingLevel({ level, courseId })
@@ -179,10 +180,6 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
         const res = await deleteLevelAction(deletingItem.id)
         if (res.success) toast.success('Level deleted')
         else toast.error(res.error || 'Failed to delete level')
-      } else if (deletingItem.type === 'link') {
-        const res = await deleteClassroomLinkAction(deletingItem.id)
-        if (res.success) toast.success('Link deleted')
-        else toast.error(res.error || 'Failed to delete link')
       }
       setDeletingItem(null)
       setDeleteInput('')

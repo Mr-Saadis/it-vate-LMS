@@ -224,22 +224,12 @@ body {
   }
 }
 
-/* Custom Themed Scrollbar */
+/* Hide scrollbar completely for a cleaner UI */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  display: none;
 }
-::-webkit-scrollbar-track {
-  background: var(--navy-dark);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--navy-secondary);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--orange-accent);
-}
+
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--navy-secondary) var(--navy-dark);
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }

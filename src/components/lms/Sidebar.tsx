@@ -167,6 +167,15 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
               <Users className="h-4 w-4 shrink-0" />
               Students
             </Link>
+            {/* Nested student name when on detail page */}
+            {isOnStudentDetail && activeStudentName && (
+              <div className="ml-5 mt-0.5 flex items-center gap-1.5 rounded-lg px-3 py-2 bg-white/5">
+                <ChevronRight className="h-3 w-3 text-[#F18231] shrink-0" />
+                <span className="text-[11px] font-semibold text-white truncate">
+                  {activeStudentName}
+                </span>
+              </div>
+            )}
             <Link
               href="/admin/courses"
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${
@@ -178,15 +187,6 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
               <BookOpen className="h-4 w-4 shrink-0" />
               Courses
             </Link>
-            {/* Nested student name when on detail page */}
-            {isOnStudentDetail && activeStudentName && (
-              <div className="ml-5 mt-0.5 flex items-center gap-1.5 rounded-lg px-3 py-2 bg-white/5">
-                <ChevronRight className="h-3 w-3 text-[#F18231] shrink-0" />
-                <span className="text-[11px] font-semibold text-white truncate">
-                  {activeStudentName}
-                </span>
-              </div>
-            )}
           </>
         )}
       </nav>

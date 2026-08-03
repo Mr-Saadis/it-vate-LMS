@@ -13,6 +13,8 @@ import {
   Clock,
   ArrowRight,
   Mail,
+  Award,
+  Hash,
   Phone,
   GraduationCap,
   Briefcase,
@@ -310,73 +312,71 @@ export function DashboardClient({
                   </div>
 
                   {/* Level Stepper Timeline */}
-                  <div className="relative overflow-x-auto pb-4 hide-scrollbar">
-                    <div className="flex items-center min-w-max pr-4">
-                      {sortedLevels.map((lvl, idx) => {
-                        const isOwned = ownedLevels.includes(lvl.level_id)
-                        const isActive = activeLevelId === lvl.level_id
-                        const hasNext = idx < sortedLevels.length - 1
-                        const lvlData = enrolledLevelsData[lvl.level_id]
+                  <div className="flex items-center gap-3 overflow-x-auto pb-4 custom-scrollbar">
+                    {sortedLevels.map((lvl) => {
+                      const isOwned = ownedLevels.includes(lvl.level_id)
+                      const isActive = activeLevelId === lvl.level_id
+                      
+                      let bgClass = 'bg-slate-100 border-slate-200'
+                      let textClass = 'text-slate-500'
+                      let icon = <Hash className="h-4 w-4" />
 
-                        return (
-                          <div key={lvl.level_id} className="flex items-center">
-                            {/* Step Card */}
-                            <div
-                              onClick={() => handleLevelClick(courseId, lvl.level_id, isOwned)}
-                              className={`relative flex flex-col justify-between h-[85px] w-[170px] rounded-2xl border p-3.5 transition-all duration-300 ${
-                                isOwned 
-                                  ? 'cursor-pointer hover:shadow-sm hover:border-[#F18231]/40' 
-                                  : 'opacity-60 cursor-not-allowed bg-slate-50'
-                              } ${
-                                isActive
-                                  ? 'border-[#F18231] bg-orange-50/30 shadow-sm ring-1 ring-[#F18231]'
-                                  : 'border-slate-200 bg-white'
+                      if (isOwned) {
+                        if (isActive) {
+                          bgClass = 'bg-orange-50 border-[#F18231] hover:border-[#F18231]'
+                          textClass = 'text-[#F18231]'
+                          icon = <Clock className="h-4 w-4" />
+                        } else {
+                          bgClass = 'bg-orange-50 border-orange-300 hover:border-[#F18231]'
+                          textClass = 'text-[#F18231]'
+                          icon = <CheckCircle2 className="h-4 w-4" />
+                        }
+                      }
+
+                      return (
+                        <div key={lvl.level_id} className="flex items-center gap-3 shrink-0">
+                          {/* Level Box */}
+                          <div
+                            onClick={() => handleLevelClick(courseId, lvl.level_id, isOwned)}
+                            className={`flex flex-col justify-center w-40 h-24 rounded-xl border-2 p-3 transition-all ${
+                              isOwned ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'
+                            } ${bgClass}`}
+                          >
+                            <div className={`flex items-center justify-between mb-2 ${textClass}`}>
+                              <span className="text-[10px] font-bold uppercase tracking-wider">
+                                Level {lvl.no}
+                              </span>
+                              {icon}
+                            </div>
+                            <p className={`text-xs font-semibold leading-tight line-clamp-2 ${isOwned ? 'text-[#0F172A]' : 'text-slate-500'}`}>
+                              {lvl.level_title}
+                            </p>
+                          </div>
+
+                          {/* Certificate Button */}
+                          <div className="flex flex-col items-center justify-center w-12 gap-1">
+                            <div className={`h-0.5 w-full ${isOwned ? 'bg-[#F18231]' : 'bg-slate-200'}`} />
+                            <button
+                              title={`Certificate for Level ${lvl.no}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (isOwned) {
+                                  // Can optionally route to certificate view if needed
+                                }
+                              }}
+                              className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all shrink-0 ${
+                                isOwned
+                                  ? 'border-[#F18231] bg-orange-50 text-[#F18231] shadow-sm hover:scale-110'
+                                  : 'border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed'
                               }`}
                             >
-                              <div className="flex items-center justify-between">
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${
-                                  isActive ? 'text-[#F18231]' : 'text-slate-400'
-                                }`}>
-                                  Level {lvl.no}
-                                </span>
-                                {isActive ? (
-                                  <Clock className="h-3.5 w-3.5 text-[#F18231]" />
-                                ) : (
-                                  <span className="text-[12px] font-black text-slate-300">#</span>
-                                )}
-                              </div>
-                              <div className="space-y-1 mt-auto">
-                                <h4 className={`text-[11px] font-bold leading-snug line-clamp-2 ${
-                                  isActive ? 'text-[#0F172A]' : 'text-slate-400'
-                                }`}>
-                                  {lvl.level_title}
-                                </h4>
-                                {isOwned && lvlData?.started_at && (
-                                  <div className={`flex items-center text-[9px] font-semibold tracking-wide ${isActive ? 'text-[#F18231]' : 'text-slate-400'}`}>
-                                    <CalendarDays className="h-2.5 w-2.5 mr-1" />
-                                    {formatDate(lvlData.started_at)}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Connecting Line & Badge */}
-                            {hasNext && (
-                              <div className="flex items-center px-1">
-                                <div className="h-px w-5 bg-slate-200" />
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 shrink-0">
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-300">
-                                    <circle cx="12" cy="8" r="7"></circle>
-                                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
-                                  </svg>
-                                </div>
-                                <div className="h-px w-5 bg-slate-200" />
-                              </div>
-                            )}
+                              <Award className="h-4 w-4" />
+                            </button>
+                            <div className={`h-0.5 w-full ${isOwned ? 'bg-[#F18231]' : 'bg-slate-200'}`} />
                           </div>
-                        )
-                      })}
-                    </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )
