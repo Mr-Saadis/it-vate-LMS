@@ -4,14 +4,17 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/lib/actions/auth'
+import { useActiveStudent } from '@/components/lms/SidebarContext'
 import {
   LayoutDashboard,
   Award,
   Compass,
   LogOut,
   User,
+  Users,
   Menu,
   X,
+  ChevronRight,
 } from 'lucide-react'
 
 interface LMSSidebarProps {
@@ -35,6 +38,10 @@ const navItems = [
 export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSidebarProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const { activeStudentName } = useActiveStudent()
+
+  // Detect if on a student detail page (e.g. /admin/students/some-uuid)
+  const isOnStudentDetail = /^\/admin\/students\/[^/]+$/.test(pathname)
 
   return (
     <>
@@ -67,7 +74,7 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex h-screen w-56 shrink-0 flex-col bg-[#0F172A] transform transition-transform duration-300 md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex h-screen w-56 shrink-0 flex-col bg-[#0F172A] transform transition-transform duration-300 md:sticky md:top-0 md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Logo Area */}
         <div className="border-b border-white/10 px-5 py-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -154,14 +161,34 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
             <Link
               href="/admin"
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${
-                pathname.startsWith('/admin')
+                pathname === '/admin'
                   ? 'bg-[#F18231] text-white'
                   : 'text-slate-400 hover:bg-white/5 hover:text-white'
               }`}
             >
               <LayoutDashboard className="h-4 w-4 shrink-0" />
-              Admin Panel
+              Payment Verifications
             </Link>
+            <Link
+              href="/admin/students"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${
+                pathname.startsWith('/admin/students')
+                  ? 'bg-[#F18231] text-white'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <Users className="h-4 w-4 shrink-0" />
+              Students
+            </Link>
+            {/* Nested student name when on detail page */}
+            {isOnStudentDetail && activeStudentName && (
+              <div className="ml-5 mt-0.5 flex items-center gap-1.5 rounded-lg px-3 py-2 bg-white/5">
+                <ChevronRight className="h-3 w-3 text-[#F18231] shrink-0" />
+                <span className="text-[11px] font-semibold text-white truncate">
+                  {activeStudentName}
+                </span>
+              </div>
+            )}
           </>
         )}
       </nav>

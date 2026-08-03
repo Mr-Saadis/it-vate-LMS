@@ -38,6 +38,8 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
   const [generatedIds, setGeneratedIds] = useState<Record<string, string>>({})
   const [isPending, startTransition] = useTransition()
   const [actionTarget, setActionTarget] = useState<string | null>(null)
+  const [rejectPaymentTarget, setRejectPaymentTarget] = useState<Payment | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
 
   const handleApprove = (payment: Payment) => {
     setActionTarget(payment.payment_id)
@@ -67,12 +69,14 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
     })
   }
 
-  const handleReject = (payment: Payment) => {
-    setActionTarget(payment.payment_id)
+  const handleRejectConfirm = () => {
+    if (!rejectPaymentTarget || !rejectReason.trim()) return
+
+    setActionTarget(rejectPaymentTarget.payment_id)
     const fd = new FormData()
-    fd.append('payment_id', payment.payment_id)
-    fd.append('enroll_id', payment.enroll_id)
-    fd.append('reason', 'Payment could not be verified.')
+    fd.append('payment_id', rejectPaymentTarget.payment_id)
+    fd.append('enroll_id', rejectPaymentTarget.enroll_id)
+    fd.append('reason', rejectReason.trim())
 
     startTransition(async () => {
       const result = await rejectPayment(fd)
@@ -82,9 +86,11 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
         toast.info('Payment rejected')
         setPayments((prev) =>
           prev.map((p) =>
-            p.payment_id === payment.payment_id ? { ...p, status: 'Rejected' } : p
+            p.payment_id === rejectPaymentTarget.payment_id ? { ...p, status: 'Rejected' } : p
           )
         )
+        setRejectPaymentTarget(null)
+        setRejectReason('')
       }
       setActionTarget(null)
     })
@@ -150,6 +156,68 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
             >
               <XCircle className="h-5 w-5" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Payment Dialog */}
+      {rejectPaymentTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
+          <div
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 shrink-0">
+                <XCircle className="h-5 w-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-[#0F172A]">Reject Payment</h3>
+                <p className="text-xs text-slate-500">Provide a reason for rejection.</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <label
+                  htmlFor="rejectReason"
+                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500"
+                >
+                  Rejection Reason <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="rejectReason"
+                  rows={3}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="e.g., The transaction ID provided does not match our records."
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] placeholder-slate-400 focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231] transition-all resize-none"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setRejectPaymentTarget(null)
+                    setRejectReason('')
+                  }}
+                  disabled={isPending}
+                  className="text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleRejectConfirm}
+                  disabled={isPending || !rejectReason.trim()}
+                  variant="destructive"
+                  className="text-xs font-semibold"
+                >
+                  {isPending ? 'Rejecting...' : 'Confirm Rejection'}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -249,7 +317,10 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleReject(p)}
+                            onClick={() => {
+                              setRejectPaymentTarget(p)
+                              setRejectReason('')
+                            }}
                             disabled={isProcessing}
                             className="h-8 text-[11px]"
                           >
