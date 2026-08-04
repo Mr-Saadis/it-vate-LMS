@@ -19,6 +19,8 @@ import {
 import { toggleEnrollmentCompletionAction } from '@/lib/actions/admin'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 
 interface Enrollment {
   enroll_id: string
@@ -182,12 +184,12 @@ export function StudentsClient({ students }: StudentsClientProps) {
             <div className="flex flex-col sm:flex-row items-stretch gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
+                <Input
                   type="text"
                   placeholder="Search name, email or course…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs text-[#0F172A] placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F18231]/30 focus:border-[#F18231] transition-all"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-5 pl-10 pr-4 text-xs text-[#0F172A] placeholder:text-slate-400 shadow-sm focus-visible:ring-2 focus-visible:ring-[#F18231]/30 focus-visible:border-[#F18231] transition-all"
                 />
               </div>
               <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 shadow-sm">
@@ -374,12 +376,11 @@ export function StudentsClient({ students }: StudentsClientProps) {
                           </div>
                           
                           <label className="flex items-center gap-1.5 cursor-pointer bg-white border border-slate-200 px-2 py-1 rounded-md shadow-sm">
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               checked={enr.is_completed}
-                              onChange={() => handleToggleCompletion(enr.enroll_id, enr.is_completed)}
+                              onCheckedChange={(checked) => handleToggleCompletion(enr.enroll_id, !!checked)}
                               disabled={isPending}
-                              className="h-3 w-3 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 disabled:opacity-50"
+                              className="h-3.5 w-3.5 rounded border-slate-300 text-emerald-500 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white disabled:opacity-50"
                             />
                             <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Completed</span>
                           </label>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/lib/actions/auth'
 import { useActiveStudent, useActiveCourse } from '@/components/lms/SidebarContext'
@@ -58,15 +59,13 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
       {/* Mobile Header */}
       <div className="md:hidden flex w-full items-center justify-between bg-[#0F172A] px-5 py-4 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded bg-[#F18231]">
-            <span className="text-[10px] font-black text-white">IT</span>
-          </div>
+          <Image src="/logo2.png" alt="IT-vate LMS" width={28} height={28} className="rounded object-contain bg-white p-0.5" />
           <div className="leading-none">
             <span className="block text-xs font-black text-white tracking-tight">
               IT-vate LMS
             </span>
             <span className="block text-[9px] font-medium text-slate-500 uppercase tracking-widest">
-              Student Portal
+              {userRole === 'admin' ? 'Admin Portal' : 'Student Portal'}
             </span>
           </div>
         </div>
@@ -88,15 +87,13 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
         {/* Logo Area */}
         <div className="border-b border-white/10 px-5 py-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded bg-[#F18231]">
-              <span className="text-[10px] font-black text-white">IT</span>
-            </div>
+            <Image src="/logo2.png" alt="IT-vate LMS" width={28} height={28} className="rounded object-contain bg-white p-0.5" />
             <div className="leading-none">
               <span className="block text-xs font-black text-white tracking-tight">
                 IT-vate LMS
               </span>
               <span className="block text-[9px] font-medium text-slate-500 uppercase tracking-widest">
-                Student Portal
+                {userRole === 'admin' ? 'Admin Portal' : 'Student Portal'}
               </span>
             </div>
           </div>
@@ -178,11 +175,11 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
             </Link>
             {/* Nested student name when on detail page */}
             {isOnStudentDetail && activeStudentName && (
-              <div className="ml-5 mt-1 flex items-center gap-2 pl-3 border-l-2 border-slate-700">
-                <ChevronRight className="h-3 w-3 text-[#F18231] shrink-0" />
-                <span className="text-[11px] font-semibold text-white truncate">
-                  {activeStudentName}
-                </span>
+              <div className="flex flex-col gap-1 pl-4 mt-1">
+                <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-semibold bg-white/5 text-white border-l-2 border-[#F18231]">
+                  <ChevronRight className="h-3 w-3 text-[#F18231] shrink-0" />
+                  <span className="truncate">{activeStudentName}</span>
+                </div>
               </div>
             )}
             <Link
@@ -198,11 +195,11 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
             </Link>
             {/* Nested course name when on detail page */}
             {isOnCourseDetail && activeCourseName && (
-              <div className="ml-5 mt-1 flex items-center gap-2 pl-3 border-l-2 border-slate-700">
-                <ChevronRight className="h-3 w-3 text-[#F18231] shrink-0" />
-                <span className="text-[11px] font-semibold text-white truncate">
-                  {activeCourseName}
-                </span>
+              <div className="flex flex-col gap-1 pl-4 mt-1">
+                <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-semibold bg-white/5 text-white border-l-2 border-[#F18231]">
+                  <ChevronRight className="h-3 w-3 text-[#F18231] shrink-0" />
+                  <span className="truncate">{activeCourseName}</span>
+                </div>
               </div>
             )}
           </>
