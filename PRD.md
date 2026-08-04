@@ -38,9 +38,10 @@ The system utilizes Supabase. Key tables include:
 * **Experience:** `experience_id`, `user_id` (FK), `experience` (text), `experience_dates`. (Users can have multiple experiences).
 * **Course:** `course_id`, `name`, `description`, `is_active`, `slug`.
 * **Level:** `level_id`, `course_id` (FK), `price`, `no` (level number), `title`.
-* **Payment:** `payment_id`, `enroll_id` (FK), `amount`, `discount`, `total_amount`, `status` (Pending/Verified), `payment_proof` (URL from Supabase Storage).
-* **Enrollment:** `enroll_id`, `user_id` (FK), `status`, `enroll_no` (e.g., CPDP202607001), `level_id`.
-* *(AI Note: Refer to standard relational practices for linking `Enrolled_Courses`, `Payment_Courses`, and `Content_Items` as per typical LMS structures).*
+* **Payment:** `payment_id`, `user_id` (FK), `amount`, `discount`, `total_amount`, `status` (Pending/Verified), `payment_proof` (URL from Supabase Storage).
+* **Enrollment:** `enroll_id`, `user_id` (FK), `level_id` (FK), `status`, `enroll_no` (e.g., CPDP202607001).
+* **Payment Enrollments:** `payment_id` (FK), `enroll_id` (FK) (Junction table linking payments to multiple enrollments).
+* *(AI Note: Refer to standard relational practices for linking `Content_Items` as per typical LMS structures).*
 
 ---
 
