@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/lib/actions/auth'
-import { useActiveStudent } from '@/components/lms/SidebarContext'
+import { useActiveStudent, useActiveCourse } from '@/components/lms/SidebarContext'
 import {
   LayoutDashboard,
   Award,
@@ -46,9 +46,12 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const { activeStudentName } = useActiveStudent()
+  const { activeCourseName } = useActiveCourse()
 
   // Detect if on a student detail page (e.g. /admin/students/some-uuid)
   const isOnStudentDetail = /^\/admin\/students\/[^/]+$/.test(pathname)
+  // Detect if on a course detail page (e.g. /admin/courses/some-uuid)
+  const isOnCourseDetail = /^\/admin\/courses\/[^/]+$/.test(pathname)
 
   return (
     <>
@@ -175,7 +178,7 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
             </Link>
             {/* Nested student name when on detail page */}
             {isOnStudentDetail && activeStudentName && (
-              <div className="ml-5 mt-0.5 flex items-center gap-1.5 rounded-lg px-3 py-2 bg-white/5">
+              <div className="ml-5 mt-1 flex items-center gap-2 pl-3 border-l-2 border-slate-700">
                 <ChevronRight className="h-3 w-3 text-[#F18231] shrink-0" />
                 <span className="text-[11px] font-semibold text-white truncate">
                   {activeStudentName}
@@ -193,6 +196,15 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
               <BookOpen className="h-4 w-4 shrink-0" />
               Courses
             </Link>
+            {/* Nested course name when on detail page */}
+            {isOnCourseDetail && activeCourseName && (
+              <div className="ml-5 mt-1 flex items-center gap-2 pl-3 border-l-2 border-slate-700">
+                <ChevronRight className="h-3 w-3 text-[#F18231] shrink-0" />
+                <span className="text-[11px] font-semibold text-white truncate">
+                  {activeCourseName}
+                </span>
+              </div>
+            )}
           </>
         )}
       </nav>
