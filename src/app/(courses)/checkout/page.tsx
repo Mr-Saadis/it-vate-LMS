@@ -100,16 +100,62 @@ function CheckoutContent() {
     fd.append('level_id', primaryLevelId)
     fd.append('track_type', track)
     fd.append('levels', levelIds)
-    fd.append('amount', String(Number(amount) + Number(discount)))
-    fd.append('discount', discount)
-    fd.append('total_amount', amount)
-    if (couponId) fd.append('coupon_id', couponId)
+    
+    // total discount = initial discount + (new coupon discount if applied)
+    const currentDiscount = displayDiscount
+    const finalAmount = Math.max(0, Number(amount) - currentDiscount)
+    
+    fd.append('amount', String(Number(amount) + currentDiscount))
+    fd.append('discount', String(currentDiscount))
+    fd.append('total_amount', String(finalAmount))
+    
+    if (finalCouponId) fd.append('coupon_id', finalCouponId)
     if (fileObj) fd.set('payment_proof', fileObj)
 
     startTransition(async () => {
       const result = await submitPayment(fd)
       if (result?.error) toast.error(result.error)
     })
+  }
+
+  const [promoCode, setPromoCode] = useState('')
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false)
+  const [activeCouponState, setActiveCouponState] = useState<{id: string, code: string, discountAmount: number} | null | undefined>(undefined)
+
+  const displayDiscount = activeCouponState === undefined ? Number(discount) : (activeCouponState ? activeCouponState.discountAmount : 0)
+  const finalCouponId = activeCouponState === undefined ? couponId : (activeCouponState ? activeCouponState.id : '')
+  const displayCode = activeCouponState?.code || ''
+  const displayPercentage = Math.round((displayDiscount / Number(amount)) * 100) || 0
+  const finalTotalDue = Math.max(0, Number(amount) - displayDiscount)
+
+  const handleApplyPromo = async () => {
+    if (!promoCode) return
+    setIsApplyingPromo(true)
+    try {
+      const { validateCoupon } = await import('@/lib/actions/coupons')
+      const res = await validateCoupon(promoCode, courseId, track)
+      if (res.error) {
+        toast.error(res.error)
+        setActiveCouponState(null)
+      } else if (res.success && res.coupon_id && res.discount_percentage) {
+        toast.success(`Coupon applied! ${res.discount_percentage}% OFF`)
+        setActiveCouponState({
+          id: res.coupon_id,
+          code: promoCode.toUpperCase(),
+          discountAmount: Math.round(Number(amount) * (res.discount_percentage / 100))
+        })
+        setPromoCode('')
+      }
+    } catch (err: any) {
+      toast.error('Failed to validate coupon')
+    }
+    setIsApplyingPromo(false)
+  }
+
+  const handleRemovePromo = () => {
+    setActiveCouponState(null)
+    setPromoCode('')
+    toast.success('Coupon removed')
   }
 
   if (isAuthChecking) {
@@ -158,18 +204,66 @@ function CheckoutContent() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Subtotal:</span>
-                <span>PKR {(Number(amount) + Number(discount)).toLocaleString()}</span>
+                <span>PKR {Number(amount).toLocaleString()}</span>
               </div>
-              {Number(discount) > 0 && (
+              {displayDiscount > 0 && (
                 <div className="flex justify-between text-green-600 font-medium">
-                  <span>Discount Applied:</span>
-                  <span>-PKR {Number(discount).toLocaleString()}</span>
+                  <span>Discount Applied {displayCode ? `(${displayCode})` : ''} {displayPercentage > 0 && `— ${displayPercentage}%`}:</span>
+                  <span>-PKR {displayDiscount.toLocaleString()}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm font-extrabold text-[#0F172A] border-t border-slate-100 pt-3">
                 <span>Total Due:</span>
-                <span className="text-[#F18231]">PKR {Number(amount).toLocaleString()}</span>
+                <span className="text-[#F18231]">PKR {finalTotalDue.toLocaleString()}</span>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Promo Code section */}
+          <Card className="shadow-sm">
+            <CardHeader className="border-b border-slate-100 pb-3">
+              <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-[#0F172A]">
+                Promo Code
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {displayDiscount > 0 ? (
+                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-emerald-700">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase">
+                      {displayCode || 'COUPON APPLIED'} {displayPercentage > 0 && `(${displayPercentage}%)`}
+                    </span>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleRemovePromo}
+                    className="h-7 text-xs text-emerald-700 hover:text-emerald-800 hover:bg-emerald-100"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="Enter code" 
+                    value={promoCode} 
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    className="font-mono uppercase text-xs"
+                  />
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={handleApplyPromo}
+                    disabled={isApplyingPromo || !promoCode.trim()}
+                    className="text-xs shrink-0"
+                  >
+                    {isApplyingPromo ? 'Applying...' : 'Apply'}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
