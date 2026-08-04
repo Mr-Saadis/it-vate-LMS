@@ -8,7 +8,10 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createContentItemAction, deleteClassroomLinkAction } from '@/lib/actions/content_items'
+import { createLevelAction, updateLevelAction } from '@/lib/actions/courses'
 import { toggleContentItemCompletionAction } from '@/lib/actions/admin'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 const getAvatarHue = (name: string) => {
   let hash = 0
   for (let i = 0; i < name.length; i++) {
@@ -128,8 +131,8 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
     try {
       let finalTitle = linkForm.title
       if (linkForm.type === 'link') {
-        const codePrefix = linkTarget.courseSlug.split('-').map(w => w[0]).join('').toUpperCase() || 'CRS'
-        finalTitle = `${codePrefix}${linkForm.year}${linkForm.month}L${linkTarget.levelNo}`
+        const codePrefix = linkTarget.courseSlug.toUpperCase() || 'CRS'
+        finalTitle = `${codePrefix}-${linkForm.year}${linkForm.month}-L${linkTarget.levelNo}`
       }
       
       const res = await createContentItemAction({
@@ -155,21 +158,35 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
     }
   }
 
-  const saveLevel = () => {
+  const saveLevel = async () => {
     setIsSaving(true)
-    
-    startTransition(async () => {
-      try {
-        await new Promise(r => setTimeout(r, 500))
-        toast.success(editingLevel ? 'Level updated' : 'Level created')
-        setIsLevelModalOpen(false)
-        router.refresh()
-      } catch (error) {
-        toast.error('Failed to save level')
-      } finally {
-        setIsSaving(false)
+    try {
+      if (editingLevel) {
+        // Edit existing level
+        const res = await updateLevelAction(editingLevel.level_id, levelForm)
+        if (res.success) {
+          toast.success('Level updated')
+          setIsLevelModalOpen(false)
+          router.refresh()
+        } else {
+          toast.error(res.error || 'Failed to update level')
+        }
+      } else {
+        // Add new level
+        const res = await createLevelAction({ ...levelForm, course_id: course.course_id })
+        if (res.success) {
+          toast.success('Level created')
+          setIsLevelModalOpen(false)
+          router.refresh()
+        } else {
+          toast.error(res.error || 'Failed to add level')
+        }
       }
-    })
+    } catch (e: any) {
+      toast.error(e.message || 'An error occurred')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const executeDelete = () => {
@@ -205,6 +222,7 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
         const res = await toggleContentItemCompletionAction(itemId, !currentStatus)
         if (res.error) throw new Error(res.error)
         toast.success(currentStatus ? 'Marked as incomplete' : 'Marked as completed')
+        router.refresh()
       } catch (err: any) {
         toast.error(err.message || 'Failed to toggle completion status')
       }
@@ -485,16 +503,16 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                             )}
                           </div>
                           <div className="flex items-center gap-1 shrink-0 ml-2">
-                            <label className="flex items-center gap-1.5 cursor-pointer mr-2">
-                              <input
-                                type="checkbox"
+                            <div className="flex items-center gap-1.5 mr-2">
+                              <Switch
+                                id={`complete-${item.content_items_id}`}
                                 checked={!!item.is_completed}
-                                onChange={() => handleToggleContentItemCompletion(item.content_items_id, !!item.is_completed)}
+                                onCheckedChange={() => handleToggleContentItemCompletion(item.content_items_id, !!item.is_completed)}
                                 disabled={isPending}
-                                className="h-4 w-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 disabled:opacity-50"
+                                className="data-[state=checked]:bg-emerald-500"
                               />
-                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Completed</span>
-                            </label>
+                              <label htmlFor={`complete-${item.content_items_id}`} className="text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer">Completed</label>
+                            </div>
                             <Button 
                               variant="ghost" 
                               size="icon" 
@@ -577,12 +595,11 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                 />
               </div>
               <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
+                <Switch
                   id="levelActive"
                   checked={levelForm.is_active}
-                  onChange={(e) => setLevelForm({ ...levelForm, is_active: e.target.checked })}
-                  className="h-4 w-4 rounded border-slate-300 text-[#F18231] focus:ring-[#F18231]"
+                  onCheckedChange={(checked) => setLevelForm({ ...levelForm, is_active: checked })}
+                  className="data-[state=checked]:bg-[#F18231]"
                 />
                 <label htmlFor="levelActive" className="text-sm font-semibold text-[#0F172A]">Active Level</label>
               </div>
@@ -623,37 +640,38 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Year</label>
-                      <select 
-                        value={linkForm.year} 
-                        onChange={e => setLinkForm({...linkForm, year: e.target.value})}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231]"
-                      >
-                        {[0,1,2,3].map(i => {
-                          const y = new Date().getFullYear() + i
-                          return <option key={y} value={y}>{y}</option>
-                        })}
-                      </select>
+                      <Select value={linkForm.year} onValueChange={v => setLinkForm({...linkForm, year: v})}>
+                        <SelectTrigger className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231]">
+                          <SelectValue placeholder="Select Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[0, 1, 2, 3].map(i => {
+                            const y = String(new Date().getFullYear() + i)
+                            return <SelectItem key={y} value={y}>{y}</SelectItem>
+                          })}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Month</label>
-                      <select 
-                        value={linkForm.month} 
-                        onChange={e => setLinkForm({...linkForm, month: e.target.value})}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231]"
-                      >
-                        {Array.from({length: 12}).map((_, i) => {
-                          const m = String(i + 1).padStart(2, '0')
-                          return <option key={m} value={m}>{m}</option>
-                        })}
-                      </select>
+                      <Select value={linkForm.month} onValueChange={v => setLinkForm({...linkForm, month: v})}>
+                        <SelectTrigger className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231]">
+                          <SelectValue placeholder="Select Month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({length: 12}).map((_, i) => {
+                            const m = String(i + 1).padStart(2, '0')
+                            return <SelectItem key={m} value={m}>{m}</SelectItem>
+                          })}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
                   <div className="rounded-xl border border-[#F18231]/20 bg-[#F18231]/5 p-3">
                     <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#F18231]">Generated Batch ID</label>
                     <p className="font-mono text-sm font-bold text-[#0F172A]">
-                      {(linkTarget.courseSlug.split('-').map(w => w[0]).join('').toUpperCase() || 'CRS')}
-                      {linkForm.year}{linkForm.month}L{linkTarget.levelNo}
+                      {(linkTarget.courseSlug.toUpperCase() || 'CRS')}-{linkForm.year}{linkForm.month}-L{linkTarget.levelNo}
                     </p>
                     <p className="text-[10px] text-slate-500 mt-1">This ID must exactly match the student's enrollment string.</p>
                   </div>

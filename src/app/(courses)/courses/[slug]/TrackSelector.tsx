@@ -88,7 +88,8 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
 
   // --- Pricing ---
   const calculatePricing = () => {
-    const levels = activeCourse.levels || []
+    // Sort levels by level number (no) to ensure level 1 is first
+    const levels = [...(activeCourse.levels || [])].sort((a, b) => a.no - b.no)
     let basePrice = 0
 
     if (selectedTrack === 'Expert') {
@@ -140,13 +141,21 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
     setValidationError(null)
     setIsCheckingAuth(true)
 
+    const sortedLevels = [...(activeCourse.levels || [])].sort((a, b) => a.no - b.no)
+    let finalLevelIds = selectedLevelIds
+    if (selectedTrack === 'Progressive' && sortedLevels.length > 0) {
+      finalLevelIds = [sortedLevels[0].level_id]
+    } else if (selectedTrack === 'Expert' || selectedTrack === 'Premium') {
+      finalLevelIds = sortedLevels.map((l) => l.level_id)
+    }
+
     const checkoutParams = new URLSearchParams({
       course_id: activeCourse.course_id,
       slug: activeCourse.slug,
       track: selectedTrack,
       amount: pricing.finalPrice.toString(),
       discount: pricing.discountAmount.toString(),
-      levels: selectedLevelIds.join(','),
+      levels: finalLevelIds.join(','),
     })
     const checkoutUrl = `/checkout?${checkoutParams.toString()}`
 
@@ -174,7 +183,7 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
       const validation = validateTrackSelection(
         (existingEnrollments as any) || [], 
         selectedTrack, 
-        selectedLevelIds, 
+        finalLevelIds, 
         activeCourse.levels || []
       )
       

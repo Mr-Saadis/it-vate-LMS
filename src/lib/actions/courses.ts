@@ -16,7 +16,6 @@ async function verifyAdmin() {
 export async function createCourseAction(courseData: {
   name: string
   description: string
-  category: string
   slug: string
   is_active: boolean
 }) {
@@ -39,7 +38,6 @@ export async function createCourseAction(courseData: {
 export async function updateCourseAction(courseId: string, courseData: {
   name: string
   description: string
-  category: string
   slug: string
   is_active: boolean
 }) {
@@ -68,19 +66,13 @@ export async function createLevelAction(levelData: {
   level_description: string
   price: number
   is_active: boolean
-  year?: number
 }) {
   try {
     const supabase = await verifyAdmin()
-    // Ensure we set a year if not provided, assuming 2026 for now or null
-    const dataToInsert = { ...levelData }
-    if (!dataToInsert.year) {
-      dataToInsert.year = new Date().getFullYear()
-    }
-
+    
     const { data, error } = await supabase
       .from('levels')
-      .insert([dataToInsert])
+      .insert([levelData])
       .select()
       .single()
 
