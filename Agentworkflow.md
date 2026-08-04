@@ -54,8 +54,9 @@ erDiagram
     USER ||--o{ EXPERIENCE : "has multiple"
     USER ||--o{ ENROLLMENT : "purchases"
     USER ||--o{ PAYMENT : "makes"
+    COUPON ||--o{ PAYMENT : "applied to"
     COURSE ||--o{ LEVEL : "contains"
-    LEVEL ||--o{ ENROLLMENT : "enrolled in"
+    LEVEL ||--o{ ENROLLMENT : "referenced in"
     PAYMENT ||--o{ PAYMENT_ENROLLMENTS : "covers"
     ENROLLMENT ||--o{ PAYMENT_ENROLLMENTS : "included in"
 
@@ -102,6 +103,18 @@ erDiagram
         string status "Pending | Active | Completed | Rejected"
         string enroll_no UK "CPDP[YYYY][MM][Seq]"
         boolean is_completed
+    }
+
+    COUPON {
+        UUID coupon_id PK
+        TEXT code
+        NUMERIC discount_percentage
+        INTEGER usage_limit
+        INTEGER used_count
+        UUID applicable_course_id FK
+        TEXT applicable_track_type
+        TIMESTAMPTZ valid_until
+        BOOLEAN is_active
     }
 
     PAYMENT {
