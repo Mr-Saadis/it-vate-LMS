@@ -202,7 +202,7 @@ export const TRACK_OPTIONS: TrackOption[] = [
 export const MOCK_PENDING_PAYMENTS: (Payment & { user_name: string; user_email: string; course_name: string; track_type: string })[] = [
   {
     payment_id: 'pay-001',
-    enroll_id: 'enr-101',
+    user_id: 'usr-101',
     user_name: 'Muhammad Ali',
     user_email: 'ali.m@example.com',
     course_name: 'Embedded Systems & Firmware Engineering',
@@ -218,7 +218,7 @@ export const MOCK_PENDING_PAYMENTS: (Payment & { user_name: string; user_email: 
   },
   {
     payment_id: 'pay-002',
-    enroll_id: 'enr-102',
+    user_id: 'usr-102',
     user_name: 'Sara Khan',
     user_email: 'sara.k@example.com',
     course_name: 'Industrial IoT & Edge Intelligence',

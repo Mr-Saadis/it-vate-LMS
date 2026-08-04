@@ -50,6 +50,18 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
 
   // --- LIST VIEW ---
   if (!id) {
+    const groupedEnrollments = Object.values(
+      enrollments.reduce((acc: any, req: any) => {
+        const key = req.enroll_no || req.enroll_id
+        if (!acc[key]) {
+          acc[key] = { ...req, all_levels: [req.levels] }
+        } else {
+          acc[key].all_levels.push(req.levels)
+        }
+        return acc
+      }, {})
+    )
+
     return (
       <div className="flex flex-1 flex-col items-center px-4 md:px-8 py-8">
         <div className="mx-auto max-w-3xl w-full space-y-6">
@@ -59,7 +71,7 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
           </div>
           
           <div className="grid gap-3">
-            {enrollments.map((req) => {
+            {groupedEnrollments.map((req: any) => {
               const courseName = (req.levels as any)?.courses?.name || 'Unknown Course'
               const isPending = req.status === 'Pending'
               const isActive = req.status === 'Active'
@@ -112,18 +124,22 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
   }
 
   // --- DETAIL VIEW ---
-  const enrollment = enrollments.find(e => e.enroll_id === id) 
+  const initialEnrollment = enrollments.find(e => e.enroll_id === id) 
   
-  if (!enrollment) {
+  if (!initialEnrollment) {
     redirect('/dashboard/notifications')
   }
+
+  const groupKey = initialEnrollment.enroll_no || initialEnrollment.enroll_id
+  const groupEnrollments = enrollments.filter(e => (e.enroll_no || e.enroll_id) === groupKey)
+  const enrollment = groupEnrollments[0]
 
   const isActive = enrollment.status === 'Active'
   const isPending = enrollment.status === 'Pending'
   const isRejected = enrollment.status === 'Rejected'
 
   const courseName = (enrollment.levels as any)?.courses?.name || 'Your Course'
-  const levelTitle = (enrollment.levels as any)?.level_title || ''
+  const levelTitle = groupEnrollments.map(e => (e.levels as any)?.level_title).filter(Boolean).join(', ') || ''
 
   return (
     <div className="flex flex-1 flex-col px-4 md:px-8 py-8">
@@ -210,8 +226,8 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
               </div>
               {levelTitle && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Level:</span>
-                  <span className="font-semibold">{levelTitle}</span>
+                  <span className="text-slate-500">Levels Included ({groupEnrollments.length}):</span>
+                  <span className="font-semibold text-right max-w-[60%]">{levelTitle}</span>
                 </div>
               )}
               <div className="flex justify-between">
@@ -220,12 +236,19 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
               </div>
               
               {/* Payment Amount */}
-              {enrollment.payments && enrollment.payments[0] && typeof enrollment.payments[0].total_amount === 'number' && (
-                <div className="flex justify-between border-t border-slate-100 pt-2 mt-2">
-                  <span className="text-slate-500">Amount Paid:</span>
-                  <span className="font-semibold">Rs. {enrollment.payments[0].total_amount}</span>
-                </div>
-              )}
+              {(() => {
+                const p: any = enrollment.payment_enrollments?.[0]?.payments;
+                const totalAmount = Array.isArray(p) ? p[0]?.total_amount : p?.total_amount;
+                if (typeof totalAmount === 'number' || typeof totalAmount === 'string') {
+                  return (
+                    <div className="flex justify-between border-t border-slate-100 pt-2 mt-2">
+                      <span className="text-slate-500">Amount Paid:</span>
+                      <span className="font-semibold">Rs. {totalAmount}</span>
+                    </div>
+                  )
+                }
+                return null;
+              })()}
 
               <div className="flex justify-between border-t border-slate-100 pt-2 mt-2">
                 <span className="text-slate-500">Status:</span>
