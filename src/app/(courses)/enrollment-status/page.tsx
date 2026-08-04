@@ -31,6 +31,17 @@ export default async function EnrollmentStatusPage({ searchParams }: PageProps) 
     redirect('/login')
   }
 
+  // If user is admin, redirect to admin portal
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (profile?.role === 'admin') {
+    redirect('/admin')
+  }
+
   const enrollments = await getAllUserEnrollmentsStatus()
 
   // No enrollment at all — redirect to courses
