@@ -85,6 +85,7 @@ export async function submitPayment(formData: FormData) {
   const dbLevels = courseLevels || []
   let levelIdsToEnroll = [levelId]
 
+  const passedLevels = (formData.get('levels') as string || '').split(',').filter(Boolean)
   if (trackType === 'Expert') {
     // Expert track: sum all levels at 85% discount (15% off)
     const totalPrice = dbLevels.reduce((sum, l) => sum + Number(l.price), 0)
@@ -101,7 +102,6 @@ export async function submitPayment(formData: FormData) {
     canonicalAmount = Number(levelPrice) + 150
   } else if (trackType === 'Fast') {
     // Fast track: sum selected levels
-    const passedLevels = (formData.get('levels') as string || '').split(',').filter(Boolean)
     if (passedLevels.length > 0) {
       const selectedLevels = dbLevels.filter(l => passedLevels.includes(l.level_id))
       canonicalAmount = selectedLevels.reduce((sum, l) => sum + Number(l.price), 0)
@@ -110,7 +110,30 @@ export async function submitPayment(formData: FormData) {
   }
   // Progressive: just the first level price (default)
 
-  const totalAmount = Math.max(0, canonicalAmount)
+  let baseAmountForCoupon = canonicalAmount
+  let couponDiscount = 0
+  const couponId = formData.get('coupon_id') as string | null
+
+  if (couponId) {
+    const { data: coupon } = await supabase
+      .from('coupons')
+      .select('discount_percentage, used_count')
+      .eq('coupon_id', couponId)
+      .single()
+      
+    if (coupon) {
+      couponDiscount = Math.round(baseAmountForCoupon * (Number(coupon.discount_percentage) / 100))
+      
+      // Increment usage count
+      await supabase
+        .from('coupons')
+        .update({ used_count: coupon.used_count + 1 })
+        .eq('coupon_id', couponId)
+    }
+  }
+
+  const totalDiscount = discount + couponDiscount
+  const totalAmount = Math.max(0, canonicalAmount - couponDiscount)
 
   // 1. Upload payment proof to Supabase Storage
   const ext = proofFile.name.split('.').pop()?.toLowerCase() || 'jpg'
@@ -171,9 +194,10 @@ export async function submitPayment(formData: FormData) {
   // 4. Insert Payment record (no enroll_id, includes user_id)
   const { data: payment, error: paymentError } = await supabase.from('payments').insert({
     user_id: user.id,
-    amount: levelPrice,        // original price
-    discount,                    // server-calculated discount
-    total_amount: totalAmount,   // final price
+    coupon_id: couponId || null,
+    amount: canonicalAmount + discount,        // original price
+    discount: totalDiscount,                   // server-calculated discount
+    total_amount: totalAmount,                 // final price
     payment_method: 'Bank Transfer',
     transaction_reference: transactionRef,
     status: 'Pending',

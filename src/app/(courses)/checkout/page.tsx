@@ -34,6 +34,7 @@ function CheckoutContent() {
   const discount = searchParams.get('discount') || '0'
   const levelIds = searchParams.get('levels') || ''
   const courseId = searchParams.get('course_id') || ''
+  const couponId = searchParams.get('coupon_id') || ''
 
   const course = MOCK_COURSES.find((c) => c.slug === slug) || MOCK_COURSES[0]
   // Pick the first level id for enrollment (or the selected levels for Fast Track)
@@ -80,7 +81,7 @@ function CheckoutContent() {
     }
 
     checkAuthAndDuplicates()
-  }, [router, searchParams, levelIds, slug])
+  }, [router, searchParams, levelIds, slug, courseId, track, course.levels])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -102,6 +103,7 @@ function CheckoutContent() {
     fd.append('amount', String(Number(amount) + Number(discount)))
     fd.append('discount', discount)
     fd.append('total_amount', amount)
+    if (couponId) fd.append('coupon_id', couponId)
     if (fileObj) fd.set('payment_proof', fileObj)
 
     startTransition(async () => {

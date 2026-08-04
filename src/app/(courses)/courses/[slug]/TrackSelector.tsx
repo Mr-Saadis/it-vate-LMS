@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Check, ShieldCheck, ArrowRight, Lock, ChevronDown, X, Loader2, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { validateTrackSelection } from '@/lib/validations'
+import { validateCoupon } from '@/lib/actions/coupons'
 
 interface TrackSelectorProps {
   course: Course
@@ -25,6 +26,8 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
   )
   const [couponCode, setCouponCode] = useState('')
   const [discountPercent, setDiscountPercent] = useState(0)
+  const [appliedCouponId, setAppliedCouponId] = useState<string | null>(null)
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [showCourseModal, setShowCourseModal] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -35,7 +38,8 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
     setSelectedLevelIds(activeCourse.levels?.map((l) => l.level_id) || [])
     setDiscountPercent(0)
     setCouponCode('')
-  }, [activeCourse])
+    setAppliedCouponId(null)
+  }, [activeCourse, selectedTrack])
 
   // Close modal on outside click
   useEffect(() => {
@@ -123,15 +127,25 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
     }
   }
 
-  const applyCoupon = () => {
-    if (couponCode.trim().toUpperCase() === 'ITVATE10') {
-      setDiscountPercent(10)
-      toast.success('Coupon applied successfully! 10% discount.')
-    } else if (couponCode.trim().toUpperCase() === 'CPDP20') {
-      setDiscountPercent(20)
-      toast.success('Coupon applied successfully! 20% discount.')
-    } else {
-      toast.error('Invalid Coupon Code. Try "ITVATE10" or "CPDP20"')
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setDiscountPercent(0)
+      setAppliedCouponId(null)
+      return
+    }
+
+    setIsApplyingCoupon(true)
+    const res = await validateCoupon(couponCode, activeCourse.course_id, selectedTrack)
+    setIsApplyingCoupon(false)
+
+    if (res.error) {
+      toast.error(res.error)
+      setDiscountPercent(0)
+      setAppliedCouponId(null)
+    } else if (res.success && res.discount_percentage && res.coupon_id) {
+      setDiscountPercent(res.discount_percentage)
+      setAppliedCouponId(res.coupon_id)
+      toast.success(`Coupon applied successfully! ${res.discount_percentage}% discount.`)
     }
   }
 
@@ -157,6 +171,9 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
       discount: pricing.discountAmount.toString(),
       levels: finalLevelIds.join(','),
     })
+    if (appliedCouponId) {
+      checkoutParams.append('coupon_id', appliedCouponId)
+    }
     const checkoutUrl = `/checkout?${checkoutParams.toString()}`
 
     try {
@@ -387,9 +404,10 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
               />
               <button
                 onClick={applyCoupon}
-                className="shrink-0 rounded-lg bg-[#0b1120] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#1e293b] transition-colors"
+                disabled={isApplyingCoupon || !couponCode.trim()}
+                className="shrink-0 rounded-lg bg-[#0b1120] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#1e293b] transition-colors disabled:opacity-50"
               >
-                Apply
+                {isApplyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
               </button>
             </div>
           </div>

@@ -208,6 +208,17 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
                 </div>
               </div>
             )}
+            <Link
+              href="/admin/coupons"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${
+                pathname.startsWith('/admin/coupons')
+                  ? 'bg-[#F18231] text-white'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <Award className="h-4 w-4 shrink-0" />
+              Coupons
+            </Link>
           </>
         )}
       </nav>
