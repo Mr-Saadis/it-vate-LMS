@@ -1,13 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { Course, Level } from '@/lib/types'
 import { Plus, Edit2, ShieldCheck, ChevronDown, ChevronUp, Layers, Save, X, Loader2, Trash2, BookOpen, Clock, BarChart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useEffect } from 'react'
 import { createCourseAction, updateCourseAction, createLevelAction, updateLevelAction, deleteCourseAction, deleteLevelAction } from '@/lib/actions/courses'
 import { Switch } from '@/components/ui/switch'
 
@@ -19,6 +18,10 @@ interface AdminCoursesClientProps {
 export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) {
   const router = useRouter()
   const [courses, setCourses] = useState<Course[]>(initialCourses)
+
+  useEffect(() => {
+    setCourses(initialCourses)
+  }, [initialCourses])
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {

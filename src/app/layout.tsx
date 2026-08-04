@@ -11,6 +11,7 @@ const poppins = Poppins({
 });
 
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { RealtimeProvider } from "@/components/RealtimeProvider";
 
 export const metadata: Metadata = {
   title: "IT-vate Solutions | Engineering R&D & LMS Platform",
@@ -31,6 +32,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <RealtimeProvider />
           {children}
           <Toaster position="top-center" />
         </ThemeProvider>

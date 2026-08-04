@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { approvePayment, rejectPayment, getBatchPreviewAction } from '@/lib/actions/admin'
 import {
   CheckCircle2,
@@ -36,6 +36,11 @@ interface AdminClientProps {
 
 export function AdminClient({ payments: initialPayments }: AdminClientProps) {
   const [payments, setPayments] = useState<Payment[]>(initialPayments)
+
+  useEffect(() => {
+    setPayments(initialPayments)
+  }, [initialPayments])
+
   const [selectedProofUrl, setSelectedProofUrl] = useState<string | null>(null)
   const [generatedIds, setGeneratedIds] = useState<Record<string, string>>({})
   const [isPending, startTransition] = useTransition()

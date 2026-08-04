@@ -167,7 +167,7 @@ export function TrackSelector({ course: initialCourse }: TrackSelectorProps) {
       course_id: activeCourse.course_id,
       slug: activeCourse.slug,
       track: selectedTrack,
-      amount: pricing.finalPrice.toString(),
+      amount: pricing.basePrice.toString(),
       discount: pricing.discountAmount.toString(),
       levels: finalLevelIds.join(','),
     })

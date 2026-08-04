@@ -220,10 +220,10 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
               </div>
               
               {/* Payment Amount */}
-              {enrollment.payments && enrollment.payments[0] && typeof enrollment.payments[0].total_amount === 'number' && (
+              {((enrollment as any).payment_enrollments?.[0]?.payments as any)?.total_amount && (
                 <div className="flex justify-between border-t border-slate-100 pt-2 mt-2">
                   <span className="text-slate-500">Amount Paid:</span>
-                  <span className="font-semibold">Rs. {enrollment.payments[0].total_amount}</span>
+                  <span className="font-semibold">Rs. {((enrollment as any).payment_enrollments[0].payments as any).total_amount}</span>
                 </div>
               )}
 
