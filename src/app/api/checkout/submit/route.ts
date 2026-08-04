@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     const newPayment: Payment = {
       payment_id,
       created_at: new Date().toISOString(),
+      user_id,
       amount,
       discount,
       total_amount,

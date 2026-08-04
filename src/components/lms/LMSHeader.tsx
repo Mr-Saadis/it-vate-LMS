@@ -28,7 +28,19 @@ export function LMSHeader({ enrollments }: LMSHeaderProps) {
     router.push(`/dashboard/notifications?id=${enrollment.enroll_id}`)
   }
 
-  const badgeCount = enrollments.length
+  const groupedEnrollments = Object.values(
+    enrollments.reduce((acc: any, req: any) => {
+      const key = req.enroll_no || req.enroll_id
+      if (!acc[key]) {
+        acc[key] = { ...req, all_levels: [req.levels] }
+      } else {
+        acc[key].all_levels.push(req.levels)
+      }
+      return acc
+    }, {})
+  )
+
+  const badgeCount = groupedEnrollments.length
 
   return (
     <header className="flex h-16 items-center justify-between px-4 md:px-8 bg-slate-50 border-b border-slate-200/60 sticky top-0 z-40">
@@ -58,7 +70,7 @@ export function LMSHeader({ enrollments }: LMSHeaderProps) {
                   </h3>
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto space-y-1">
-                  {enrollments.map((req) => {
+                  {groupedEnrollments.map((req: any) => {
                     const courseName = req.levels?.courses?.name || 'Unknown Course'
                     const isPending = req.status === 'Pending'
                     const isActive = req.status === 'Active'

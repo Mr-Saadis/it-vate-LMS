@@ -114,7 +114,13 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
               Navigation
             </p>
             {navItems.map(({ href, label, icon: Icon }) => {
-              const isActive = pathname === href || pathname.startsWith(href + '/')
+              let isActive = false
+              if (href === '/dashboard') {
+                isActive = pathname === '/dashboard' || pathname.startsWith('/dashboard/level/')
+              } else {
+                isActive = pathname === href || pathname.startsWith(href + '/')
+              }
+              
               return (
                 <Link
                   key={href}

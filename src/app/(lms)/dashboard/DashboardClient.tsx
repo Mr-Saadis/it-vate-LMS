@@ -142,18 +142,14 @@ export function DashboardClient({
   // useEffect removed for initial active state
   const handleLevelClick = (courseId: string, levelId: string, isOwned: boolean, trackType: string, isLockedForExpert: boolean) => {
     if (isOwned) {
-      if (trackType === 'Expert') {
-        if (isLockedForExpert) {
-          toast.error("Please complete the previous level first.")
-          return
-        }
-        setActiveCourseLevels(prev => ({ 
-          ...prev, 
-          [courseId]: prev[courseId] === levelId ? '' : levelId 
-        }))
-      } else {
-        router.push(`/dashboard/level/${levelId}`)
+      if (trackType === 'Expert' && isLockedForExpert) {
+        toast.error("Please complete the previous level first.")
+        return
       }
+      setActiveCourseLevels(prev => ({ 
+        ...prev, 
+        [courseId]: prev[courseId] === levelId ? '' : levelId 
+      }))
     }
   }
 
@@ -289,7 +285,7 @@ export function DashboardClient({
 
               let nextUnlockableLevelId: string | null = null
               
-              if (trackType === 'Progressive') {
+              if (trackType === 'Progressive' || trackType === 'Fast') {
                 // Find highest completed level number
                 let highestCompletedNo = 0
                 for (const lvlId of ownedLevels) {
@@ -447,7 +443,7 @@ export function DashboardClient({
                                 const checkoutParams = new URLSearchParams({
                                   course_id: course.course_id,
                                   slug: course.slug,
-                                  track: 'Progressive',
+                                  track: trackType,
                                   amount: lvl.price.toString(),
                                   levels: lvl.level_id,
                                 })
@@ -506,8 +502,8 @@ export function DashboardClient({
                     })}
                   </div>
 
-                  {/* Inline Level Content for Expert Track */}
-                  {trackType === 'Expert' && activeLevelId && (
+                  {/* Inline Level Content for All Tracks */}
+                  {activeLevelId && (
                     (() => {
                       const activeLevelInfo = sortedLevels.find(l => l.level_id === activeLevelId)
                       const activeLevelData = enrolledLevelsData[activeLevelId]
