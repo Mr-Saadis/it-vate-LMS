@@ -234,9 +234,9 @@ function LoginFormContent() {
                   <label htmlFor="login-password" className="text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
                     Password
                   </label>
-                  <a href="#" className="text-xs font-semibold text-[#F18231] hover:text-[#d96f21] transition-colors">
+                  <Link href="/forgot-password" className="text-xs font-semibold text-[#F18231] hover:text-[#d96f21] transition-colors">
                     Forgot?
-                  </a>
+                  </Link>
                 </div>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
