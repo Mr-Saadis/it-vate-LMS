@@ -74,7 +74,9 @@ export async function getUserEnrollments() {
       .from('enrollments')
       .select(`
         *,
-        payments ( payment_id, status, total_amount ),
+        payment_enrollments (
+          payments ( payment_id, status, total_amount )
+        ),
         levels (
           level_id,
           no,
@@ -106,15 +108,17 @@ export async function getAllAdminPayments() {
       .from('payments')
       .select(`
         *,
-        enrollments (
-          enroll_id,
-          track_type,
-          status,
-          rejected_reason,
-          users ( name, email ),
-          levels (
-            level_title,
-            courses ( name )
+        users!payments_user_id_fkey ( name, email ),
+        payment_enrollments (
+          enrollments (
+            enroll_id,
+            track_type,
+            status,
+            rejected_reason,
+            levels (
+              level_title,
+              courses ( name )
+            )
           )
         )
       `)
@@ -213,7 +217,9 @@ export async function getAllUserEnrollmentsStatus() {
           level_title,
           courses ( name, slug )
         ),
-        payments ( total_amount )
+        payment_enrollments (
+          payments ( total_amount )
+        )
       `)
       .eq('user_id', user.id)
       .order('enrolled_at', { ascending: false })
