@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input"
 interface Enrollment {
   enroll_id: string
   course: string
+  level?: string
   track: string
   status: string
   is_completed: boolean
@@ -106,12 +107,12 @@ export function StudentsClient({ students }: StudentsClientProps) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
-  const handleToggleCompletion = (enrollId: string, currentStatus: boolean) => {
+  const handleToggleCompletion = (enrollId: string, newStatus: boolean) => {
     startTransition(async () => {
       try {
-        const res = await toggleEnrollmentCompletionAction(enrollId, !currentStatus)
+        const res = await toggleEnrollmentCompletionAction(enrollId, newStatus)
         if (res.error) throw new Error(res.error)
-        toast.success(currentStatus ? 'Marked as incomplete' : 'Marked as completed')
+        toast.success(newStatus ? 'Marked as completed' : 'Marked as incomplete')
         router.refresh()
       } catch (err: any) {
         toast.error(err.message || 'Failed to toggle completion status')
@@ -277,7 +278,7 @@ export function StudentsClient({ students }: StudentsClientProps) {
                           {student.enrollments[0] && (
                             <span className="hidden md:inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-200 px-2 py-1 text-[10px] font-medium text-slate-600 max-w-[160px] truncate">
                               <BookOpen className="h-3 w-3 text-[#F18231] shrink-0" />
-                              <span className="truncate">{student.enrollments[0].course}</span>
+                              <span className="truncate">{student.enrollments[0].course} {student.enrollments[0].level ? `- ${student.enrollments[0].level}` : ''}</span>
                             </span>
                           )}
                           {student.enrollments.length > 1 && (
@@ -361,7 +362,7 @@ export function StudentsClient({ students }: StudentsClientProps) {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-xs font-semibold text-[#0F172A] leading-snug flex-1 min-w-0">
-                            {enr.course}
+                            {enr.course} {enr.level && <span className="text-slate-400 font-normal ml-1">— {enr.level}</span>}
                           </p>
                           <StatusBadge status={enr.status} />
                         </div>

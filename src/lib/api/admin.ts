@@ -63,6 +63,7 @@ export async function getAllStudents() {
           enrolled_at,
           is_completed,
           levels (
+            level_title,
             courses (
               name
             )
@@ -85,6 +86,7 @@ export async function getAllStudents() {
       enrollments: (user.enrollments || []).map((enr: any) => ({
         enroll_id: enr.enroll_id,
         course: enr.levels?.courses?.name || 'Unknown Course',
+        level: enr.levels?.level_title || 'Unknown Level',
         track: enr.track_type || 'Unknown',
         status: enr.status || 'Inactive',
         is_completed: !!enr.is_completed,
