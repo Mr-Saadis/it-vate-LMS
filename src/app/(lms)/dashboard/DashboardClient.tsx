@@ -18,8 +18,30 @@ import {
   Phone,
   GraduationCap,
   Briefcase,
-  CalendarDays
+  CalendarDays,
+  PlayCircle,
+  FileText,
+  HardDrive,
+  Link as LinkIcon,
+  Code2
 } from 'lucide-react'
+import { toast } from 'sonner'
+
+const IconMap: Record<string, any> = {
+  video: PlayCircle,
+  pdf: FileText,
+  drive: HardDrive,
+  link: LinkIcon,
+  code: Code2,
+}
+
+const ColorMap: Record<string, string> = {
+  video: 'text-red-500 bg-red-50 border-red-100',
+  pdf: 'text-blue-500 bg-blue-50 border-blue-100',
+  drive: 'text-green-500 bg-green-50 border-green-100',
+  link: 'text-purple-500 bg-purple-50 border-purple-100',
+  code: 'text-slate-700 bg-slate-100 border-slate-200',
+}
 
 interface DashboardClientProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,39 +126,34 @@ export function DashboardClient({
   })
 
   const uniqueCourseIds = Object.keys(courseGroups)
+  
+  // Post-process to ensure Expert track has all levels owned
+  uniqueCourseIds.forEach(courseId => {
+    const group = courseGroups[courseId]
+    if (group.trackType === 'Expert') {
+      const allLevelIds = (group.course.levels || []).map(l => l.level_id)
+      group.ownedLevels = allLevelIds
+    }
+  })
+
   const totalCourses = uniqueCourseIds.length
 
-  // Initialize active level per course to the first owned level
-  useEffect(() => {
-    const initialActive: Record<string, string> = {}
-    uniqueCourseIds.forEach(cId => {
-      if (!activeCourseLevels[cId]) {
-        const owned = courseGroups[cId].ownedLevels
-        if (owned.length > 0) {
-          // Find lowest owned level number
-          const course = courseGroups[cId].course
-          const levels = course.levels || []
-          let lowest = owned[0]
-          let minNo = 999
-          owned.forEach(id => {
-            const l = levels.find(x => x.level_id === id)
-            if (l && l.no < minNo) {
-              minNo = l.no
-              lowest = id
-            }
-          })
-          initialActive[cId] = lowest
-        }
-      }
-    })
-    if (Object.keys(initialActive).length > 0) {
-      setActiveCourseLevels(prev => ({ ...prev, ...initialActive }))
-    }
-  }, [enrollments, allCourses])
-
-  const handleLevelClick = (courseId: string, levelId: string, isOwned: boolean) => {
+  // User must click a level to view its details (no level is active by default)
+  // useEffect removed for initial active state
+  const handleLevelClick = (courseId: string, levelId: string, isOwned: boolean, trackType: string, isLockedForExpert: boolean) => {
     if (isOwned) {
-      router.push(`/dashboard/level/${levelId}`)
+      if (trackType === 'Expert') {
+        if (isLockedForExpert) {
+          toast.error("Please complete the previous level first.")
+          return
+        }
+        setActiveCourseLevels(prev => ({ 
+          ...prev, 
+          [courseId]: prev[courseId] === levelId ? '' : levelId 
+        }))
+      } else {
+        router.push(`/dashboard/level/${levelId}`)
+      }
     }
   }
 
@@ -259,10 +276,10 @@ export function DashboardClient({
           <div className="space-y-8">
             {uniqueCourseIds.map(courseId => {
               const { course, trackType, ownedLevels, enrollNo } = courseGroups[courseId]
-              const activeLevelId = activeCourseLevels[courseId] || ownedLevels[0]
+              const activeLevelId = activeCourseLevels[courseId] || null
               
               // Find the classroom link from REAL content_items for the active level
-              const activeLevelData = enrolledLevelsData[activeLevelId]
+              const activeLevelData = activeLevelId ? enrolledLevelsData[activeLevelId] : undefined
               const activeItems = activeLevelData?.content_items || []
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const classroomItem = activeItems.find((i: any) => i.content_type === 'drive' || i.title.toLowerCase().includes('classroom'))
@@ -363,16 +380,55 @@ export function DashboardClient({
                         levelData.content_items?.some((i: any) => i.is_completed === true)
                       )
 
-                      if (isOwned) {
-                        bgClass = isActive 
-                          ? 'bg-orange-50 border-[#F18231] hover:border-[#F18231]' 
-                          : 'bg-orange-50 border-orange-300 hover:border-[#F18231]'
-                        textClass = 'text-[#F18231]'
+                      let isLockedForExpert = false;
+                      if (trackType === 'Expert') {
+                        const sortedOwnedLevels = [...ownedLevels].sort((aId, bId) => {
+                          const lA = sortedLevels.find(s => s.level_id === aId)
+                          const lB = sortedLevels.find(s => s.level_id === bId)
+                          return (lA?.no || 0) - (lB?.no || 0)
+                        })
                         
-                        if (isCompleted) {
-                          icon = <CheckCircle2 className="h-4 w-4" />
+                        const myIndex = sortedOwnedLevels.indexOf(lvl.level_id)
+                        if (myIndex > 0) {
+                          const prevLvlId = sortedOwnedLevels[myIndex - 1]
+                          const prevLvlData = enrolledLevelsData[prevLvlId]
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          const prevIsCompleted = prevLvlData && (
+                            prevLvlData.status === 'Completed' || 
+                            prevLvlData.is_completed === true || 
+                            prevLvlData.content_items?.some((i: any) => i.is_completed === true)
+                          )
+                          if (!prevIsCompleted) {
+                            isLockedForExpert = true;
+                          }
+                        }
+                      }
+
+                      if (isOwned) {
+                        if (trackType === 'Expert') {
+                          bgClass = isActive 
+                            ? 'bg-orange-50 border-[#F18231] hover:border-[#F18231]' 
+                            : 'bg-orange-50/50 border-orange-200 hover:border-orange-300'
+                          textClass = isActive ? 'text-[#F18231]' : 'text-orange-400/80'
+                          
+                          if (isCompleted) {
+                            icon = <CheckCircle2 className={`h-4 w-4 ${isActive ? 'text-[#F18231]' : 'text-orange-400/80'}`} />
+                          } else if (isLockedForExpert) {
+                            icon = <Lock className={`h-4 w-4 ${isActive ? 'text-[#F18231]' : 'text-orange-300/80'}`} />
+                          } else {
+                            icon = <Clock className={`h-4 w-4 ${isActive ? 'text-[#F18231]' : 'text-orange-400/80'}`} />
+                          }
                         } else {
-                          icon = <Clock className="h-4 w-4" />
+                          bgClass = isActive 
+                            ? 'bg-orange-50 border-[#F18231] hover:border-[#F18231]' 
+                            : 'bg-orange-50 border-orange-300 hover:border-[#F18231]'
+                          textClass = 'text-[#F18231]'
+                          
+                          if (isCompleted) {
+                            icon = <CheckCircle2 className="h-4 w-4" />
+                          } else {
+                            icon = <Clock className="h-4 w-4" />
+                          }
                         }
                       } else if (isNextUnlockable) {
                         bgClass = 'bg-orange-50 border-orange-400 ring-2 ring-[#F18231]/30 hover:bg-[#F18231] group'
@@ -386,7 +442,7 @@ export function DashboardClient({
                           <div
                             onClick={() => {
                               if (isOwned) {
-                                handleLevelClick(courseId, lvl.level_id, isOwned)
+                                handleLevelClick(courseId, lvl.level_id, isOwned, trackType, isLockedForExpert)
                               } else if (isNextUnlockable) {
                                 const checkoutParams = new URLSearchParams({
                                   course_id: course.course_id,
@@ -449,6 +505,86 @@ export function DashboardClient({
                       )
                     })}
                   </div>
+
+                  {/* Inline Level Content for Expert Track */}
+                  {trackType === 'Expert' && activeLevelId && (
+                    (() => {
+                      const activeLevelInfo = sortedLevels.find(l => l.level_id === activeLevelId)
+                      const activeLevelData = enrolledLevelsData[activeLevelId]
+                      const activeItems = activeLevelData?.content_items || []
+                      
+                      return (
+                        <div className="mt-8 border-t border-slate-100 pt-8 animate-in fade-in duration-300">
+                          <div className="mb-6 space-y-2">
+                            <h4 className="text-xl font-black text-[#0F172A] tracking-tight flex items-center gap-2">
+                              {activeLevelInfo?.level_title}
+                              <span className="rounded-md bg-orange-50 px-2 py-0.5 text-[10px] font-black text-[#F18231] uppercase tracking-widest">
+                                Level {activeLevelInfo?.no}
+                              </span>
+                            </h4>
+                            {activeLevelInfo?.level_description && (
+                              <p className="text-sm text-slate-500 max-w-3xl">
+                                {activeLevelInfo.level_description}
+                              </p>
+                            )}
+                          </div>
+
+                          <h5 className="text-[13px] font-extrabold text-[#0F172A] tracking-tight mb-4 flex items-center gap-2">
+                            Course Materials
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500 font-bold">{activeItems.length} items</span>
+                          </h5>
+
+                          {activeItems.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 border-dashed bg-slate-50/50 py-12 px-6 text-center">
+                              <BookOpen className="h-8 w-8 text-slate-300 mb-2" />
+                              <p className="text-sm font-bold text-slate-600">No materials available yet</p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {activeItems.map((item: any, idx: number) => {
+                                const Icon = IconMap[item.content_type] || FileText
+                                const colorClass = ColorMap[item.content_type] || ColorMap.link
+                                
+                                let itemUrl = item.url || '#'
+                                if (item.content_type === 'drive' && item.drive_file_id) {
+                                  itemUrl = item.drive_file_id.startsWith('http') ? item.drive_file_id : `https://drive.google.com/file/d/${item.drive_file_id}/view`
+                                } else if (item.content_type === 'video' && item.youtube_id) {
+                                  itemUrl = item.youtube_id.startsWith('http') ? item.youtube_id : `https://youtube.com/watch?v=${item.youtube_id}`
+                                }
+
+                                return (
+                                  <a
+                                    key={item.content_items_id}
+                                    href={itemUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`group flex items-start gap-3 rounded-xl border border-slate-200/60 bg-white p-3.5 transition-all duration-200 hover:shadow-md hover:border-slate-300 ${
+                                      itemUrl === '#' ? 'pointer-events-none opacity-70' : ''
+                                    }`}
+                                  >
+                                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${colorClass} transition-transform group-hover:scale-105`}>
+                                      <Icon className="h-4 w-4" />
+                                    </div>
+                                    
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                          {item.content_type}
+                                        </span>
+                                      </div>
+                                      <h6 className="text-[13px] font-bold text-[#0F172A] truncate group-hover:text-[#F18231] transition-colors" title={item.title}>
+                                        {item.title}
+                                      </h6>
+                                    </div>
+                                  </a>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })()
+                  )}
                 </div>
               )
             })}
