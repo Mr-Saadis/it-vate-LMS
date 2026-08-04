@@ -285,7 +285,7 @@ export function DashboardClient({
 
               let nextUnlockableLevelId: string | null = null
               
-              if (trackType === 'Progressive') {
+              if (trackType === 'Progressive' || trackType === 'Fast') {
                 // Find highest completed level number
                 let highestCompletedNo = 0
                 for (const lvlId of ownedLevels) {
@@ -443,7 +443,7 @@ export function DashboardClient({
                                 const checkoutParams = new URLSearchParams({
                                   course_id: course.course_id,
                                   slug: course.slug,
-                                  track: 'Progressive',
+                                  track: trackType,
                                   amount: lvl.price.toString(),
                                   levels: lvl.level_id,
                                 })
