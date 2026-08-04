@@ -60,6 +60,7 @@ export interface ContentItem {
   youtube_id?: string;
   is_free: boolean;
   order_no: number;
+  is_completed?: boolean;
   updated_at?: string;
 }
 
@@ -85,6 +86,7 @@ export interface Enrollment {
   rejected_reason?: string;
   updated_at?: string;
   track_type?: TrackType;
+  is_completed?: boolean;
 }
 
 export interface Payment {
