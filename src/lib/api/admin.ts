@@ -140,12 +140,14 @@ export async function getStudentById(userId: string) {
             slug
           )
         ),
-        payments (
-          payment_id,
-          status,
-          total_amount,
-          payment_method,
-          created_at
+        payment_enrollments (
+          payments (
+            payment_id,
+            status,
+            total_amount,
+            payment_method,
+            created_at
+          )
         )
       `)
       .eq('user_id', userId)
@@ -201,7 +203,7 @@ export async function getStudentById(userId: string) {
             approved_at: enrollmentForLevel.approved_at || '',
             enroll_no: enrollmentForLevel.enroll_no || '',
             rejected_reason: enrollmentForLevel.rejected_reason || '',
-            payment: enrollmentForLevel.payments?.[0] || null,
+            payment: enrollmentForLevel.payment_enrollments?.[0]?.payments || null,
           } : null
         }
       })

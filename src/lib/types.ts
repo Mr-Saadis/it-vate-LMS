@@ -92,7 +92,7 @@ export interface Enrollment {
 export interface Payment {
   payment_id: string;
   created_at?: string;
-  enroll_id: string; // FK to Enrollment.enroll_id
+  user_id: string; // FK to User.user_id
   amount: number;
   discount: number;
   total_amount: number;
@@ -103,6 +103,11 @@ export interface Payment {
   verified_by?: string; // FK to User.user_id
   verified_at?: string;
   notes?: string;
+}
+
+export interface PaymentEnrollment {
+  payment_id: string;
+  enroll_id: string;
 }
 
 export interface EnrolledCourse {

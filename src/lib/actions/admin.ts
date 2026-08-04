@@ -55,6 +55,34 @@ async function computeBatchId(supabase: Awaited<ReturnType<typeof createClient>>
   return { batchId, contentItemId: latestItem?.content_items_id || null }
 }
 
+// Helper: generate student roll number like PDAT-202608-001
+async function generateStudentRollNo(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const prefix = `PDAT-${year}${month}-`
+
+  // Find highest roll number for this month
+  const { data } = await supabase
+    .from('enrollments')
+    .select('enroll_no')
+    .like('enroll_no', `${prefix}%`)
+    .order('enroll_no', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  let nextSeq = 1
+  if (data && data.enroll_no) {
+    const lastSeqStr = data.enroll_no.replace(prefix, '')
+    const lastSeq = parseInt(lastSeqStr, 10)
+    if (!isNaN(lastSeq)) {
+      nextSeq = lastSeq + 1
+    }
+  }
+
+  return `${prefix}${String(nextSeq).padStart(3, '0')}`
+}
+
 export async function getBatchPreviewAction(enrollId: string) {
   const supabase = await createClient()
 
@@ -82,29 +110,22 @@ export async function approvePayment(formData: FormData) {
   }
 
   const paymentId = formData.get('payment_id') as string
-  const enrollId = formData.get('enroll_id') as string
 
-  if (!paymentId || !enrollId) {
-    return { error: 'Missing payment_id or enroll_id.' }
+  if (!paymentId) {
+    return { error: 'Missing payment_id.' }
   }
 
-  // 1. Get the level_id for this enrollment
-  const { data: currentEnroll } = await supabase
-    .from('enrollments')
-    .select('level_id')
-    .eq('enroll_id', enrollId)
-    .single()
+  // 1. Get all enrollments linked to this payment
+  const { data: paymentLinks, error: linksError } = await supabase
+    .from('payment_enrollments')
+    .select('enroll_id')
+    .eq('payment_id', paymentId)
 
-  if (!currentEnroll) {
-    return { error: 'Enrollment not found.' }
+  if (linksError || !paymentLinks || paymentLinks.length === 0) {
+    return { error: 'No enrollments found for this payment.' }
   }
 
-  // 2. Compute Batch ID dynamically
-  const { batchId, contentItemId } = await computeBatchId(supabase, currentEnroll.level_id)
-
-  if (!batchId) {
-    return { error: 'Failed to generate batch ID.' }
-  }
+  const enrollIds = paymentLinks.map(p => p.enroll_id)
 
   // Update payment status → Verified
   const { error: payErr } = await supabase
@@ -114,23 +135,53 @@ export async function approvePayment(formData: FormData) {
 
   if (payErr) return { error: payErr.message }
 
-  // Update enrollment status → Active + assign enroll_no and content_items_id
-  const { error: enrollErr } = await supabase
-    .from('enrollments')
-    .update({ 
-      status: 'Active', 
-      enroll_no: batchId, 
-      content_items_id: contentItemId,
-      approved_at: new Date().toISOString() 
-    })
-    .eq('enroll_id', enrollId)
+  const approvedBatchIds: string[] = []
 
-  if (enrollErr) {
-    return { error: enrollErr.message }
+  // Update all associated enrollments
+  for (const eId of enrollIds) {
+    const { data: currentEnroll } = await supabase
+      .from('enrollments')
+      .select('level_id, user_id')
+      .eq('enroll_id', eId)
+      .single()
+
+    if (currentEnroll) {
+      // 1. Fetch existing Roll Number for this student, or generate a new one
+      let studentRollNo = null;
+      const { data: existingRoll } = await supabase
+        .from('enrollments')
+        .select('enroll_no')
+        .eq('user_id', currentEnroll.user_id)
+        .not('enroll_no', 'is', null)
+        .limit(1)
+        .maybeSingle()
+
+      if (existingRoll && existingRoll.enroll_no) {
+        studentRollNo = existingRoll.enroll_no
+      } else {
+        // Generate a new Roll Number (e.g. PDAT-202608-001)
+        studentRollNo = await generateStudentRollNo(supabase)
+      }
+
+      // 2. Compute the Batch ID mapping
+      const { batchId, contentItemId } = await computeBatchId(supabase, currentEnroll.level_id)
+      
+      await supabase
+        .from('enrollments')
+        .update({ 
+          status: 'Active', 
+          enroll_no: studentRollNo, // Set the Roll Number
+          content_items_id: contentItemId, // Set the Batch ID
+          approved_at: new Date().toISOString() 
+        })
+        .eq('enroll_id', eId)
+        
+      if (batchId) approvedBatchIds.push(batchId)
+    }
   }
 
   revalidatePath('/admin')
-  return { success: true, enrollNo: batchId }
+  return { success: true, enrollNo: approvedBatchIds.join(', ') }
 }
 
 // ─── Reject Payment ──────────────────────────────────────────────────────────
@@ -145,22 +196,30 @@ export async function rejectPayment(formData: FormData) {
   }
 
   const paymentId = formData.get('payment_id') as string
-  const enrollId = formData.get('enroll_id') as string
   const reason = (formData.get('reason') as string) || 'Payment could not be verified.'
 
-  if (!paymentId || !enrollId) {
-    return { error: 'Missing payment_id or enroll_id.' }
+  if (!paymentId) {
+    return { error: 'Missing payment_id.' }
   }
+
+  const { data: paymentLinks } = await supabase
+    .from('payment_enrollments')
+    .select('enroll_id')
+    .eq('payment_id', paymentId)
+
+  const enrollIds = paymentLinks ? paymentLinks.map(p => p.enroll_id) : []
 
   await supabase
     .from('payments')
     .update({ status: 'Rejected', verified_by: user.id, verified_at: new Date().toISOString() })
     .eq('payment_id', paymentId)
 
-  await supabase
-    .from('enrollments')
-    .update({ status: 'Rejected', rejected_reason: reason })
-    .eq('enroll_id', enrollId)
+  if (enrollIds.length > 0) {
+    await supabase
+      .from('enrollments')
+      .update({ status: 'Rejected', rejected_reason: reason })
+      .in('enroll_id', enrollIds)
+  }
 
   revalidatePath('/admin')
   return { success: true }

@@ -75,29 +75,38 @@ export async function submitPayment(formData: FormData) {
   // Calculate canonical price server-side based on track
   let canonicalAmount = levelPrice
   let discount = 0
+  
+  // Fetch all levels for the course from DB to calculate prices correctly
+  const { data: courseLevels } = await supabase
+    .from('levels')
+    .select('level_id, price')
+    .eq('course_id', courseId)
+
+  const dbLevels = courseLevels || []
+  let levelIdsToEnroll = [levelId]
 
   if (trackType === 'Expert') {
-    // Expert track: sum all levels at 85% discount
-    const allLevelIds = (formData.get('levels') as string || '').split(',').filter(Boolean)
-    const allLevels = MOCK_COURSES
-      .flatMap((c) => (c.levels || []).map((l) => ({ ...l })))
-    const selectedLevels = allLevelIds.length > 0
-      ? allLevels.filter((l) => allLevelIds.includes(l.level_id))
-      : [{ price: levelPrice }]
-    const totalPrice = selectedLevels.reduce((sum, l) => sum + l.price, 0)
-    discount = Math.round(totalPrice * 0.15)
-    canonicalAmount = totalPrice - discount
+    // Expert track: sum all levels at 85% discount (15% off)
+    const totalPrice = dbLevels.reduce((sum, l) => sum + Number(l.price), 0)
+    
+    if (totalPrice > 0) {
+      discount = Math.round(totalPrice * 0.15)
+      canonicalAmount = totalPrice - discount
+      levelIdsToEnroll = dbLevels.map(l => l.level_id)
+    } else {
+      // Fallback
+      canonicalAmount = levelPrice * 5 * 0.85 
+    }
   } else if (trackType === 'Premium') {
-    canonicalAmount = levelPrice + 150
+    canonicalAmount = Number(levelPrice) + 150
   } else if (trackType === 'Fast') {
     // Fast track: sum selected levels
-    const allLevelIds = (formData.get('levels') as string || '').split(',').filter(Boolean)
-    const allLevels = MOCK_COURSES
-      .flatMap((c) => (c.levels || []).map((l) => ({ ...l })))
-    const selectedLevels = allLevelIds.length > 0
-      ? allLevels.filter((l) => allLevelIds.includes(l.level_id))
-      : [{ price: levelPrice }]
-    canonicalAmount = selectedLevels.reduce((sum, l) => sum + l.price, 0)
+    const passedLevels = (formData.get('levels') as string || '').split(',').filter(Boolean)
+    if (passedLevels.length > 0) {
+      const selectedLevels = dbLevels.filter(l => passedLevels.includes(l.level_id))
+      canonicalAmount = selectedLevels.reduce((sum, l) => sum + Number(l.price), 0)
+      levelIdsToEnroll = passedLevels
+    }
   }
   // Progressive: just the first level price (default)
 
@@ -142,28 +151,29 @@ export async function submitPayment(formData: FormData) {
     }
   }
 
-  // 2. Insert Enrollment record (status: Pending)
-  const { data: enrollment, error: enrollError } = await supabase
-    .from('enrollments')
-    .insert({
-      user_id: user.id,
-      level_id: levelId,
-      status: 'Pending',
-      track_type: trackType
-    })
-    .select()
-    .single()
+  // 3. Create all Enrollments (status: Pending)
+  const enrollmentsData = levelIdsToEnroll.map(id => ({
+    user_id: user.id,
+    level_id: id,
+    status: 'Pending',
+    track_type: trackType
+  }))
 
-  if (enrollError || !enrollment) {
+  const { data: createdEnrollments, error: enrollError } = await supabase
+    .from('enrollments')
+    .insert(enrollmentsData)
+    .select('enroll_id')
+
+  if (enrollError || !createdEnrollments || createdEnrollments.length === 0) {
     return { error: `Enrollment failed: ${enrollError?.message}` }
   }
 
-  // 3. Insert Payment record with server-calculated amounts
+  // 4. Insert Payment record (no enroll_id, includes user_id)
   const { data: payment, error: paymentError } = await supabase.from('payments').insert({
-    enroll_id: enrollment.enroll_id,
+    user_id: user.id,
     amount: levelPrice,        // original price
     discount,                    // server-calculated discount
-    total_amount: totalAmount,   // final price (server-calculated, not client-supplied)
+    total_amount: totalAmount,   // final price
     payment_method: 'Bank Transfer',
     transaction_reference: transactionRef,
     status: 'Pending',
@@ -176,20 +186,20 @@ export async function submitPayment(formData: FormData) {
     return { error: `Payment record failed: ${paymentError?.message}` }
   }
 
-  // 4. Insert into junction tables (Many-to-Many mapping)
-  const { error: enrollCourseErr } = await supabase.from('enrolled_courses').insert({
-    enroll_id: enrollment.enroll_id,
-    course_id: courseId,
-    user_id: user.id
-  })
-  if (enrollCourseErr) console.error('Failed to link enrolled_courses', enrollCourseErr)
-
-  const { error: paymentCourseErr } = await supabase.from('payment_courses').insert({
+  // 5. Link Payment to all created Enrollments
+  const paymentEnrollmentsData = createdEnrollments.map(enroll => ({
     payment_id: payment.payment_id,
-    course_id: courseId,
-    user_id: user.id
-  })
-  if (paymentCourseErr) console.error('Failed to link payment_courses', paymentCourseErr)
+    enroll_id: enroll.enroll_id
+  }))
+
+  const { error: linkErr } = await supabase
+    .from('payment_enrollments')
+    .insert(paymentEnrollmentsData)
+
+  if (linkErr) {
+    console.error('Failed to link payment to enrollments', linkErr)
+    return { error: `Payment linking failed: ${linkErr.message}` }
+  }
 
   const { revalidatePath } = await import('next/cache')
   revalidatePath('/', 'layout')
