@@ -29,8 +29,9 @@ import {
 import { createClient } from '@/lib/supabase/server'
 
 import { MOCK_COURSES } from '@/lib/mockData'
-
 import { CircuitGraphic } from '@/components/courses/CircuitGraphic'
+import { getAllUserEnrollmentsStatus } from '@/lib/api/courses'
+import { HeroNavbarClient } from '@/components/courses/HeroNavbarClient'
 
 
 
@@ -81,21 +82,27 @@ export default async function CoursesLandingPage() {
 
 
     if (!error && data && data.length > 0) {
-
       courses = data
-
     }
-
   } catch {
-
     // DB not configured yet — use mock data
-
   }
 
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
+  // Fetch enrollments only if user is logged in
+  const enrollments = user ? await getAllUserEnrollmentsStatus() : []
+  let userRole = 'student'
+
+  if (user) {
+    const { data: userData } = await supabase.from('users').select('role').eq('user_id', user.id).single()
+    if (userData?.role) {
+      userRole = userData.role
+    }
+  }
 
   return (
-
     <>
 
       {/* 1. Hero Section (Compact Split Layout with High-Readability Contrast) */}
@@ -103,14 +110,14 @@ export default async function CoursesLandingPage() {
       <section className="relative overflow-hidden border-b border-slate-800 bg-[#0b1120] px-4 md:px-6 py-10 md:py-12 lg:px-8 lg:py-16">
 
         {/* Subtle grid mesh overlay */}
-
         <div className="absolute inset-0 bg-[radial-gradient(#F18231_1px,transparent_1px)] [background-size:24px_24px] opacity-5 pointer-events-none" />
 
-
-
         <div className="relative mx-auto max-w-7xl">
+          
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <HeroNavbarClient user={user} userRole={userRole} enrollments={enrollments as any} />
 
-          <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
+          <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 mt-4">
 
 
 
