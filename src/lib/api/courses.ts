@@ -297,7 +297,8 @@ export async function getAllCoursesWithLevelsAdmin(): Promise<Course[]> {
             content_items_id,
             title,
             url,
-            content_type
+            content_type,
+            is_completed
           )
         )
       `)
@@ -336,7 +337,8 @@ export async function getCourseByIdAdmin(id: string): Promise<Course | null> {
             content_items_id,
             title,
             url,
-            content_type
+            content_type,
+            is_completed
           )
         )
       `)

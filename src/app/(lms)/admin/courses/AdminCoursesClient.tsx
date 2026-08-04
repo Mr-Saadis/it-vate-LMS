@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { createCourseAction, updateCourseAction, createLevelAction, updateLevelAction, deleteCourseAction, deleteLevelAction } from '@/lib/actions/courses'
+import { Switch } from '@/components/ui/switch'
 
 
 interface AdminCoursesClientProps {
@@ -48,11 +49,9 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
   // Generate ID helper
   const generateId = (prefix: string) => `${prefix}-${Math.random().toString(36).substring(2, 9)}`
 
-  // Course Form State
   const [courseForm, setCourseForm] = useState({
     name: '',
     description: '',
-    category: '',
     slug: '',
     is_active: true
   })
@@ -68,7 +67,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
   })
 
   const openAddCourse = () => {
-    setCourseForm({ name: '', description: '', category: '', slug: '', is_active: true })
+    setCourseForm({ name: '', description: '', slug: '', is_active: true })
     setEditingCourse(null)
     setIsCourseModalOpen(true)
   }
@@ -77,7 +76,6 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
     setCourseForm({
       name: course.name,
       description: course.description,
-      category: course.category || '',
       slug: course.slug,
       is_active: course.is_active
     })
@@ -353,19 +351,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
                 />
               </div>
               
-              <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Category
-                </label>
-                <input
-                  type="text"
-                  value={courseForm.category}
-                  onChange={(e) => setCourseForm({ ...courseForm, category: e.target.value })}
-                  placeholder="e.g. Hardware Engineering"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] placeholder-slate-400 focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231]"
-                />
-              </div>
-              
+
               <div>
                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
                   Slug URL
@@ -392,12 +378,11 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
               </div>
               
               <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
+                <Switch
                   id="courseActive"
                   checked={courseForm.is_active}
-                  onChange={(e) => setCourseForm({ ...courseForm, is_active: e.target.checked })}
-                  className="h-4 w-4 rounded border-slate-300 text-[#F18231] focus:ring-[#F18231]"
+                  onCheckedChange={(checked) => setCourseForm({ ...courseForm, is_active: checked })}
+                  className="data-[state=checked]:bg-[#F18231]"
                 />
                 <label htmlFor="courseActive" className="text-sm font-semibold text-[#0F172A]">
                   Active (Visible to students)
@@ -495,12 +480,11 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
               </div>
               
               <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
+                <Switch
                   id="levelActive"
                   checked={levelForm.is_active}
-                  onChange={(e) => setLevelForm({ ...levelForm, is_active: e.target.checked })}
-                  className="h-4 w-4 rounded border-slate-300 text-[#F18231] focus:ring-[#F18231]"
+                  onCheckedChange={(checked) => setLevelForm({ ...levelForm, is_active: checked })}
+                  className="data-[state=checked]:bg-[#F18231]"
                 />
                 <label htmlFor="levelActive" className="text-sm font-semibold text-[#0F172A]">
                   Active Level
