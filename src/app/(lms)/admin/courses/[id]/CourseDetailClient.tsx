@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition, useMemo, useEffect } from 'react'
 import { Course, Level } from '@/lib/types'
 import { Plus, Edit2, ChevronRight, Layers, Save, X, Loader2, Trash2, ArrowLeft, Search, SlidersHorizontal, BookOpen, Clock, BarChart, FileText, PlayCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,8 @@ import { createLevelAction, updateLevelAction } from '@/lib/actions/courses'
 import { toggleContentItemCompletionAction } from '@/lib/actions/admin'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { useActiveCourse } from '@/components/lms/SidebarContext'
+
 const getAvatarHue = (name: string) => {
   let hash = 0
   for (let i = 0; i < name.length; i++) {
@@ -30,6 +32,13 @@ interface CourseDetailClientProps {
 
 export function CourseDetailClient({ course }: CourseDetailClientProps) {
   const router = useRouter()
+  const { setActiveCourseName } = useActiveCourse()
+
+  useEffect(() => {
+    setActiveCourseName(course.name)
+    return () => setActiveCourseName(null)
+  }, [course.name, setActiveCourseName])
+
   const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
@@ -640,7 +649,7 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Year</label>
-                      <Select value={linkForm.year} onValueChange={v => setLinkForm({...linkForm, year: v})}>
+                      <Select value={linkForm.year} onValueChange={v => setLinkForm({...linkForm, year: v || ''})}>
                         <SelectTrigger className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231]">
                           <SelectValue placeholder="Select Year" />
                         </SelectTrigger>
@@ -654,7 +663,7 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Month</label>
-                      <Select value={linkForm.month} onValueChange={v => setLinkForm({...linkForm, month: v})}>
+                      <Select value={linkForm.month} onValueChange={v => setLinkForm({...linkForm, month: v || ''})}>
                         <SelectTrigger className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231]">
                           <SelectValue placeholder="Select Month" />
                         </SelectTrigger>
