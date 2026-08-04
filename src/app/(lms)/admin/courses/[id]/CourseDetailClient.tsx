@@ -649,7 +649,7 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Year</label>
-                      <Select value={linkForm.year} onValueChange={v => setLinkForm({...linkForm, year: v})}>
+                      <Select value={linkForm.year} onValueChange={v => setLinkForm({...linkForm, year: v || ''})}>
                         <SelectTrigger className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231]">
                           <SelectValue placeholder="Select Year" />
                         </SelectTrigger>
@@ -663,7 +663,7 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Month</label>
-                      <Select value={linkForm.month} onValueChange={v => setLinkForm({...linkForm, month: v})}>
+                      <Select value={linkForm.month} onValueChange={v => setLinkForm({...linkForm, month: v || ''})}>
                         <SelectTrigger className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231]">
                           <SelectValue placeholder="Select Month" />
                         </SelectTrigger>
