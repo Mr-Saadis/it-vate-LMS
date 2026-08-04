@@ -27,22 +27,25 @@ export default async function AdminVerificationPage() {
   const realPayments = await getAllAdminPayments()
 
   // Normalise shape for AdminClient
-  const payments = realPayments.map((p: any) => ({
-    payment_id: p.payment_id,
-    enroll_id: p.enrollments?.enroll_id ?? p.enroll_id,
-    user_name: p.enrollments?.users?.name ?? 'Unknown',
-    user_email: p.enrollments?.users?.email ?? '',
-    course_name: p.enrollments?.levels?.courses?.name ?? 'Unknown Course',
-    track_type: p.enrollments?.track_type ?? 'Expert',
-    amount: p.amount,
-    discount: p.discount,
-    total_amount: p.total_amount,
-    transaction_reference: p.transaction_reference,
-    status: p.status,
-    payment_proof: p.payment_proof,
-    created_at: p.created_at,
-    rejected_reason: p.enrollments?.rejected_reason ?? null,
-  }))
+  const payments = realPayments.map((p: any) => {
+    const firstEnrollment = p.payment_enrollments?.[0]?.enrollments;
+    return {
+      payment_id: p.payment_id,
+      enroll_id: firstEnrollment?.enroll_id ?? null,
+      user_name: p.users?.name ?? 'Unknown',
+      user_email: p.users?.email ?? '',
+      course_name: firstEnrollment?.levels?.courses?.name ?? 'Unknown Course',
+      track_type: firstEnrollment?.track_type ?? 'Expert',
+      amount: p.amount,
+      discount: p.discount,
+      total_amount: p.total_amount,
+      transaction_reference: p.transaction_reference,
+      status: p.status,
+      payment_proof: p.payment_proof,
+      created_at: p.created_at,
+      rejected_reason: firstEnrollment?.rejected_reason ?? null,
+    };
+  })
 
   return <AdminClient payments={payments} />
 }
