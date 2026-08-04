@@ -74,21 +74,20 @@ CREATE TABLE IF NOT EXISTS public.enrollments (
   enroll_id       UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id         UUID        NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
   level_id        UUID        NOT NULL REFERENCES public.levels(level_id),
-  content_items_id UUID       REFERENCES public.content_items(content_items_id),
   track_type      TEXT        NOT NULL CHECK (track_type IN ('Expert', 'Progressive', 'Fast', 'Premium')),
   status          TEXT        NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Active', 'Completed', 'Rejected')),
   enroll_no       TEXT,       -- e.g. PDAT202607L1 (assigned on approval)
-  is_completed    BOOLEAN     DEFAULT false,
   enrolled_at     TIMESTAMPTZ DEFAULT now(),
   approved_at     TIMESTAMPTZ,
   rejected_reason TEXT,
-  updated_at      TIMESTAMPTZ DEFAULT now()
+  updated_at      TIMESTAMPTZ DEFAULT now(),
+  content_items_id UUID       REFERENCES public.content_items(content_items_id),
+  is_completed    BOOLEAN     DEFAULT false
 );
 
 -- ─── PAYMENTS TABLE ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.payments (
   payment_id            UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
-  enroll_id             UUID        NOT NULL REFERENCES public.enrollments(enroll_id) ON DELETE CASCADE,
   amount                NUMERIC(10,2) NOT NULL,
   discount              NUMERIC(10,2) NOT NULL DEFAULT 0,
   total_amount          NUMERIC(10,2) NOT NULL,
@@ -99,23 +98,15 @@ CREATE TABLE IF NOT EXISTS public.payments (
   verified_by           UUID        REFERENCES public.users(user_id),
   verified_at           TIMESTAMPTZ,
   notes                 TEXT,
-  created_at            TIMESTAMPTZ DEFAULT now()
+  created_at            TIMESTAMPTZ DEFAULT now(),
+  user_id               UUID        REFERENCES public.users(user_id)
 );
 
--- ─── ENROLLED COURSES TABLE ──────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.enrolled_courses (
-  enroll_id       UUID        NOT NULL REFERENCES public.enrollments(enroll_id) ON DELETE CASCADE,
-  course_id       UUID        NOT NULL REFERENCES public.courses(course_id) ON DELETE CASCADE,
-  user_id         UUID        NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
-  PRIMARY KEY (enroll_id, course_id)
-);
-
--- ─── PAYMENT COURSES TABLE ───────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.payment_courses (
+-- ─── PAYMENT ENROLLMENTS TABLE ───────────────────────────────
+CREATE TABLE IF NOT EXISTS public.payment_enrollments (
   payment_id      UUID        NOT NULL REFERENCES public.payments(payment_id) ON DELETE CASCADE,
-  course_id       UUID        NOT NULL REFERENCES public.courses(course_id) ON DELETE CASCADE,
-  user_id         UUID        NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
-  PRIMARY KEY (payment_id, course_id)
+  enroll_id       UUID        NOT NULL REFERENCES public.enrollments(enroll_id) ON DELETE CASCADE,
+  PRIMARY KEY (payment_id, enroll_id)
 );
 
 
@@ -130,8 +121,7 @@ ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.levels ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.enrollments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.enrolled_courses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.payment_courses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payment_enrollments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.content_items ENABLE ROW LEVEL SECURITY;
 
 -- Users: can read and update their own profile
@@ -183,9 +173,7 @@ CREATE POLICY "Admins can update enrollments"
 
 -- Payments: students see own, admins see all
 CREATE POLICY "Students see own payments"
-  ON public.payments FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.enrollments WHERE enroll_id = payments.enroll_id AND user_id = auth.uid())
-  );
+  ON public.payments FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Admins see all payments"
   ON public.payments FOR SELECT USING (
@@ -193,9 +181,7 @@ CREATE POLICY "Admins see all payments"
   );
 
 CREATE POLICY "Students can insert payment"
-  ON public.payments FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM public.enrollments WHERE enroll_id = payments.enroll_id AND user_id = auth.uid())
-  );
+  ON public.payments FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Admins can update payments"
   ON public.payments FOR UPDATE USING (
@@ -213,29 +199,21 @@ CREATE POLICY "Enrolled students can view content"
     )
   );
 
--- Enrolled Courses: students see own, admins see all
-CREATE POLICY "Students see own enrolled_courses"
-  ON public.enrolled_courses FOR SELECT USING (auth.uid() = user_id);
+-- Payment Enrollments: accessible to involved user/admin
+CREATE POLICY "Students see own payment_enrollments"
+  ON public.payment_enrollments FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.payments p WHERE p.payment_id = payment_enrollments.payment_id AND p.user_id = auth.uid())
+  );
 
-CREATE POLICY "Admins see all enrolled_courses"
-  ON public.enrolled_courses FOR SELECT USING (
+CREATE POLICY "Admins see all payment_enrollments"
+  ON public.payment_enrollments FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.users WHERE user_id = auth.uid() AND role = 'admin')
   );
 
-CREATE POLICY "Students can insert own enrolled_courses"
-  ON public.enrolled_courses FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- Payment Courses: students see own, admins see all
-CREATE POLICY "Students see own payment_courses"
-  ON public.payment_courses FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Admins see all payment_courses"
-  ON public.payment_courses FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.users WHERE user_id = auth.uid() AND role = 'admin')
+CREATE POLICY "Students can insert payment_enrollments"
+  ON public.payment_enrollments FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM public.payments p WHERE p.payment_id = payment_enrollments.payment_id AND p.user_id = auth.uid())
   );
-
-CREATE POLICY "Students can insert own payment_courses"
-  ON public.payment_courses FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================
 -- SUPABASE STORAGE BUCKET

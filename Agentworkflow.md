@@ -53,9 +53,11 @@ src/
 erDiagram
     USER ||--o{ EXPERIENCE : "has multiple"
     USER ||--o{ ENROLLMENT : "purchases"
+    USER ||--o{ PAYMENT : "makes"
     COURSE ||--o{ LEVEL : "contains"
     LEVEL ||--o{ ENROLLMENT : "enrolled in"
-    ENROLLMENT ||--o1 PAYMENT : "requires"
+    PAYMENT ||--o{ PAYMENT_ENROLLMENTS : "covers"
+    ENROLLMENT ||--o{ PAYMENT_ENROLLMENTS : "included in"
 
     USER {
         uuid user_id PK
@@ -95,14 +97,16 @@ erDiagram
         uuid enroll_id PK
         uuid user_id FK
         uuid level_id FK
+        uuid content_items_id FK
         string track_type "Expert | Progressive | Fast | Premium"
-        string status "Pending | Active | Completed"
+        string status "Pending | Active | Completed | Rejected"
         string enroll_no UK "CPDP[YYYY][MM][Seq]"
+        boolean is_completed
     }
 
     PAYMENT {
         uuid payment_id PK
-        uuid enroll_id FK
+        uuid user_id FK
         decimal amount
         decimal discount
         decimal total_amount
@@ -110,6 +114,11 @@ erDiagram
         string transaction_ref
         string payment_proof_url
         timestamp created_at
+    }
+
+    PAYMENT_ENROLLMENTS {
+        uuid payment_id PK, FK
+        uuid enroll_id PK, FK
     }
 ```
 
