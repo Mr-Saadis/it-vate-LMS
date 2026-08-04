@@ -142,18 +142,14 @@ export function DashboardClient({
   // useEffect removed for initial active state
   const handleLevelClick = (courseId: string, levelId: string, isOwned: boolean, trackType: string, isLockedForExpert: boolean) => {
     if (isOwned) {
-      if (trackType === 'Expert') {
-        if (isLockedForExpert) {
-          toast.error("Please complete the previous level first.")
-          return
-        }
-        setActiveCourseLevels(prev => ({ 
-          ...prev, 
-          [courseId]: prev[courseId] === levelId ? '' : levelId 
-        }))
-      } else {
-        router.push(`/dashboard/level/${levelId}`)
+      if (trackType === 'Expert' && isLockedForExpert) {
+        toast.error("Please complete the previous level first.")
+        return
       }
+      setActiveCourseLevels(prev => ({ 
+        ...prev, 
+        [courseId]: prev[courseId] === levelId ? '' : levelId 
+      }))
     }
   }
 
@@ -506,8 +502,8 @@ export function DashboardClient({
                     })}
                   </div>
 
-                  {/* Inline Level Content for Expert Track */}
-                  {trackType === 'Expert' && activeLevelId && (
+                  {/* Inline Level Content for All Tracks */}
+                  {activeLevelId && (
                     (() => {
                       const activeLevelInfo = sortedLevels.find(l => l.level_id === activeLevelId)
                       const activeLevelData = enrolledLevelsData[activeLevelId]
