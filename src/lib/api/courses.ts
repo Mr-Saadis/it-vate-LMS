@@ -218,7 +218,8 @@ export async function getAllUserEnrollmentsStatus() {
           courses ( name, slug )
         ),
         payment_enrollments (
-          payments ( total_amount )
+          payment_id,
+          payments ( payment_id, total_amount )
         )
       `)
       .eq('user_id', user.id)

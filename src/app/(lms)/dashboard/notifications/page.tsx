@@ -52,7 +52,8 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
   if (!id) {
     const groupedEnrollments = Object.values(
       enrollments.reduce((acc: any, req: any) => {
-        const key = req.enroll_no || req.enroll_id
+        const pId = req.payment_enrollments?.[0]?.payment_id || (Array.isArray(req.payment_enrollments?.[0]?.payments) ? req.payment_enrollments?.[0]?.payments[0]?.payment_id : req.payment_enrollments?.[0]?.payments?.payment_id)
+        const key = pId || req.enroll_no || req.enroll_id
         if (!acc[key]) {
           acc[key] = { ...req, all_levels: [req.levels] }
         } else {
@@ -130,8 +131,13 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
     redirect('/dashboard/notifications')
   }
 
-  const groupKey = initialEnrollment.enroll_no || initialEnrollment.enroll_id
-  const groupEnrollments = enrollments.filter(e => (e.enroll_no || e.enroll_id) === groupKey)
+  const initReq: any = initialEnrollment
+  const pId = initReq.payment_enrollments?.[0]?.payment_id || (Array.isArray(initReq.payment_enrollments?.[0]?.payments) ? initReq.payment_enrollments?.[0]?.payments[0]?.payment_id : initReq.payment_enrollments?.[0]?.payments?.payment_id)
+  const groupKey = pId || initReq.enroll_no || initReq.enroll_id
+  const groupEnrollments = enrollments.filter((e: any) => {
+    const eId = e.payment_enrollments?.[0]?.payment_id || (Array.isArray(e.payment_enrollments?.[0]?.payments) ? e.payment_enrollments?.[0]?.payments[0]?.payment_id : e.payment_enrollments?.[0]?.payments?.payment_id)
+    return (eId || e.enroll_no || e.enroll_id) === groupKey
+  })
   const enrollment = groupEnrollments[0]
 
   const isActive = enrollment.status === 'Active'

@@ -30,7 +30,8 @@ export function LMSHeader({ enrollments }: LMSHeaderProps) {
 
   const groupedEnrollments = Object.values(
     enrollments.reduce((acc: any, req: any) => {
-      const key = req.enroll_no || req.enroll_id
+      const pId = req.payment_enrollments?.[0]?.payment_id || (Array.isArray(req.payment_enrollments?.[0]?.payments) ? req.payment_enrollments?.[0]?.payments[0]?.payment_id : req.payment_enrollments?.[0]?.payments?.payment_id)
+      const key = pId || req.enroll_no || req.enroll_id
       if (!acc[key]) {
         acc[key] = { ...req, all_levels: [req.levels] }
       } else {

@@ -7,6 +7,7 @@ import { Bell, Clock, CheckCircle2, XCircle, ChevronRight, Menu, X, LogOut, Layo
 
 interface Enrollment {
   enroll_id: string
+  enroll_no?: string
   status: string
   track_type: string
   levels?: {
@@ -39,6 +40,19 @@ export function HeroNavbarClient({ user, userRole = 'student', enrollments }: He
   useEffect(() => {
     setMobileOpen(false)
   }, [router])
+
+  const groupedEnrollments = Object.values(
+    enrollments.reduce((acc: any, req: any) => {
+      const pId = req.payment_enrollments?.[0]?.payment_id || (Array.isArray(req.payment_enrollments?.[0]?.payments) ? req.payment_enrollments?.[0]?.payments[0]?.payment_id : req.payment_enrollments?.[0]?.payments?.payment_id)
+      const key = pId || req.enroll_no || req.enroll_id
+      if (!acc[key]) {
+        acc[key] = { ...req, all_levels: [req.levels] }
+      } else {
+        acc[key].all_levels.push(req.levels)
+      }
+      return acc
+    }, {})
+  )
 
   const handleRequestClick = (enrollment: Enrollment) => {
     setNotifOpen(false)
@@ -88,7 +102,7 @@ export function HeroNavbarClient({ user, userRole = 'student', enrollments }: He
       <div className="flex items-center gap-6 absolute -top-8 right-0 z-50 justify-end font-sans">
         {user ? (
           <div className="flex items-center gap-5">
-            {enrollments.length > 0 && (
+            {groupedEnrollments.length > 0 && (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setNotifOpen(!notifOpen)}
@@ -97,7 +111,7 @@ export function HeroNavbarClient({ user, userRole = 'student', enrollments }: He
                 >
                   <Bell className="h-5 w-5" />
                   <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#F18231] text-[9px] font-bold text-white shadow-sm ring-2 ring-[#0b1120]">
-                    {enrollments.length}
+                    {groupedEnrollments.length}
                   </span>
                 </button>
 
@@ -109,7 +123,7 @@ export function HeroNavbarClient({ user, userRole = 'student', enrollments }: He
                       </h3>
                     </div>
                     <div className="max-h-[60vh] overflow-y-auto space-y-1">
-                      {enrollments.map((req) => {
+                      {groupedEnrollments.map((req: any) => {
                         const courseName = req.levels?.courses?.name || 'Unknown Course'
                         const isPending = req.status === 'Pending'
                         const isActive = req.status === 'Active'
