@@ -396,15 +396,25 @@ export function DashboardClient({
                           <ArrowRight className="h-4 w-4 text-slate-400" />
                         </Link>
                       )}
-                      <a
-                        href={classroomUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#0F172A] px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-sm shadow-slate-900/10"
-                      >
-                        Join Google Classroom
-                        <ExternalLink className="h-4 w-4 text-[#F18231]" />
-                      </a>
+                      {trackType === 'Premium' ? (
+                        <a
+                          href="mailto:admin@it-vate.com"
+                          className="inline-flex items-center gap-2 rounded-xl bg-[#0F172A] px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-sm shadow-slate-900/10"
+                        >
+                          Contact Admin
+                          <ExternalLink className="h-4 w-4 text-[#F18231]" />
+                        </a>
+                      ) : (
+                        <a
+                          href={classroomUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-xl bg-[#0F172A] px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-sm shadow-slate-900/10"
+                        >
+                          Join Google Classroom
+                          <ExternalLink className="h-4 w-4 text-[#F18231]" />
+                        </a>
+                      )}
                     </div>
                   </div>
 
