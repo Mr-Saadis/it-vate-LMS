@@ -38,21 +38,28 @@ async function computeBatchId(supabase: Awaited<ReturnType<typeof createClient>>
   const slug = (levelData.courses as any)?.slug?.toUpperCase() || 'CRS'
   const levelNo = levelData.no
 
-  // 2. Get latest content item created_at
+  // 2. Get latest batch (item with start/end dates)
   const { data: latestItem } = await supabase
     .from('content_items')
-    .select('content_items_id, created_at')
+    .select('content_items_id, title')
     .eq('level_id', levelId)
+    .not('start_date', 'is', null)
+    .not('end_date', 'is', null)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
-  const dateToUse = latestItem?.created_at ? new Date(latestItem.created_at) : new Date()
+  if (latestItem?.title) {
+    return { batchId: latestItem.title, contentItemId: latestItem.content_items_id }
+  }
+
+  // Fallback if no batch link exists
+  const dateToUse = new Date()
   const year = dateToUse.getFullYear().toString()
   const month = String(dateToUse.getMonth() + 1).padStart(2, '0')
 
   const batchId = `${slug}${year}${month}L${levelNo}`
-  return { batchId, contentItemId: latestItem?.content_items_id || null }
+  return { batchId, contentItemId: null }
 }
 
 // Helper: generate student roll number like PDAT-202608-001
@@ -83,7 +90,7 @@ async function generateStudentRollNo(supabase: Awaited<ReturnType<typeof createC
   return `${prefix}${String(nextSeq).padStart(3, '0')}`
 }
 
-export async function getBatchPreviewAction(enrollId: string) {
+export async function getAvailableBatchesAction(enrollId: string) {
   const supabase = await createClient()
 
   const { data: enrollData } = await supabase
@@ -92,10 +99,17 @@ export async function getBatchPreviewAction(enrollId: string) {
     .eq('enroll_id', enrollId)
     .single()
 
-  if (!enrollData?.level_id) return 'UNKNOWN'
+  if (!enrollData?.level_id) return []
 
-  const { batchId } = await computeBatchId(supabase, enrollData.level_id)
-  return batchId || 'UNKNOWN'
+  const { data: batches } = await supabase
+    .from('content_items')
+    .select('content_items_id, title')
+    .eq('level_id', enrollData.level_id)
+    .not('start_date', 'is', null)
+    .not('end_date', 'is', null)
+    .order('created_at', { ascending: false })
+
+  return batches || []
 }
 
 // ─── Approve Payment ──────────────────────────────────────────────────────────
@@ -110,6 +124,8 @@ export async function approvePayment(formData: FormData) {
   }
 
   const paymentId = formData.get('payment_id') as string
+  const newBatchId = formData.get('new_batch_id') as string | null
+  const changeReason = formData.get('batch_change_reason') as string | null
 
   if (!paymentId) {
     return { error: 'Missing payment_id.' }
@@ -130,7 +146,12 @@ export async function approvePayment(formData: FormData) {
   // Update payment status → Verified
   const { error: payErr } = await supabase
     .from('payments')
-    .update({ status: 'Verified', verified_by: user.id, verified_at: new Date().toISOString() })
+    .update({ 
+      status: 'Verified', 
+      verified_by: user.id, 
+      verified_at: new Date().toISOString(),
+      ...(changeReason && changeReason.trim().length > 0 ? { notes: changeReason.trim() } : {})
+    })
     .eq('payment_id', paymentId)
 
   if (payErr) return { error: payErr.message }
@@ -141,7 +162,7 @@ export async function approvePayment(formData: FormData) {
   for (const eId of enrollIds) {
     const { data: currentEnroll } = await supabase
       .from('enrollments')
-      .select('level_id, user_id')
+      .select('level_id, user_id, content_items_id, track_type')
       .eq('enroll_id', eId)
       .single()
 
@@ -164,24 +185,63 @@ export async function approvePayment(formData: FormData) {
       }
 
       // 2. Compute the Batch ID mapping
-      const { batchId, contentItemId } = await computeBatchId(supabase, currentEnroll.level_id)
+      let finalContentItemId = currentEnroll.content_items_id
+      let finalBatchTitle = 'Unknown Batch'
+
+      // Check if the explicitly provided newBatchId belongs to THIS enrollment's level
+      if (newBatchId) {
+        const { data: bData } = await supabase
+          .from('content_items')
+          .select('level_id, title')
+          .eq('content_items_id', newBatchId)
+          .single()
+
+        if (bData && bData.level_id === currentEnroll.level_id) {
+          finalContentItemId = newBatchId
+          finalBatchTitle = bData.title
+        }
+      }
+
+      // If we STILL don't have a batch, but this is Level 1, we try to compute it as a fallback
+      if (!finalContentItemId) {
+         if (currentEnroll.track_type === 'Premium') {
+           finalContentItemId = null
+           finalBatchTitle = 'Premium Access (No Batch)'
+         } else {
+           const { data: levelData } = await supabase.from('levels').select('no').eq('level_id', currentEnroll.level_id).single()
+           if (levelData?.no === 1) {
+             const { batchId, contentItemId } = await computeBatchId(supabase, currentEnroll.level_id)
+             finalContentItemId = contentItemId
+             finalBatchTitle = batchId || 'Unknown Batch'
+           } else {
+             finalContentItemId = null
+             finalBatchTitle = 'Pending Selection'
+           }
+         }
+      } else if (finalContentItemId && finalContentItemId !== newBatchId) {
+         // If we used the original content_items_id, fetch its title
+         const { data: bData } = await supabase.from('content_items').select('title').eq('content_items_id', finalContentItemId).single()
+         if (bData?.title) finalBatchTitle = bData.title
+      }
       
       await supabase
         .from('enrollments')
         .update({ 
           status: 'Active', 
           enroll_no: studentRollNo, // Set the Roll Number
-          content_items_id: contentItemId, // Set the Batch ID
-          approved_at: new Date().toISOString() 
+          content_items_id: finalContentItemId, // Set the explicitly selected Batch ID
+          approved_at: new Date().toISOString(),
+          ...(finalContentItemId !== currentEnroll.content_items_id && changeReason ? { rejected_reason: changeReason.trim() } : {})
         })
         .eq('enroll_id', eId)
         
-      if (batchId) approvedBatchIds.push(batchId)
+      approvedBatchIds.push(finalBatchTitle)
     }
   }
 
   revalidatePath('/admin')
-  return { success: true, enrollNo: approvedBatchIds.join(', ') }
+  const uniqueBatchIds = Array.from(new Set(approvedBatchIds))
+  return { success: true, enrollNo: uniqueBatchIds.join(', ') }
 }
 
 // ─── Reject Payment ──────────────────────────────────────────────────────────

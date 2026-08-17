@@ -22,6 +22,7 @@ export async function submitPayment(formData: FormData) {
   const trackTypeRaw = formData.get('track_type') as string
   const transactionRef = (formData.get('transaction_reference') as string)?.trim()
   const proofFile = formData.get('payment_proof') as File
+  const batchId = (formData.get('batch_id') as string) || null
 
   // ── Input Validation ───────────────────────────────────────────────────────
 
@@ -99,7 +100,13 @@ export async function submitPayment(formData: FormData) {
       canonicalAmount = levelPrice * 5 * 0.85 
     }
   } else if (trackType === 'Premium') {
-    canonicalAmount = Number(levelPrice) + 150
+    const totalPrice = dbLevels.reduce((sum, l) => sum + Number(l.price), 0)
+    if (totalPrice > 0) {
+      canonicalAmount = totalPrice + 25000
+      levelIdsToEnroll = dbLevels.map(l => l.level_id)
+    } else {
+      canonicalAmount = (levelPrice * 5) + 25000
+    }
   } else if (trackType === 'Fast') {
     // Fast track: sum selected levels
     if (passedLevels.length > 0) {
@@ -175,11 +182,14 @@ export async function submitPayment(formData: FormData) {
   }
 
   // 3. Create all Enrollments (status: Pending)
-  const enrollmentsData = levelIdsToEnroll.map(id => ({
+  // Only the FIRST (lowest) level gets the selected batch; subsequent levels
+  // will have their batch selected from the student dashboard after completion.
+  const enrollmentsData = levelIdsToEnroll.map((id, index) => ({
     user_id: user.id,
     level_id: id,
     status: 'Pending',
-    track_type: trackType
+    track_type: trackType,
+    content_items_id: index === 0 ? (batchId || null) : null
   }))
 
   const { data: createdEnrollments, error: enrollError } = await supabase

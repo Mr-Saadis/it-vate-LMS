@@ -32,6 +32,7 @@ import { MOCK_COURSES } from '@/lib/mockData'
 import { CircuitGraphic } from '@/components/courses/CircuitGraphic'
 import { getAllUserEnrollmentsStatus } from '@/lib/api/courses'
 import { HeroNavbarClient } from '@/components/courses/HeroNavbarClient'
+import { UpcomingCohorts, CohortInfo } from '@/components/courses/UpcomingCohorts'
 
 
 
@@ -66,17 +67,11 @@ export default async function CoursesLandingPage() {
   let courses = MOCK_COURSES
 
   try {
-
     const supabase = await createClient()
-
     const { data, error } = await supabase
-
       .from('courses')
-
-      .select('*, levels(*)')
-
+      .select('*, levels(*, content_items(*))')
       .eq('is_active', true)
-
       .order('name')
 
 
@@ -100,6 +95,39 @@ export default async function CoursesLandingPage() {
     if (userData?.role) {
       userRole = userData.role
     }
+  }
+
+  let upcomingCohorts: CohortInfo[] = []
+  if (courses && courses !== MOCK_COURSES) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    for (const course of courses) {
+      if (!course.levels) continue
+      const hue = Math.abs(course.name.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0)) % 360
+      
+      for (const level of course.levels) {
+        if (!level.content_items) continue
+        for (const item of level.content_items) {
+          if (item.start_date && item.end_date) {
+            const startDate = new Date(item.start_date)
+            if (startDate >= today) {
+              upcomingCohorts.push({
+                content_items_id: item.content_items_id,
+                courseName: course.name,
+                levelTitle: level.level_title,
+                batchId: item.title,
+                startDate: item.start_date,
+                endDate: item.end_date,
+                hue
+              })
+            }
+          }
+        }
+      }
+    }
+    
+    upcomingCohorts.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
   }
 
   return (
@@ -242,8 +270,6 @@ export default async function CoursesLandingPage() {
         </div>
 
       </section>
-
-
 
       {/* 2. Course Catalog Section (Equal Height Cards & Micro-Badges) */}
 
@@ -435,7 +461,8 @@ export default async function CoursesLandingPage() {
 
       </section>
 
-
+      {/* Upcoming Cohorts Section */}
+      <UpcomingCohorts cohorts={upcomingCohorts} />
 
       {/* 3. Track System Section (Interactive Cards with Accessible Focus Rings) */}
 

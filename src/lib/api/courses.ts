@@ -18,7 +18,14 @@ export async function getActiveCourses(): Promise<Course[]> {
           price,
           code,
           is_active,
-          course_id
+          course_id,
+          content_items (
+            content_items_id,
+            title,
+            content_type,
+            start_date,
+            end_date
+          )
         )
       `)
       .eq('is_active', true)
@@ -47,7 +54,14 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
           price,
           code,
           is_active,
-          course_id
+          course_id,
+          content_items (
+            content_items_id,
+            title,
+            content_type,
+            start_date,
+            end_date
+          )
         )
       `)
       .eq('slug', slug)
@@ -115,6 +129,8 @@ export async function getAllAdminPayments() {
             track_type,
             status,
             rejected_reason,
+            content_items_id,
+            content_items ( title ),
             levels (
               level_title,
               courses ( name )
@@ -217,6 +233,8 @@ export async function getAllUserEnrollmentsStatus() {
           level_title,
           courses ( name, slug )
         ),
+        content_items_id,
+        content_items ( title ),
         payment_enrollments (
           payment_id,
           payments ( payment_id, total_amount )
@@ -305,7 +323,11 @@ export async function getAllCoursesWithLevelsAdmin(): Promise<Course[]> {
             title,
             url,
             content_type,
-            is_completed
+            is_completed,
+            start_date,
+            end_date,
+            drive_file_id,
+            youtube_id
           )
         )
       `)
@@ -345,7 +367,11 @@ export async function getCourseByIdAdmin(id: string): Promise<Course | null> {
             title,
             url,
             content_type,
-            is_completed
+            is_completed,
+            start_date,
+            end_date,
+            drive_file_id,
+            youtube_id
           )
         )
       `)

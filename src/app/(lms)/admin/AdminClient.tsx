@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
-import { approvePayment, rejectPayment, getBatchPreviewAction } from '@/lib/actions/admin'
+import { approvePayment, rejectPayment, getAvailableBatchesAction } from '@/lib/actions/admin'
 import {
   CheckCircle2,
   XCircle,
@@ -12,6 +12,13 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface Payment {
   payment_id: string
@@ -20,6 +27,8 @@ interface Payment {
   user_email: string
   course_name: string
   track_type: string
+  batch_title?: string | null
+  batch_id?: string | null
   amount: number
   discount: number
   total_amount: number
@@ -48,22 +57,60 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
   const [rejectPaymentTarget, setRejectPaymentTarget] = useState<Payment | null>(null)
   const [approvePaymentTarget, setApprovePaymentTarget] = useState<Payment | null>(null)
   const [rejectReason, setRejectReason] = useState('')
-  const [batchPreview, setBatchPreview] = useState<string | null>(null)
+  const [availableBatches, setAvailableBatches] = useState<{content_items_id: string, title: string}[]>([])
+  const [selectedBatchId, setSelectedBatchId] = useState<string>('')
+  const [initialBatchId, setInitialBatchId] = useState<string>('')
+  const [batchChangeReason, setBatchChangeReason] = useState('')
+  const [isLoadingBatches, setIsLoadingBatches] = useState(false)
 
   const handleApproveClick = (payment: Payment) => {
     setApprovePaymentTarget(payment)
-    setBatchPreview(null)
-    getBatchPreviewAction(payment.enroll_id).then(setBatchPreview).catch(() => setBatchPreview('UNKNOWN'))
+    setAvailableBatches([])
+    setSelectedBatchId(payment.batch_id || '')
+    setInitialBatchId(payment.batch_id || '')
+    setBatchChangeReason('')
+    setIsLoadingBatches(true)
+    getAvailableBatchesAction(payment.enroll_id).then(batches => {
+      setAvailableBatches(batches)
+      setIsLoadingBatches(false)
+      // Default to student's selected batch if possible, otherwise first available
+      let initId = ''
+      if (payment.batch_id && batches.some(b => b.content_items_id === payment.batch_id)) {
+        initId = payment.batch_id
+      } else if (batches.length > 0) {
+        initId = batches[0].content_items_id
+      }
+      setSelectedBatchId(initId)
+      setInitialBatchId(initId)
+    }).catch(() => {
+      setIsLoadingBatches(false)
+    })
   }
 
   const handleApproveConfirm = () => {
     if (!approvePaymentTarget) return
     const payment = approvePaymentTarget
+
+    if (!selectedBatchId && approvePaymentTarget.track_type !== 'Premium') {
+      toast.error('Please select a target batch.')
+      return
+    }
+
+    const isBatchChanged = initialBatchId ? selectedBatchId !== initialBatchId : false
+    if (isBatchChanged && !batchChangeReason.trim() && approvePaymentTarget.track_type !== 'Premium') {
+      toast.error('Please provide a reason for changing the batch.')
+      return
+    }
+
     setApprovePaymentTarget(null)
     setActionTarget(payment.payment_id)
     const fd = new FormData()
     fd.append('payment_id', payment.payment_id)
     fd.append('enroll_id', payment.enroll_id)
+    fd.append('new_batch_id', selectedBatchId)
+    if (isBatchChanged) {
+      fd.append('batch_change_reason', batchChangeReason.trim())
+    }
 
     startTransition(async () => {
       const result = await approvePayment(fd)
@@ -153,7 +200,7 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
       {/* Proof Image Lightbox */}
       {selectedProofUrl && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
+          className="fixed inset-0 w-screen h-screen z-[9999] flex items-center justify-center bg-black/70 p-6"
           onClick={() => setSelectedProofUrl(null)}
         >
           <div
@@ -178,7 +225,7 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
 
       {/* Approve Payment Dialog */}
       {approvePaymentTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
+        <div className="fixed inset-0 w-screen h-screen z-[9999] flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
           <div
             className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
@@ -198,23 +245,66 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                 Approving this payment will generate a new enrollment for the current month.
               </p>
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Target Classroom Batch ID
-                </label>
-                <div className="font-mono text-sm font-bold text-[#0F172A] mb-1">
-                  {batchPreview === null ? (
-                    <span className="flex items-center gap-2 text-slate-400">
-                      <Loader2 className="h-3 w-3 animate-spin" /> Fetching...
-                    </span>
-                  ) : (
-                    batchPreview
-                  )}
+              {approvePaymentTarget?.track_type === 'Premium' ? (
+                <div className="rounded-xl border border-[#F18231]/20 bg-orange-50/50 p-5 text-center">
+                  <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
+                    <CheckCircle2 className="h-5 w-5 text-[#F18231]" />
+                  </div>
+                  <h4 className="text-sm font-bold text-[#0F172A] mb-1">Premium Track (1-on-1)</h4>
+                  <p className="text-[11px] font-medium text-slate-500 max-w-xs mx-auto">
+                    No batch assignment is required for the Premium track since it includes 1-on-1 mentorship.
+                  </p>
                 </div>
-                <p className="text-[10px] text-[#F18231] font-semibold">
-                  This ID is derived from the latest content uploaded for this level.
-                </p>
-              </div>
+              ) : (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Target Classroom Batch
+                  </label>
+                  {isLoadingBatches ? (
+                    <div className="flex items-center gap-2 text-slate-400 text-sm font-mono mb-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Fetching batches...
+                    </div>
+                  ) : availableBatches.length > 0 ? (
+                    <Select
+                      value={selectedBatchId}
+                      onValueChange={(val) => setSelectedBatchId(val)}
+                    >
+                      <SelectTrigger className="w-full h-10 border-slate-200 focus:border-[#F18231] focus:ring-[#F18231] mb-1 text-sm font-semibold text-[#0F172A] bg-white">
+                        <SelectValue placeholder="Select a batch">
+                          {availableBatches.find(b => b.content_items_id === selectedBatchId)?.title || "Select a batch"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableBatches.map(b => (
+                          <SelectItem key={b.content_items_id} value={b.content_items_id}>
+                            {b.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm text-red-500 font-semibold mb-1">No batches found for this level.</p>
+                  )}
+                  <p className="text-[10px] text-[#F18231] font-semibold mt-2">
+                    Select the correct batch to generate the CPDP enrollment ID.
+                  </p>
+                </div>
+              )}
+
+              {approvePaymentTarget?.track_type !== 'Premium' && initialBatchId && selectedBatchId !== initialBatchId && (
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Reason for Changing Batch <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={batchChangeReason}
+                    onChange={(e) => setBatchChangeReason(e.target.value)}
+                    placeholder="Explain why the batch was changed (sent to student)"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-[#0F172A] placeholder-slate-400 focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231] transition-all resize-none"
+                  />
+                </div>
+              )}
 
               <div className="flex justify-end gap-3 pt-2">
                 <Button
@@ -227,7 +317,14 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                 </Button>
                 <Button
                   onClick={handleApproveConfirm}
-                  disabled={isPending}
+                  disabled={
+                    isPending || 
+                    (approvePaymentTarget?.track_type !== 'Premium' && (
+                      isLoadingBatches || 
+                      !selectedBatchId || 
+                      (initialBatchId ? selectedBatchId !== initialBatchId && !batchChangeReason.trim() : false)
+                    ))
+                  }
                   className="text-xs font-semibold bg-[#F18231] hover:bg-[#d96f21]"
                 >
                   {isPending ? 'Approving...' : 'Confirm Approval'}
@@ -240,7 +337,7 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
 
       {/* Reject Payment Dialog */}
       {rejectPaymentTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
+        <div className="fixed inset-0 w-screen h-screen z-[9999] flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
           <div
             className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
@@ -344,9 +441,16 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                         <p className="font-semibold text-[#0F172A] max-w-[150px] truncate">
                           {p.course_name}
                         </p>
-                        <span className="rounded bg-orange-50 px-1.5 py-0.5 text-[10px] font-bold text-[#F18231]">
-                          {p.track_type} Track
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          <span className="rounded bg-orange-50 px-1.5 py-0.5 text-[10px] font-bold text-[#F18231]">
+                            {p.track_type} Track
+                          </span>
+                          {(p.batch_title || p.batch_id) && (
+                            <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600">
+                              Batch: {p.batch_title || p.batch_id?.slice(0, 8)}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4">
                         <p className="font-extrabold text-[#0F172A]">
@@ -483,9 +587,16 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                         <p className="font-semibold text-[#0F172A] max-w-[150px] truncate">
                           {p.course_name}
                         </p>
-                        <span className="rounded bg-orange-50 px-1.5 py-0.5 text-[10px] font-bold text-[#F18231]">
-                          {p.track_type} Track
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          <span className="rounded bg-orange-50 px-1.5 py-0.5 text-[10px] font-bold text-[#F18231]">
+                            {p.track_type} Track
+                          </span>
+                          {(p.batch_title || p.batch_id) && (
+                            <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600">
+                              Batch: {p.batch_title || p.batch_id?.slice(0, 8)}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4">
                         <p className="font-extrabold text-[#0F172A]">

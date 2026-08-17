@@ -36,6 +36,8 @@ export default async function AdminVerificationPage() {
       user_email: p.users?.email ?? '',
       course_name: firstEnrollment?.levels?.courses?.name ?? 'Unknown Course',
       track_type: firstEnrollment?.track_type ?? 'Expert',
+      batch_title: firstEnrollment?.content_items?.title ?? null,
+      batch_id: firstEnrollment?.content_items_id ?? null,
       amount: p.amount,
       discount: p.discount,
       total_amount: p.total_amount,

@@ -35,6 +35,9 @@ function CheckoutContent() {
   const levelIds = searchParams.get('levels') || ''
   const courseId = searchParams.get('course_id') || ''
   const couponId = searchParams.get('coupon_id') || ''
+  const batchId = searchParams.get('batch_id') || ''
+  const batchTitle = searchParams.get('batch_title') || ''
+  const [fetchedBatchTitle, setFetchedBatchTitle] = useState<string | null>(null)
 
   const course = MOCK_COURSES.find((c) => c.slug === slug) || MOCK_COURSES[0]
   // Pick the first level id for enrollment (or the selected levels for Fast Track)
@@ -77,6 +80,18 @@ function CheckoutContent() {
         }
       }
 
+      if (batchId && !batchTitle) {
+        const { data: batchData } = await supabase
+          .from('content_items')
+          .select('title')
+          .eq('content_items_id', batchId)
+          .single()
+        
+        if (batchData?.title) {
+          setFetchedBatchTitle(batchData.title)
+        }
+      }
+
       setIsAuthChecking(false)
     }
 
@@ -100,6 +115,8 @@ function CheckoutContent() {
     fd.append('level_id', primaryLevelId)
     fd.append('track_type', track)
     fd.append('levels', levelIds)
+    // Pass selected batch (content_items_id)
+    if (batchId) fd.append('batch_id', batchId)
     
     // total discount = initial discount + (new coupon discount if applied)
     const currentDiscount = displayDiscount
@@ -202,6 +219,14 @@ function CheckoutContent() {
                 <span className="text-slate-500">Track:</span>
                 <span className="font-bold text-[#F18231]">{track} Track</span>
               </div>
+              {track !== 'Premium' && (batchTitle || fetchedBatchTitle || batchId) && (
+                <div className="flex justify-between items-start gap-2">
+                  <span className="text-slate-500 shrink-0">Selected Batch:</span>
+                  <span className={`font-semibold text-right text-[11px] ${(batchTitle || fetchedBatchTitle) === 'Pending Assignment' ? 'text-amber-500 italic' : 'text-[#0F172A]'}`}>
+                    {batchTitle || fetchedBatchTitle || batchId.slice(0, 8)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-500">Subtotal:</span>
                 <span>PKR {Number(amount).toLocaleString()}</span>

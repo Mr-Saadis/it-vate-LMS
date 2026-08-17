@@ -202,16 +202,24 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
             )}
           </div>
 
-          {/* Rejection Reason */}
-          {isRejected && enrollment.rejected_reason && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-left">
+          {/* Reason Note */}
+          {enrollment.rejected_reason && (
+            <div className={`rounded-xl border p-5 text-left ${
+              isRejected ? 'border-red-200 bg-red-50' : 'border-blue-200 bg-blue-50'
+            }`}>
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                <AlertTriangle className={`h-5 w-5 shrink-0 mt-0.5 ${
+                  isRejected ? 'text-red-500' : 'text-blue-500'
+                }`} />
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-red-800 uppercase tracking-wider">
-                    Reason for Rejection
+                  <p className={`text-xs font-bold uppercase tracking-wider ${
+                    isRejected ? 'text-red-800' : 'text-blue-800'
+                  }`}>
+                    {isRejected ? 'Reason for Rejection' : 'Important Note'}
                   </p>
-                  <p className="text-sm text-red-700 leading-relaxed">
+                  <p className={`text-sm leading-relaxed ${
+                    isRejected ? 'text-red-700' : 'text-blue-700'
+                  }`}>
                     {enrollment.rejected_reason}
                   </p>
                 </div>
@@ -240,6 +248,13 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
                 <span className="text-slate-500">Track:</span>
                 <span className="font-bold text-[#F18231]">{enrollment.track_type} Track</span>
               </div>
+              
+              {isActive && enrollment.content_items?.title && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Assigned Batch:</span>
+                  <span className="font-semibold text-[#0F172A]">{enrollment.content_items.title}</span>
+                </div>
+              )}
               
               {/* Payment Amount */}
               {(() => {

@@ -2,16 +2,20 @@
 
 import { useState, useTransition, useMemo, useEffect } from 'react'
 import { Course, Level } from '@/lib/types'
-import { Plus, Edit2, ChevronRight, Layers, Save, X, Loader2, Trash2, ArrowLeft, Search, SlidersHorizontal, BookOpen, Clock, BarChart, FileText, PlayCircle } from 'lucide-react'
+import { Plus, Edit2, ChevronRight, Layers, Save, X, Loader2, Trash2, ArrowLeft, Search, SlidersHorizontal, BookOpen, Clock, BarChart, FileText, PlayCircle, CalendarIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createContentItemAction, deleteClassroomLinkAction } from '@/lib/actions/content_items'
+import { createContentItemAction, deleteClassroomLinkAction, getNextBatchSequenceAction, updateContentItemAction } from '@/lib/actions/content_items'
 import { createLevelAction, updateLevelAction } from '@/lib/actions/courses'
 import { toggleContentItemCompletionAction } from '@/lib/actions/admin'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import { format, parseISO } from 'date-fns'
+import { cn } from '@/lib/utils'
 import { useActiveCourse } from '@/components/lms/SidebarContext'
 
 const getAvatarHue = (name: string) => {
@@ -64,11 +68,24 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
     type: 'link' as 'link' | 'drive' | 'video',
     title: '',
     year: String(new Date().getFullYear()),
-    month: String(new Date().getMonth() + 1).padStart(2, '0'),
+    start_date: '',
+    end_date: '',
     url: '',
     drive_file_id: '',
     youtube_id: ''
   })
+  
+  const [editingLink, setEditingLink] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'link' | 'drive' | 'video'>('link')
+  const [previewSequence, setPreviewSequence] = useState<string>('01')
+
+  useEffect(() => {
+    if (isLinkModalOpen && linkTarget && linkForm.type === 'link') {
+      getNextBatchSequenceAction(linkTarget.levelId, linkForm.year).then(res => {
+        if (res.success && res.sequence) setPreviewSequence(res.sequence)
+      })
+    }
+  }, [isLinkModalOpen, linkTarget, linkForm.year, linkForm.type])
 
   // Delete State
   const [deletingItem, setDeletingItem] = useState<{ type: 'level' | 'link'; id: string; name: string } | null>(null)
@@ -117,44 +134,84 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
 
   // Open add link modal
   const openAddLink = (levelId: string, levelNo: number) => {
+    setEditingLink(null)
     setLinkTarget({ levelId, courseSlug: course.slug, levelNo })
     setLinkForm({
       type: 'link',
       title: '',
       year: String(new Date().getFullYear()),
-      month: String(new Date().getMonth() + 1).padStart(2, '0'),
+      start_date: '',
+      end_date: '',
       url: '',
       drive_file_id: '',
       youtube_id: ''
     })
+    setActiveTab('link')
+    setIsLinkModalOpen(true)
+  }
+
+  // Open edit link modal
+  const openEditLink = (item: any, levelId: string, levelNo: number) => {
+    setEditingLink(item.content_items_id)
+    setLinkTarget({ levelId, courseSlug: course.slug, levelNo })
+    
+    let year = String(new Date().getFullYear())
+    if (item.content_type === 'link' && item.title) {
+      const match = item.title.match(/-(\d{4})/)
+      if (match) year = match[1]
+    }
+    
+    setLinkForm({
+      type: item.content_type,
+      title: item.title || '',
+      year,
+      start_date: item.start_date || '',
+      end_date: item.end_date || '',
+      url: item.url || '',
+      drive_file_id: item.drive_file_id || '',
+      youtube_id: item.youtube_id || ''
+    })
+    setActiveTab(item.content_type === 'drive' ? 'drive' : item.content_type === 'video' ? 'video' : 'link')
     setIsLinkModalOpen(true)
   }
 
   const saveLink = async () => {
     if (!linkTarget) return
-    if (linkForm.type === 'link' && !linkForm.url) return
+    if (linkForm.type === 'link' && (!linkForm.url || !linkForm.start_date || !linkForm.end_date)) {
+      toast.error('URL, Start Date, and End Date are required for a batch link')
+      return
+    }
     if (linkForm.type === 'drive' && (!linkForm.title || !linkForm.drive_file_id)) return
     if (linkForm.type === 'video' && (!linkForm.title || !linkForm.youtube_id)) return
 
     setIsSaving(true)
     try {
       let finalTitle = linkForm.title
-      if (linkForm.type === 'link') {
+      if (linkForm.type === 'link' && !editingLink) {
         const codePrefix = linkTarget.courseSlug.toUpperCase() || 'CRS'
-        finalTitle = `${codePrefix}-${linkForm.year}${linkForm.month}-L${linkTarget.levelNo}`
+        finalTitle = `${codePrefix}-${linkForm.year}${previewSequence}-L${linkTarget.levelNo}`
       }
       
-      const res = await createContentItemAction({
+      const payload = {
         level_id: linkTarget.levelId,
         title: finalTitle,
         content_type: linkForm.type,
-        url: linkForm.type === 'link' ? linkForm.url : undefined,
-        drive_file_id: linkForm.type === 'drive' ? linkForm.drive_file_id : undefined,
-        youtube_id: linkForm.type === 'video' ? linkForm.youtube_id : undefined
-      })
+        url: linkForm.url || null,
+        drive_file_id: linkForm.drive_file_id || null,
+        youtube_id: linkForm.youtube_id || null,
+        start_date: linkForm.start_date || null,
+        end_date: linkForm.end_date || null
+      }
+
+      let res;
+      if (editingLink) {
+        res = await updateContentItemAction(editingLink, payload)
+      } else {
+        res = await createContentItemAction(payload)
+      }
 
       if (res.success) {
-        toast.success('Link added successfully')
+        toast.success(editingLink ? 'Link updated successfully' : 'Link added successfully')
         setIsLinkModalOpen(false)
         router.refresh()
       } else {
@@ -495,21 +552,23 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                               {item.content_type === 'video' && <PlayCircle className="h-3 w-3 text-red-500" />}
                               <span className={item.content_type === 'link' ? "font-mono tracking-tight" : "truncate max-w-[150px]"}>{item.title}</span>
                             </span>
-                            {item.content_type === 'link' && item.url && (
-                              <a href={item.url} target="_blank" rel="noreferrer" className="block text-xs font-medium text-blue-500 hover:underline max-w-[200px] sm:max-w-[250px] truncate">
-                                {item.url}
-                              </a>
-                            )}
-                            {item.content_type === 'drive' && item.drive_file_id && (
-                              <a href={item.drive_file_id.startsWith('http') ? item.drive_file_id : `https://drive.google.com/file/d/${item.drive_file_id}/view`} target="_blank" rel="noreferrer" className="block text-xs font-medium text-blue-500 hover:underline max-w-[200px] sm:max-w-[250px] truncate">
-                                View File
-                              </a>
-                            )}
-                            {item.content_type === 'video' && item.youtube_id && (
-                              <a href={item.youtube_id.startsWith('http') ? item.youtube_id : `https://youtube.com/watch?v=${item.youtube_id}`} target="_blank" rel="noreferrer" className="block text-xs font-medium text-blue-500 hover:underline max-w-[200px] sm:max-w-[250px] truncate">
-                                View Video
-                              </a>
-                            )}
+                            <div className="flex items-center gap-3 mt-1 flex-wrap">
+                              {item.url && (
+                                <a href={item.url.startsWith('http') ? item.url : `https://${item.url}`} target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-500 hover:underline flex items-center gap-1">
+                                  Classroom
+                                </a>
+                              )}
+                              {item.drive_file_id && (
+                                <a href={item.drive_file_id.startsWith('http') ? item.drive_file_id : `https://drive.google.com/file/d/${item.drive_file_id}/view`} target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-500 hover:underline flex items-center gap-1">
+                                  Drive
+                                </a>
+                              )}
+                              {item.youtube_id && (
+                                <a href={item.youtube_id.startsWith('http') ? item.youtube_id : `https://youtube.com/watch?v=${item.youtube_id}`} target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-500 hover:underline flex items-center gap-1">
+                                  YouTube
+                                </a>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0 ml-2">
                             <div className="flex items-center gap-1.5 mr-2">
@@ -522,6 +581,14 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                               />
                               <label htmlFor={`complete-${item.content_items_id}`} className="text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer">Completed</label>
                             </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => openEditLink(item, selectedLevel.level_id, selectedLevel.no)} 
+                              className="h-6 w-6 text-slate-400 hover:text-[#F18231] hover:bg-orange-50 mr-1"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
                             <Button 
                               variant="ghost" 
                               size="icon" 
@@ -628,9 +695,9 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
       {/* Link Form Modal */}
       {isLinkModalOpen && linkTarget && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white shadow-xl flex flex-col max-h-[90vh]">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-xl flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
-              <h3 className="text-lg font-bold text-[#0F172A]">Add Classroom Link</h3>
+              <h3 className="text-lg font-bold text-[#0F172A]">{editingLink ? 'Edit Link' : 'Add Classroom Link'}</h3>
               <button onClick={() => setIsLinkModalOpen(false)} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
                 <X className="h-5 w-5" />
               </button>
@@ -639,12 +706,12 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
             <div className="p-5 space-y-4 overflow-y-auto">
               {/* Type Switcher */}
               <div className="flex items-center gap-2 mb-2 bg-slate-100 p-1 rounded-xl">
-                 <button onClick={() => setLinkForm({...linkForm, type: 'link'})} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${linkForm.type === 'link' ? 'bg-white text-[#0F172A] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Classroom</button>
-                 <button onClick={() => setLinkForm({...linkForm, type: 'drive'})} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${linkForm.type === 'drive' ? 'bg-white text-[#0F172A] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Google Drive</button>
-                 <button onClick={() => setLinkForm({...linkForm, type: 'video'})} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${linkForm.type === 'video' ? 'bg-white text-[#0F172A] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>YouTube</button>
+                 <button onClick={() => setActiveTab('link')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'link' ? 'bg-white text-[#0F172A] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Classroom</button>
+                 <button onClick={() => setActiveTab('drive')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'drive' ? 'bg-white text-[#0F172A] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Google Drive</button>
+                 <button onClick={() => setActiveTab('video')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'video' ? 'bg-white text-[#0F172A] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>YouTube</button>
               </div>
 
-              {linkForm.type === 'link' && (
+              {activeTab === 'link' && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -661,28 +728,66 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mt-3">
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Month</label>
-                      <Select value={linkForm.month} onValueChange={v => setLinkForm({...linkForm, month: v || ''})}>
-                        <SelectTrigger className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231]">
-                          <SelectValue placeholder="Select Month" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({length: 12}).map((_, i) => {
-                            const m = String(i + 1).padStart(2, '0')
-                            return <SelectItem key={m} value={m}>{m}</SelectItem>
-                          })}
-                        </SelectContent>
-                      </Select>
+                      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Start Date</label>
+                      <Popover>
+                        <PopoverTrigger
+                          type="button"
+                          className={cn(
+                            "w-full flex items-center justify-start rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231]",
+                            !linkForm.start_date && "text-slate-400"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+                          <span className="truncate">{linkForm.start_date ? format(parseISO(linkForm.start_date), "PP") : "Pick a date"}</span>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={linkForm.start_date ? parseISO(linkForm.start_date) : undefined}
+                            onSelect={(d) => setLinkForm({ ...linkForm, start_date: d ? format(d, 'yyyy-MM-dd') : '' })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">End Date</label>
+                      <Popover>
+                        <PopoverTrigger
+                          type="button"
+                          className={cn(
+                            "w-full flex items-center justify-start rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231]",
+                            !linkForm.end_date && "text-slate-400"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+                          <span className="truncate">{linkForm.end_date ? format(parseISO(linkForm.end_date), "PP") : "Pick a date"}</span>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={linkForm.end_date ? parseISO(linkForm.end_date) : undefined}
+                            onSelect={(d) => setLinkForm({ ...linkForm, end_date: d ? format(d, 'yyyy-MM-dd') : '' })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-[#F18231]/20 bg-[#F18231]/5 p-3">
+                  <div className="rounded-xl border border-[#F18231]/20 bg-[#F18231]/5 p-3 mt-3">
                     <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#F18231]">Generated Batch ID</label>
-                    <p className="font-mono text-sm font-bold text-[#0F172A]">
-                      {(linkTarget.courseSlug.toUpperCase() || 'CRS')}-{linkForm.year}{linkForm.month}-L{linkTarget.levelNo}
-                    </p>
-                    <p className="text-[10px] text-slate-500 mt-1">This ID must exactly match the student's enrollment string.</p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-mono text-sm font-bold text-[#0F172A]">
+                        {editingLink ? linkForm.title : `${linkTarget.courseSlug.toUpperCase() || 'CRS'}-${linkForm.year}${previewSequence}-L${linkTarget.levelNo}`}
+                      </p>
+                      {!editingLink && <span className="text-[10px] bg-[#F18231] text-white px-2 py-0.5 rounded-full font-bold">Sequence: {previewSequence}</span>}
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1">{editingLink ? "Batch ID cannot be changed." : "This ID is sequential for this specific level."}</p>
                   </div>
 
                   <div>
@@ -698,7 +803,7 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                 </>
               )}
 
-              {linkForm.type === 'drive' && (
+              {activeTab === 'drive' && (
                 <>
                   <div>
                     <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Link Title</label>
@@ -711,7 +816,7 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                 </>
               )}
 
-              {linkForm.type === 'video' && (
+              {activeTab === 'video' && (
                 <>
                   <div>
                     <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Video Title</label>
@@ -731,14 +836,14 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                 onClick={saveLink} 
                 disabled={
                   isSaving || 
-                  (linkForm.type === 'link' && !linkForm.url) || 
+                  (linkForm.type === 'link' && (!linkForm.url || !linkForm.start_date || !linkForm.end_date)) || 
                   (linkForm.type === 'drive' && (!linkForm.title || !linkForm.drive_file_id)) || 
                   (linkForm.type === 'video' && (!linkForm.title || !linkForm.youtube_id))
                 } 
                 className="text-xs font-semibold bg-[#F18231] hover:bg-[#d96f21]"
               >
                 {isSaving ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
-                Add Link
+                {editingLink ? 'Save Changes' : 'Add Link'}
               </Button>
             </div>
           </div>

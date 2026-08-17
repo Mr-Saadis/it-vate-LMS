@@ -58,6 +58,8 @@ export interface ContentItem {
   url?: string;
   drive_file_id?: string;
   youtube_id?: string;
+  start_date?: string;
+  end_date?: string;
   is_free: boolean;
   order_no: number;
   is_completed?: boolean;

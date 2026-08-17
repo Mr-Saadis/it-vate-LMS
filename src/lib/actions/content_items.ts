@@ -19,6 +19,8 @@ export async function createContentItemAction(data: {
   url?: string
   drive_file_id?: string
   youtube_id?: string
+  start_date?: string
+  end_date?: string
 }) {
   try {
     const supabase = await verifyAdmin()
@@ -31,7 +33,9 @@ export async function createContentItemAction(data: {
         url: data.url,
         drive_file_id: data.drive_file_id,
         youtube_id: data.youtube_id,
-        is_free: false,
+        start_date: data.start_date || null,
+        end_date: data.end_date || null,
+        is_free: data.content_type === 'link', // Allow public visibility for batches
         order_no: 0
       }])
       .select()
@@ -40,6 +44,65 @@ export async function createContentItemAction(data: {
     if (error) throw error
     revalidatePath('/admin/courses/[id]', 'page')
     return { success: true, data: inserted }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function updateContentItemAction(
+  id: string,
+  data: {
+    title: string
+    content_type: 'link' | 'drive' | 'video'
+    url?: string
+    drive_file_id?: string
+    youtube_id?: string
+    start_date?: string
+    end_date?: string
+  }
+) {
+  try {
+    const supabase = await verifyAdmin()
+    const { data: updated, error } = await supabase
+      .from('content_items')
+      .update({
+        title: data.title,
+        content_type: data.content_type,
+        url: data.url,
+        drive_file_id: data.drive_file_id,
+        youtube_id: data.youtube_id,
+        start_date: data.start_date || null,
+        end_date: data.end_date || null,
+        is_free: data.content_type === 'link'
+      })
+      .eq('content_items_id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    revalidatePath('/admin/courses/[id]', 'page')
+    return { success: true, data: updated }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function getNextBatchSequenceAction(levelId: string, year: string) {
+  try {
+    const supabase = await verifyAdmin()
+    const { data, error } = await supabase
+      .from('content_items')
+      .select('content_items_id')
+      .eq('level_id', levelId)
+      .not('start_date', 'is', null)
+      .not('end_date', 'is', null)
+      .like('title', `%-${year}%`)
+      
+    if (error) throw error
+    
+    const count = data ? data.length : 0
+    const nextSeq = String(count + 1).padStart(2, '0')
+    return { success: true, sequence: nextSeq }
   } catch (error: any) {
     return { success: false, error: error.message }
   }

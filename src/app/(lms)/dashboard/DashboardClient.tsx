@@ -26,6 +26,7 @@ import {
   Code2
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { NextLevelBatchDialog, NextLevelBatchInfo } from './NextLevelBatchDialog'
 
 const IconMap: Record<string, any> = {
   video: PlayCircle,
@@ -75,6 +76,17 @@ export function DashboardClient({
   const [activeCourseLevels, setActiveCourseLevels] = useState<Record<string, string>>({})
   const [showBanner, setShowBanner] = useState(showApprovedBanner)
 
+  // Next-level batch dialog state
+  const [nextLevelDialogOpen, setNextLevelDialogOpen] = useState(false)
+  const [nextLevelInfo, setNextLevelInfo] = useState<{
+    levelId: string
+    levelNo: number
+    levelTitle: string
+    courseId: string
+    trackType: string
+    batches: NextLevelBatchInfo[]
+  } | null>(null)
+
   useEffect(() => {
     if (showApprovedBanner) {
       const timer = setTimeout(() => setShowBanner(false), 5000)
@@ -99,12 +111,22 @@ export function DashboardClient({
     if (!level || !level.courses) return
     const courseId = level.courses.course_id
     
+    const filteredContentItems = (level.content_items || []).filter((item: any) => {
+      // Support both new date-based batches and legacy link-based batches
+      const isBatchItem = (item.start_date && item.end_date) || item.content_type === 'link'
+      if (isBatchItem) {
+        return item.content_items_id === enroll.content_items_id
+      }
+      return true
+    })
+
     enrolledLevelsData[level.level_id] = {
       started_at: level.started_at,
       ended_at: level.ended_at,
-      content_items: level.content_items || [],
+      content_items: filteredContentItems,
       status: enroll.status,
-      is_completed: enroll.is_completed
+      is_completed: enroll.is_completed,
+      assigned_batch_id: enroll.content_items_id
     }
 
     if (!courseGroups[courseId]) {
@@ -274,18 +296,31 @@ export function DashboardClient({
               const { course, trackType, ownedLevels, enrollNo } = courseGroups[courseId]
               const activeLevelId = activeCourseLevels[courseId] || null
               
-              // Find the classroom link from REAL content_items for the active level
-              const activeLevelData = activeLevelId ? enrolledLevelsData[activeLevelId] : undefined
-              const activeItems = activeLevelData?.content_items || []
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const classroomItem = activeItems.find((i: any) => i.content_type === 'drive' || i.title.toLowerCase().includes('classroom'))
-              const classroomUrl = classroomItem?.url || 'https://classroom.google.com'
-              
               const sortedLevels = [...(course.levels || [])].sort((a, b) => a.no - b.no)
+
+              // Find the classroom link from the assigned batch of the active level (or first owned level)
+              let targetLevelId = activeLevelId
+              if (!targetLevelId && sortedLevels.length > 0) {
+                const firstOwned = sortedLevels.find(l => ownedLevels.includes(l.level_id))
+                if (firstOwned) targetLevelId = firstOwned.level_id
+              }
+              const targetLevelData = targetLevelId ? enrolledLevelsData[targetLevelId] : undefined
+              const assignedBatchId = targetLevelData?.assigned_batch_id
+
+              // Search across all items in the user's enrollments to find the assigned batch
+              // (This ensures we have the full item data including the URL, which is omitted in the public courses API)
+              const allEnrolledItems = Object.values(enrolledLevelsData).flatMap((data: any) => data.content_items || [])
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const batchItem = allEnrolledItems.find((i: any) => i.content_items_id === assignedBatchId)
+              
+              let classroomUrl = 'https://classroom.google.com'
+              if (batchItem?.url) {
+                classroomUrl = batchItem.url.startsWith('http') ? batchItem.url : `https://${batchItem.url}`
+              }
 
               let nextUnlockableLevelId: string | null = null
               
-              if (trackType === 'Progressive' || trackType === 'Fast') {
+              if (trackType === 'Progressive' || trackType === 'Fast' || trackType === 'Expert') {
                 // Find highest completed level number
                 let highestCompletedNo = 0
                 for (const lvlId of ownedLevels) {
@@ -308,8 +343,22 @@ export function DashboardClient({
                 // Find the exact next level in sequence
                 if (highestCompletedNo > 0) {
                   const nextLvl = sortedLevels.find(s => s.no === highestCompletedNo + 1)
-                  if (nextLvl && !ownedLevels.includes(nextLvl.level_id)) {
-                    nextUnlockableLevelId = nextLvl.level_id
+                  if (nextLvl) {
+                    if (trackType === 'Fast' || trackType === 'Expert') {
+                      // For Fast/Expert, they already own all levels, but might need to pick a batch
+                      if (ownedLevels.includes(nextLvl.level_id)) {
+                        const nextData = enrolledLevelsData[nextLvl.level_id]
+                        
+                        // Check if the assigned batch actually belongs to THIS level.
+                        // In Expert track, checkout might assign Level 1's batch to Level 2 as a placeholder.
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const batchBelongsToThisLevel = (nextLvl.content_items || []).some((i: any) => i.content_items_id === nextData?.assigned_batch_id)
+
+                        if (!nextData?.assigned_batch_id || !batchBelongsToThisLevel) {
+                          nextUnlockableLevelId = nextLvl.level_id
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -338,13 +387,15 @@ export function DashboardClient({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                      <Link
-                        href={`/courses/${course.slug}?track=${trackType}`}
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-                      >
-                        Buy More Levels
-                        <ArrowRight className="h-4 w-4 text-slate-400" />
-                      </Link>
+                      {trackType !== 'Expert' && trackType !== 'Premium' && (
+                        <Link
+                          href={`/courses/${course.slug}?track=${trackType}`}
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                        >
+                          Buy More Levels
+                          <ArrowRight className="h-4 w-4 text-slate-400" />
+                        </Link>
+                      )}
                       <a
                         href={classroomUrl}
                         target="_blank"
@@ -437,17 +488,43 @@ export function DashboardClient({
                           {/* Level Box */}
                           <div
                             onClick={() => {
+                              if (isLockedForExpert) {
+                                toast.error('Complete the previous level first.')
+                                return
+                              }
+                              
+                              if (isNextUnlockable) {
+                                // Get batches for this level from content_items
+                                const levelData = course.levels?.find(l => l.level_id === lvl.level_id)
+                                const batches: NextLevelBatchInfo[] = (levelData?.content_items || [])
+                                  .filter((item: any) => item.start_date && item.end_date)
+                                  .map((item: any) => ({
+                                    content_items_id: item.content_items_id,
+                                    title: item.title,
+                                    start_date: item.start_date,
+                                    end_date: item.end_date,
+                                  }))
+
+                                setNextLevelInfo({
+                                  levelId: lvl.level_id,
+                                  levelNo: lvl.no,
+                                  levelTitle: lvl.level_title,
+                                  courseId,
+                                  trackType,
+                                  batches,
+                                })
+                                setNextLevelDialogOpen(true)
+                                return
+                              }
+
+                              if (!isOwned && trackType === 'Progressive') {
+                                // Progressive track boxes are strictly status indicators and are not clickable.
+                                // Users must use the "Buy More Levels" button to navigate to the course page.
+                                return
+                              }
+
                               if (isOwned) {
                                 handleLevelClick(courseId, lvl.level_id, isOwned, trackType, isLockedForExpert)
-                              } else if (isNextUnlockable) {
-                                const checkoutParams = new URLSearchParams({
-                                  course_id: course.course_id,
-                                  slug: course.slug,
-                                  track: trackType,
-                                  amount: lvl.price.toString(),
-                                  levels: lvl.level_id,
-                                })
-                                router.push(`/checkout?${checkoutParams.toString()}`)
                               }
                             }}
                             className={`flex flex-col justify-center w-40 h-24 rounded-xl border-2 p-3 transition-all ${
@@ -541,38 +618,45 @@ export function DashboardClient({
                                 const Icon = IconMap[item.content_type] || FileText
                                 const colorClass = ColorMap[item.content_type] || ColorMap.link
                                 
-                                let itemUrl = item.url || '#'
-                                if (item.content_type === 'drive' && item.drive_file_id) {
-                                  itemUrl = item.drive_file_id.startsWith('http') ? item.drive_file_id : `https://drive.google.com/file/d/${item.drive_file_id}/view`
-                                } else if (item.content_type === 'video' && item.youtube_id) {
-                                  itemUrl = item.youtube_id.startsWith('http') ? item.youtube_id : `https://youtube.com/watch?v=${item.youtube_id}`
-                                }
-
                                 return (
-                                  <a
+                                  <div
                                     key={item.content_items_id}
-                                    href={itemUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`group flex items-start gap-3 rounded-xl border border-slate-200/60 bg-white p-3.5 transition-all duration-200 hover:shadow-md hover:border-slate-300 ${
-                                      itemUrl === '#' ? 'pointer-events-none opacity-70' : ''
-                                    }`}
+                                    className="group flex flex-col gap-3 rounded-xl border border-slate-200/60 bg-white p-3.5 transition-all duration-200 hover:shadow-md hover:border-slate-300"
                                   >
-                                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${colorClass} transition-transform group-hover:scale-105`}>
-                                      <Icon className="h-4 w-4" />
-                                    </div>
-                                    
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-0.5">
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                          {item.content_type}
-                                        </span>
+                                    <div className="flex items-start gap-3">
+                                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${colorClass} transition-transform group-hover:scale-105`}>
+                                        <Icon className="h-4 w-4" />
                                       </div>
-                                      <h6 className="text-[13px] font-bold text-[#0F172A] truncate group-hover:text-[#F18231] transition-colors" title={item.title}>
-                                        {item.title}
-                                      </h6>
+                                      
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                            {item.start_date ? 'BATCH' : item.content_type}
+                                          </span>
+                                        </div>
+                                        <h6 className="text-[13px] font-bold text-[#0F172A] truncate group-hover:text-[#F18231] transition-colors" title={item.title}>
+                                          {item.title}
+                                        </h6>
+                                      </div>
                                     </div>
-                                  </a>
+                                    <div className="flex flex-wrap gap-2 mt-1">
+                                      {item.url && (
+                                        <a href={item.url.startsWith('http') ? item.url : `https://${item.url}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 hover:bg-[#F18231] hover:text-white hover:border-[#F18231] transition-colors">
+                                          <BookOpen className="h-3 w-3" /> Classroom
+                                        </a>
+                                      )}
+                                      {item.drive_file_id && (
+                                        <a href={item.drive_file_id.startsWith('http') ? item.drive_file_id : `https://drive.google.com/file/d/${item.drive_file_id}/view`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 hover:bg-[#F18231] hover:text-white hover:border-[#F18231] transition-colors">
+                                          <FileText className="h-3 w-3" /> Google Drive
+                                        </a>
+                                      )}
+                                      {item.youtube_id && (
+                                        <a href={item.youtube_id.startsWith('http') ? item.youtube_id : `https://youtube.com/watch?v=${item.youtube_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 hover:bg-[#F18231] hover:text-white hover:border-[#F18231] transition-colors">
+                                          <PlayCircle className="h-3 w-3" /> YouTube
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
                                 )
                               })}
                             </div>
@@ -587,6 +671,21 @@ export function DashboardClient({
           </div>
         )}
       </div>
+
+      {/* ── Next Level Batch Dialog ── */}
+      {nextLevelInfo && (
+        <NextLevelBatchDialog
+          isOpen={nextLevelDialogOpen}
+          onClose={() => { setNextLevelDialogOpen(false); setNextLevelInfo(null) }}
+          onSuccess={() => router.refresh()}
+          levelId={nextLevelInfo.levelId}
+          levelNo={nextLevelInfo.levelNo}
+          levelTitle={nextLevelInfo.levelTitle}
+          courseId={nextLevelInfo.courseId}
+          trackType={nextLevelInfo.trackType}
+          batches={nextLevelInfo.batches}
+        />
+      )}
     </div>
   )
 }

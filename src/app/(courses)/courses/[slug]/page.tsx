@@ -3,6 +3,9 @@ import { Suspense } from 'react'
 import { getCourseBySlug } from '@/lib/api/courses'
 import { TrackSelector } from './TrackSelector'
 import { Cpu, CheckCircle2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+
+export const dynamic = 'force-dynamic'
 
 interface CoursePageProps {
   params: Promise<{ slug: string }>
@@ -14,6 +17,49 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
 
   if (!course) {
     notFound()
+  }
+
+  let ownedLevelIds: string[] = []
+  let highestCompletedNo = 0
+  
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (user && course.course_id) {
+      // Get all level IDs for this course
+      const courseLevelIds = (course.levels || []).map(l => l.level_id)
+      
+      if (courseLevelIds.length > 0) {
+        // Find existing non-rejected enrollments for this user and these levels
+        const { data: enrollments } = await supabase
+          .from('enrollments')
+          .select(`
+            level_id, 
+            status, 
+            is_completed
+          `)
+          .eq('user_id', user.id)
+          .in('level_id', courseLevelIds)
+          .neq('status', 'Rejected')
+          
+        if (enrollments) {
+          ownedLevelIds = enrollments.map(e => e.level_id)
+          
+          for (const enrollment of enrollments) {
+            const isCompleted = enrollment.status === 'Completed' || enrollment.is_completed === true
+            if (isCompleted) {
+              const l = (course.levels || []).find(lvl => lvl.level_id === enrollment.level_id)
+              if (l && l.no > highestCompletedNo) {
+                highestCompletedNo = l.no
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error fetching user enrollments:", err)
   }
 
   return (
@@ -85,7 +131,7 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
 
       {/* 3 & 4. Interactive 4-Track System & Sticky Summary Sidebar */}
       <Suspense fallback={<div className="h-96 w-full animate-pulse bg-slate-100 rounded-xl"></div>}>
-        <TrackSelector course={course} />
+        <TrackSelector course={course} ownedLevelIds={ownedLevelIds} initialHighestCompletedNo={highestCompletedNo} />
       </Suspense>
 
     </div>
