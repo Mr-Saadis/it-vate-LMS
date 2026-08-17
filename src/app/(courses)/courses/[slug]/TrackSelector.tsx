@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Course, TrackType } from '@/lib/types'
-import { TRACK_OPTIONS, MOCK_COURSES } from '@/lib/mockData'
+import { TRACK_OPTIONS } from '@/lib/mockData'
 import { createClient } from '@/lib/supabase/client'
 import { Check, CheckCircle2, ShieldCheck, ArrowRight, Lock, ChevronDown, X, Loader2, AlertTriangle, Calendar, Info } from 'lucide-react'
 import { toast } from 'sonner'
@@ -14,11 +14,12 @@ import { format, parseISO } from 'date-fns'
 
 interface TrackSelectorProps {
   course: Course
+  allCourses?: Course[]
   ownedLevelIds?: string[]
   initialHighestCompletedNo?: number
 }
 
-export function TrackSelector({ course: initialCourse, ownedLevelIds = [], initialHighestCompletedNo = 0 }: TrackSelectorProps) {
+export function TrackSelector({ course: initialCourse, allCourses = [], ownedLevelIds = [], initialHighestCompletedNo = 0 }: TrackSelectorProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -838,41 +839,42 @@ export function TrackSelector({ course: initialCourse, ownedLevelIds = [], initi
 
             {/* Course List */}
             <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
-              {MOCK_COURSES.filter((c) => c.is_active).map((c) => {
+              {allCourses.map((c) => {
                 const isActive = c.course_id === activeCourse.course_id
                 return (
                   <button
                     key={c.course_id}
                     onClick={() => {
-                      setActiveCourse(c)
-                      setSelectedTrack(null)
-                      setSelectedBatchId(null)
-                      setSelectedBatchTitle(null)
-                      setSelectedBatchDates(null)
-                      setShowCourseModal(false)
+                      if (!isActive) {
+                        router.push(`/courses/${c.slug}`)
+                      }
                     }}
-                    className={`w-full text-left rounded-xl border p-4 transition-colors ${
+                    className={`w-full text-left rounded-xl border p-4 transition-all ${
                       isActive
-                        ? 'border-[#F18231] bg-orange-50/40 ring-2 ring-[#F18231]/20'
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                        ? 'border-[#0F172A] bg-[#0F172A]/5 ring-1 ring-[#0F172A]'
+                        : 'border-slate-200 bg-white hover:border-[#F18231] hover:shadow-md'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#F18231]">
-                          {c.category}
-                        </span>
-                        <p className="text-sm font-bold text-[#0F172A] leading-snug">{c.name}</p>
-                        <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{c.description}</p>
-                        <p className="text-[11px] font-semibold text-slate-400 mt-1">
-                          {c.levels?.length ?? 0} Levels
-                        </p>
-                      </div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#F18231]">
+                        {c.category}
+                      </span>
                       {isActive && (
-                        <div className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#F18231] text-white">
-                          <Check className="h-3 w-3 stroke-[3]" />
-                        </div>
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-[#0F172A]">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Selected
+                        </span>
                       )}
+                    </div>
+                    <h5 className="text-[15px] font-extrabold text-[#0F172A] leading-snug mb-1.5">
+                      {c.name}
+                    </h5>
+                    <p className="text-xs text-slate-500 leading-relaxed mb-3 line-clamp-2">
+                      {c.description}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-[#1e3a5f] bg-blue-50 px-2 py-1 rounded">
+                        {c.levels?.length || 0} Levels
+                      </span>
                     </div>
                   </button>
                 )

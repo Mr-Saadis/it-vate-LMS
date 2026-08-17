@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
-import { getCourseBySlug } from '@/lib/api/courses'
+import { getCourseBySlug, getActiveCourses } from '@/lib/api/courses'
 import { TrackSelector } from './TrackSelector'
 import { Cpu, CheckCircle2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
@@ -14,6 +14,7 @@ interface CoursePageProps {
 export default async function CourseDetailPage({ params }: CoursePageProps) {
   const { slug } = await params
   const course = await getCourseBySlug(slug)
+  const allCourses = await getActiveCourses()
 
   if (!course) {
     notFound()
@@ -131,7 +132,7 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
 
       {/* 3 & 4. Interactive 4-Track System & Sticky Summary Sidebar */}
       <Suspense fallback={<div className="h-96 w-full animate-pulse bg-slate-100 rounded-xl"></div>}>
-        <TrackSelector course={course} ownedLevelIds={ownedLevelIds} initialHighestCompletedNo={highestCompletedNo} />
+        <TrackSelector course={course} allCourses={allCourses} ownedLevelIds={ownedLevelIds} initialHighestCompletedNo={highestCompletedNo} />
       </Suspense>
 
     </div>
