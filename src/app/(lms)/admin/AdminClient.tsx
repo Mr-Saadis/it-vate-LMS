@@ -267,7 +267,7 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                   ) : availableBatches.length > 0 ? (
                     <Select
                       value={selectedBatchId}
-                      onValueChange={(val) => setSelectedBatchId(val)}
+                      onValueChange={(val) => setSelectedBatchId(val || '')}
                     >
                       <SelectTrigger className="w-full h-10 border-slate-200 focus:border-[#F18231] focus:ring-[#F18231] mb-1 text-sm font-semibold text-[#0F172A] bg-white">
                         <SelectValue placeholder="Select a batch">

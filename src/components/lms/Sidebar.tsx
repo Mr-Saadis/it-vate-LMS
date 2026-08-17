@@ -18,6 +18,7 @@ import {
   ChevronRight,
   BookOpen,
   Bell,
+  Globe,
 } from 'lucide-react'
 
 interface LMSSidebarProps {
@@ -223,8 +224,15 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
         )}
       </nav>
 
-      {/* Sign Out */}
-      <div className="border-t border-white/10 p-3">
+      {/* Footer Actions */}
+      <div className="border-t border-white/10 p-3 space-y-1">
+        <a
+          href="/"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-400 hover:bg-white/5 hover:text-white transition-all"
+        >
+          <Globe className="h-4 w-4 shrink-0" />
+          Main Website
+        </a>
         <form action={signOut}>
           <button
             type="submit"
