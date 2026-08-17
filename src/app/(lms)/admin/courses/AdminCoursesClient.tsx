@@ -202,7 +202,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
     setIsLinkModalOpen(true)
   }
   return (
-    <div className="mx-auto max-w-7xl px-6 py-10 space-y-8">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-10 space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
@@ -217,7 +217,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
             Create and edit courses, add levels, and manage curriculum configurations.
           </p>
         </div>
-        <Button onClick={openAddCourse} className="h-9 px-4 bg-[#F18231] hover:bg-[#d96f21] text-[11px] font-bold shadow-sm shrink-0">
+        <Button onClick={openAddCourse} className="h-9 px-4 w-full sm:w-auto bg-[#F18231] hover:bg-[#d96f21] text-[11px] font-bold shadow-sm shrink-0">
           <Plus className="h-3.5 w-3.5 mr-1.5" />
           Add Course
         </Button>
@@ -290,7 +290,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
                             </span>
                             <button 
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingItem({ type: 'level', id: lvl.level_id, name: lvl.level_title }); setDeleteInput(''); }} 
-                              className="text-slate-300 hover:text-red-500 transition-colors hidden group-hover/level:block"
+                              className="text-slate-400 hover:text-red-500 transition-colors block md:hidden group-hover/level:block"
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
@@ -330,9 +330,9 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
 
       {/* Course Form Modal */}
       {isCourseModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between border-b border-slate-100 p-6 shrink-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-slate-100 p-4 sm:p-6 shrink-0">
               <h3 className="text-lg font-bold text-[#0F172A]">
                 {editingCourse ? 'Edit Course' : 'Add New Course'}
               </h3>
@@ -341,7 +341,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
               </button>
             </div>
             
-            <div className="p-6 space-y-4 overflow-y-auto">
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
                   Course Name
@@ -393,7 +393,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-6 shrink-0 bg-slate-50 rounded-b-2xl">
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-4 sm:p-6 shrink-0 bg-slate-50 rounded-b-2xl">
               <Button variant="outline" onClick={() => setIsCourseModalOpen(false)} className="text-xs">
                 Cancel
               </Button>
@@ -408,9 +408,9 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
 
       {/* Level Form Modal */}
       {isLevelModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between border-b border-slate-100 p-6 shrink-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-slate-100 p-4 sm:p-6 shrink-0">
               <h3 className="text-lg font-bold text-[#0F172A]">
                 {editingLevel?.level ? 'Edit Level' : 'Add New Level'}
               </h3>
@@ -419,8 +419,8 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
               </button>
             </div>
             
-            <div className="p-6 space-y-4 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
                     Level Number
@@ -495,7 +495,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-6 shrink-0 bg-slate-50 rounded-b-2xl">
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-4 sm:p-6 shrink-0 bg-slate-50 rounded-b-2xl">
               <Button variant="outline" onClick={() => setIsLevelModalOpen(false)} className="text-xs">
                 Cancel
               </Button>
@@ -510,9 +510,9 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
 
       {/* Delete Confirmation Modal */}
       {deletingItem && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-xl flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-100 p-6 shrink-0">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 sm:p-6 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-xl flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-slate-100 p-4 sm:p-6 shrink-0">
               <h3 className="text-lg font-bold text-[#0F172A] flex items-center gap-2">
                 <Trash2 className="h-5 w-5 text-[#F18231]" />
                 Delete {deletingItem.type === 'course' ? 'Course' : 'Level'}
@@ -522,7 +522,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
               </button>
             </div>
             
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <p className="text-sm text-slate-600">
                 You are about to permanently delete the {deletingItem.type}: <strong className="text-[#0F172A]">{deletingItem.name}</strong>. This action cannot be undone.
               </p>
@@ -541,7 +541,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-6 shrink-0 bg-slate-50 rounded-b-2xl">
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-4 sm:p-6 shrink-0 bg-slate-50 rounded-b-2xl">
               <Button variant="outline" onClick={() => { setDeletingItem(null); setDeleteInput(''); }} className="text-xs">
                 Cancel
               </Button>

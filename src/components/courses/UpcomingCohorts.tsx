@@ -63,9 +63,9 @@ export function UpcomingCohorts({ cohorts }: UpcomingCohortsProps) {
         </div>
 
         {/* Timeline Table View */}
-        <div className="overflow-x-auto rounded-2xl border border-slate-200/80 shadow-lg bg-white" style={{ boxShadow: '0 4px 24px 0 rgba(15,23,42,0.08), 0 1px 4px 0 rgba(241,130,49,0.07)' }}>
-          <table className="w-full min-w-[900px] border-collapse text-left">
-            <thead>
+        <div className="md:overflow-x-auto md:rounded-2xl md:border md:border-slate-200/80 md:shadow-lg md:bg-white" style={{ boxShadow: '0 4px 24px 0 rgba(15,23,42,0.08), 0 1px 4px 0 rgba(241,130,49,0.07)' }}>
+          <table className="w-full md:min-w-[900px] border-collapse text-left block md:table">
+            <thead className="hidden md:table-header-group">
               <tr className="border-b border-slate-200">
                 <th className="px-6 py-4 text-[11px] font-extrabold text-[#F18231] uppercase tracking-widest w-[280px] border-r border-slate-200 bg-[#F18231]/6">
                   Course
@@ -80,12 +80,12 @@ export function UpcomingCohorts({ cohorts }: UpcomingCohortsProps) {
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="block md:table-row-group">
               {courseGroups.map((group) => (
-                <tr key={group.courseName} className="border-b border-slate-100 last:border-b-0 hover:bg-[#0F172A]/[0.02] transition-colors duration-150">
+                <tr key={group.courseName} className="block md:table-row mb-6 md:mb-0 border border-slate-200 md:border-0 md:border-b md:border-slate-100 last:border-b-0 hover:bg-[#0F172A]/[0.02] transition-colors duration-150 rounded-xl md:rounded-none overflow-hidden bg-white">
 
                   {/* Column 1: Course Name */}
-                  <td className="px-6 py-5 border-r border-slate-100 bg-[#F18231]/[0.03] align-middle">
+                  <td className="block md:table-cell px-4 py-3.5 md:px-6 md:py-5 border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50 md:bg-[#F18231]/[0.03] align-middle">
                     <h3 className="text-sm font-bold text-[#0F172A] leading-snug">
                       {group.courseName}
                     </h3>
@@ -96,7 +96,7 @@ export function UpcomingCohorts({ cohorts }: UpcomingCohortsProps) {
                     const monthCohorts = group.cohorts.filter(c => isSameMonth(parseISO(c.startDate), month))
 
                     return (
-                      <td key={month.toISOString()} className="p-3 border-r border-slate-100 last:border-r-0 align-top">
+                      <td key={month.toISOString()} className={`${monthCohorts.length === 0 ? 'hidden md:table-cell' : 'block md:table-cell'} p-3 md:p-3 border-b border-slate-50 md:border-b-0 md:border-r md:border-slate-100 last:border-b-0 md:last:border-r-0 align-top`}>
                         <div className="flex flex-col gap-2.5">
                           {monthCohorts.map(cohort => {
                             const isSameMonthEnd = isSameMonth(parseISO(cohort.startDate), parseISO(cohort.endDate))

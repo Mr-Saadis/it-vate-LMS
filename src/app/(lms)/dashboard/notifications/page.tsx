@@ -85,7 +85,7 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
                 <Link
                   key={req.enroll_id}
                   href={href}
-                  className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 hover:border-[#F18231] hover:shadow-sm transition-all group"
+                  className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 hover:border-[#F18231] hover:shadow-sm transition-all group min-w-0"
                 >
                   <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${
                     isActive ? 'bg-green-50 text-green-600' :
@@ -234,25 +234,25 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
               Enrollment Details
             </h3>
             <div className="space-y-2 text-xs text-slate-700">
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-0.5">
                 <span className="text-slate-500">Course:</span>
-                <span className="font-semibold text-[#0F172A]">{courseName}</span>
+                <span className="font-semibold text-[#0F172A] sm:text-right">{courseName}</span>
               </div>
               {levelTitle && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Levels Included ({groupEnrollments.length}):</span>
-                  <span className="font-semibold text-right max-w-[60%]">{levelTitle}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-0.5 pt-1.5 sm:pt-0">
+                  <span className="text-slate-500 sm:shrink-0">Levels Included ({groupEnrollments.length}):</span>
+                  <span className="font-semibold sm:text-right sm:max-w-[60%]">{levelTitle}</span>
                 </div>
               )}
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-0.5 pt-1.5 sm:pt-0">
                 <span className="text-slate-500">Track:</span>
-                <span className="font-bold text-[#F18231]">{enrollment.track_type} Track</span>
+                <span className="font-bold text-[#F18231] sm:text-right">{enrollment.track_type} Track</span>
               </div>
               
               {isActive && enrollment.content_items?.title && (
-                <div className="flex justify-between">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-0.5 pt-1.5 sm:pt-0">
                   <span className="text-slate-500">Assigned Batch:</span>
-                  <span className="font-semibold text-[#0F172A]">{enrollment.content_items.title}</span>
+                  <span className="font-semibold text-[#0F172A] sm:text-right">{enrollment.content_items.title}</span>
                 </div>
               )}
               
@@ -262,18 +262,18 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
                 const totalAmount = Array.isArray(p) ? p[0]?.total_amount : p?.total_amount;
                 if (typeof totalAmount === 'number' || typeof totalAmount === 'string') {
                   return (
-                    <div className="flex justify-between border-t border-slate-100 pt-2 mt-2">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-0.5 border-t border-slate-100 pt-3 mt-3">
                       <span className="text-slate-500">Amount Paid:</span>
-                      <span className="font-semibold">Rs. {totalAmount}</span>
+                      <span className="font-semibold sm:text-right">Rs. {totalAmount}</span>
                     </div>
                   )
                 }
                 return null;
               })()}
 
-              <div className="flex justify-between border-t border-slate-100 pt-2 mt-2">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 border-t border-slate-100 pt-3 mt-3">
                 <span className="text-slate-500">Status:</span>
-                <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                <span className={`self-start sm:self-auto rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
                   isActive ? 'bg-green-100 text-green-700' :
                   isPending ? 'bg-amber-100 text-amber-700' :
                   'bg-red-100 text-red-700'

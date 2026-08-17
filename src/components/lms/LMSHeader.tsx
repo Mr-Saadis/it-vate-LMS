@@ -64,7 +64,7 @@ export function LMSHeader({ enrollments }: LMSHeaderProps) {
 
             {/* Notification Dropdown */}
             {notifOpen && (
-              <div className="absolute right-0 mt-2 w-80 rounded-xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2">
+              <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 rounded-xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2 z-50">
                 <div className="px-3 py-2 border-b border-slate-100 mb-2">
                   <h3 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">
                     Your Enrollment Requests

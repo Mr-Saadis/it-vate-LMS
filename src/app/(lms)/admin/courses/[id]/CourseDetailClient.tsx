@@ -458,8 +458,8 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
 
           {/* ── Right: Level Detail Panel ── */}
           {selectedLevel && (
-            <div className="lg:w-[42%] shrink-0">
-              <div className="sticky top-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm lg:static lg:p-0 lg:bg-transparent lg:backdrop-blur-none lg:w-[42%] lg:shrink-0 lg:block">
+              <div className="w-full max-w-lg lg:max-w-none max-h-[90vh] lg:max-h-none overflow-y-auto lg:overflow-visible lg:sticky lg:top-6 rounded-2xl border border-slate-200 bg-white shadow-2xl lg:shadow-sm">
                 {/* Panel Header */}
                 <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
                   <div className="flex items-center gap-3 min-w-0">
@@ -544,13 +544,13 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                       </div>
                     ) : (
                       selectedLevel.content_items.filter(i => ['link', 'drive', 'video'].includes(i.content_type)).map((item) => (
-                        <div key={item.content_items_id} className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 flex justify-between items-start">
-                          <div>
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-bold text-[#0F172A] mb-1.5 shadow-sm">
-                              {item.content_type === 'link' && <BookOpen className="h-3 w-3 text-[#F18231]" />}
-                              {item.content_type === 'drive' && <FileText className="h-3 w-3 text-blue-500" />}
-                              {item.content_type === 'video' && <PlayCircle className="h-3 w-3 text-red-500" />}
-                              <span className={item.content_type === 'link' ? "font-mono tracking-tight" : "truncate max-w-[150px]"}>{item.title}</span>
+                        <div key={item.content_items_id} className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-0">
+                          <div className="min-w-0 w-full sm:w-auto">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-bold text-[#0F172A] mb-1.5 shadow-sm max-w-full">
+                              {item.content_type === 'link' && <BookOpen className="h-3 w-3 text-[#F18231] shrink-0" />}
+                              {item.content_type === 'drive' && <FileText className="h-3 w-3 text-blue-500 shrink-0" />}
+                              {item.content_type === 'video' && <PlayCircle className="h-3 w-3 text-red-500 shrink-0" />}
+                              <span className={cn("truncate", item.content_type === 'link' ? "font-mono tracking-tight" : "max-w-[150px]")}>{item.title}</span>
                             </span>
                             <div className="flex items-center gap-3 mt-1 flex-wrap">
                               {item.url && (
@@ -570,7 +570,7 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0 ml-2">
+                          <div className="flex items-center justify-between sm:justify-end gap-1 shrink-0 sm:ml-2 border-t border-slate-200 sm:border-0 pt-3 sm:pt-0 w-full sm:w-auto">
                             <div className="flex items-center gap-1.5 mr-2">
                               <Switch
                                 id={`complete-${item.content_items_id}`}
@@ -581,22 +581,24 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                               />
                               <label htmlFor={`complete-${item.content_items_id}`} className="text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer">Completed</label>
                             </div>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => openEditLink(item, selectedLevel.level_id, selectedLevel.no)} 
-                              className="h-6 w-6 text-slate-400 hover:text-[#F18231] hover:bg-orange-50 mr-1"
-                            >
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => { setDeletingItem({ type: 'link', id: item.content_items_id, name: item.title }); setDeleteInput(''); }} 
-                              className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                            <div className="flex items-center">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => openEditLink(item, selectedLevel.level_id, selectedLevel.no)} 
+                                className="h-6 w-6 text-slate-400 hover:text-[#F18231] hover:bg-orange-50 mr-1"
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => { setDeletingItem({ type: 'link', id: item.content_items_id, name: item.title }); setDeleteInput(''); }} 
+                                className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))

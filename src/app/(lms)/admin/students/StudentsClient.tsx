@@ -176,7 +176,7 @@ export function StudentsClient({ students }: StudentsClientProps) {
         
       {/* ── Body ── */}
       <div>
-        <div className={`flex gap-6 transition-all duration-300 ${selected ? 'lg:flex-row' : ''}`}>
+        <div className="flex flex-col lg:flex-row gap-6 transition-all duration-300">
 
           {/* ── Left: Table Panel ── */}
           <div className={`flex-1 min-w-0 flex flex-col gap-4 ${selected ? 'lg:max-w-[55%]' : ''}`}>
@@ -193,8 +193,8 @@ export function StudentsClient({ students }: StudentsClientProps) {
                   className="w-full rounded-xl border border-slate-200 bg-white py-5 pl-10 pr-4 text-xs text-[#0F172A] placeholder:text-slate-400 shadow-sm focus-visible:ring-2 focus-visible:ring-[#F18231]/30 focus-visible:border-[#F18231] transition-all"
                 />
               </div>
-              <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 shadow-sm">
-                <SlidersHorizontal className="h-3.5 w-3.5 text-slate-400 ml-1" />
+              <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 shadow-sm overflow-x-auto scrollbar-hide">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-slate-400 ml-1 shrink-0" />
                 {(['all', 'active', 'pending', 'inactive'] as const).map((f) => (
                   <button
                     key={f}
@@ -298,8 +298,8 @@ export function StudentsClient({ students }: StudentsClientProps) {
 
           {/* ── Right: Detail Panel ── */}
           {selected && (
-            <div className="lg:w-[42%] shrink-0">
-              <div className="sticky top-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm lg:static lg:p-0 lg:bg-transparent lg:backdrop-blur-none lg:w-[42%] lg:shrink-0 lg:block">
+              <div className="w-full max-w-lg lg:max-w-none max-h-[90vh] lg:max-h-none overflow-y-auto lg:overflow-visible lg:sticky lg:top-6 rounded-2xl border border-slate-200 bg-white shadow-2xl lg:shadow-sm">
                 {/* Panel Header */}
                 <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
                   <div className="flex items-center gap-3 min-w-0">
