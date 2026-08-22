@@ -249,10 +249,10 @@ export default async function DashboardNotificationsPage({ searchParams }: PageP
                 <span className="font-bold text-[#F18231] sm:text-right">{enrollment.track_type} Track</span>
               </div>
               
-              {isActive && enrollment.content_items?.title && (
+              {isActive && enrollment.content_items?.[0]?.title && (
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-0.5 pt-1.5 sm:pt-0">
                   <span className="text-slate-500">Assigned Batch:</span>
-                  <span className="font-semibold text-[#0F172A] sm:text-right">{enrollment.content_items.title}</span>
+                  <span className="font-semibold text-[#0F172A] sm:text-right">{enrollment.content_items[0].title}</span>
                 </div>
               )}
               

@@ -196,11 +196,11 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
         level_id: linkTarget.levelId,
         title: finalTitle,
         content_type: linkForm.type,
-        url: linkForm.url || null,
-        drive_file_id: linkForm.drive_file_id || null,
-        youtube_id: linkForm.youtube_id || null,
-        start_date: linkForm.start_date || null,
-        end_date: linkForm.end_date || null
+        url: linkForm.url || undefined,
+        drive_file_id: linkForm.drive_file_id || undefined,
+        youtube_id: linkForm.youtube_id || undefined,
+        start_date: linkForm.start_date || undefined,
+        end_date: linkForm.end_date || undefined
       }
 
       let res;
@@ -751,7 +751,6 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                             mode="single"
                             selected={linkForm.start_date ? parseISO(linkForm.start_date) : undefined}
                             onSelect={(d) => setLinkForm({ ...linkForm, start_date: d ? format(d, 'yyyy-MM-dd') : '' })}
-                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>
@@ -774,7 +773,6 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                             mode="single"
                             selected={linkForm.end_date ? parseISO(linkForm.end_date) : undefined}
                             onSelect={(d) => setLinkForm({ ...linkForm, end_date: d ? format(d, 'yyyy-MM-dd') : '' })}
-                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>
