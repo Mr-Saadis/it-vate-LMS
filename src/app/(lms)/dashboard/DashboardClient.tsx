@@ -23,7 +23,8 @@ import {
   FileText,
   HardDrive,
   Link as LinkIcon,
-  Code2
+  Code2,
+  Loader2
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { NextLevelBatchDialog, NextLevelBatchInfo } from './NextLevelBatchDialog'
@@ -75,6 +76,7 @@ export function DashboardClient({
   const router = useRouter()
   const [activeCourseLevels, setActiveCourseLevels] = useState<Record<string, string>>({})
   const [showBanner, setShowBanner] = useState(showApprovedBanner)
+  const [isDownloadingCert, setIsDownloadingCert] = useState<Record<string, boolean>>({})
 
   // Next-level batch dialog state
   const [nextLevelDialogOpen, setNextLevelDialogOpen] = useState(false)
@@ -172,6 +174,37 @@ export function DashboardClient({
         ...prev, 
         [courseId]: prev[courseId] === levelId ? '' : levelId 
       }))
+    }
+  }
+
+  const handleDownloadCertificate = async (levelId: string, courseId: string) => {
+    try {
+      setIsDownloadingCert(prev => ({ ...prev, [levelId]: true }))
+      const res = await fetch(`/api/certificates/download?level_id=${levelId}&course_id=${courseId}`)
+      
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.error || 'Failed to download certificate')
+      }
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      // Provide a generic fallback name, server Content-Disposition will typically override this anyway,
+      // but the <a> tag 'download' attribute is useful for forcing the browser download behavior.
+      a.download = `Certificate.pdf` 
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      toast.success("Certificate downloaded successfully!")
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || 'An error occurred while downloading the certificate.')
+    } finally {
+      setIsDownloadingCert(prev => ({ ...prev, [levelId]: false }))
     }
   }
 
@@ -565,11 +598,12 @@ export function DashboardClient({
                           <div className="flex flex-col items-center justify-center w-12 gap-1">
                             <div className={`h-0.5 w-full ${isCompleted ? 'bg-[#F18231]' : isOwned ? 'bg-orange-200/50' : 'bg-slate-200'}`} />
                             <button
-                              title={isCompleted ? `View Certificate for Level ${lvl.no}` : `Complete Level ${lvl.no} to unlock certificate`}
+                              title={isCompleted ? `Download Certificate for Level ${lvl.no}` : `Complete Level ${lvl.no} to unlock certificate`}
+                              disabled={!isCompleted || isDownloadingCert[lvl.level_id]}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (isCompleted) {
-                                  // Can optionally route to certificate view if needed
+                                  handleDownloadCertificate(lvl.level_id, courseId);
                                 }
                               }}
                               className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all shrink-0 ${
@@ -580,7 +614,11 @@ export function DashboardClient({
                                   : 'border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed'
                               }`}
                             >
-                              <Award className="h-4 w-4" />
+                              {isDownloadingCert[lvl.level_id] ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Award className="h-4 w-4" />
+                              )}
                             </button>
                             <div className={`h-0.5 w-full ${isCompleted ? 'bg-[#F18231]' : isOwned ? 'bg-orange-200/50' : 'bg-slate-200'}`} />
                           </div>

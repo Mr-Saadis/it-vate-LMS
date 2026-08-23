@@ -1,3 +1,15 @@
+export interface Certificate {
+  certificate_id: string; // UUID
+  user_id: string;      // FK to User
+  course_id: string;    // FK to Course
+  level_id: string;     // FK to Level
+  enroll_id?: string;   // FK to Enrollment
+  certificate_code: string; // e.g. "IPDPL1-I2601005"
+  issue_date: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface User {
   user_id: string;
   created_at?: string;
