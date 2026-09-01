@@ -152,7 +152,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 5. QR Code Generation
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://it-vate-lms.vercel.app/';
     const verifyUrl = `${baseUrl}/verify/${certificateRecord.certificate_id}`;
 
     const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, {
