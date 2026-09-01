@@ -17,7 +17,10 @@ export async function RealtimeProvider() {
     const role = profile?.role || 'student'
 
     return <RealtimeListener userId={user.id} role={role as any} />
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.digest === 'DYNAMIC_SERVER_USAGE') {
+      throw error;
+    }
     console.error('Failed to initialize RealtimeProvider:', error)
     return null
   }
