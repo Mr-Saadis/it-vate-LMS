@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Activity } from 'lucide-react'
-import { FaGithub, FaLinkedin, FaYoutube } from 'react-icons/fa'
+import { FaLinkedin, FaYoutube } from 'react-icons/fa'
 
 export function DarkFooter() {
   const pathname = usePathname()
@@ -18,7 +18,7 @@ export function DarkFooter() {
     <footer className="border-t border-slate-800 bg-[#0b1120] text-slate-300">
       {/* Compact Main Footer Container */}
       <div className="mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-10">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
 
           {/* Column 1: Brand & Social */}
           <div className="space-y-3">
@@ -33,22 +33,13 @@ export function DarkFooter() {
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed pr-2">
-              Empowering hardware & firmware engineers with accredited CPDP technical education and industry-grade track systems.
+              Empowering individuals and tech professionals with comprehensive technical education and industry-ready skills.
             </p>
 
             {/* Social Media Icons horizontally aligned right below brand description */}
             <div className="flex items-center gap-2.5 pt-1">
               <a
-                href="https://github.com"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="GitHub"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/80 text-slate-400 hover:border-[#F18231]/50 hover:bg-[#F18231]/10 hover:text-[#F18231] transition-colors"
-              >
-                <FaGithub className="h-4 w-4" />
-              </a>
-              <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/company/itvate"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="LinkedIn"
@@ -97,60 +88,31 @@ export function DarkFooter() {
             </ul>
           </div>
 
-          {/* Column 3: Engineering Domains */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-              Engineering Domains
-            </h3>
-            <ul className="space-y-2 text-xs">
-              <li>
-                <a href="#catalog" className="text-slate-400 hover:text-[#F18231] transition-colors">
-                  Embedded C/C++
-                </a>
-              </li>
-              <li>
-                <a href="#catalog" className="text-slate-400 hover:text-[#F18231] transition-colors">
-                  Firmware Engineering
-                </a>
-              </li>
-              <li>
-                <a href="#catalog" className="text-slate-400 hover:text-[#F18231] transition-colors">
-                  PCB Layout & Design
-                </a>
-              </li>
-              <li>
-                <a href="#catalog" className="text-slate-400 hover:text-[#F18231] transition-colors">
-                  Edge AI & IoT
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 4: Support & Legal */}
+          {/* Column 3: Support & Legal */}
           <div className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
               Support & Legal
             </h3>
             <ul className="space-y-2 text-xs">
               <li>
-                <a href="#" className="text-slate-400 hover:text-[#F18231] transition-colors">
+                <Link href="/contact" className="text-slate-400 hover:text-[#F18231] transition-colors">
                   Contact Us
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-slate-400 hover:text-[#F18231] transition-colors">
+                <Link href="/faq" className="text-slate-400 hover:text-[#F18231] transition-colors">
                   FAQ
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-slate-400 hover:text-[#F18231] transition-colors">
+                <Link href="/privacy" className="text-slate-400 hover:text-[#F18231] transition-colors">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-slate-400 hover:text-[#F18231] transition-colors">
+                <Link href="/terms" className="text-slate-400 hover:text-[#F18231] transition-colors">
                   Terms of Service
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
