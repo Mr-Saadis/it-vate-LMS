@@ -25,7 +25,7 @@ export function PortfolioNavbar() {
 
         {/* Brand Logo */}
         <Link href="/" className="flex items-center group shrink-0">
-          <Image src="/logo_h_c.png" alt="IT-vate Solutions" width={120} height={36} className="object-contain" />
+          <Image src="/logo_h_c.png" alt="PDAT Academy" width={120} height={36} className="object-contain" />
         </Link>
 
         {/* Desktop Navigation Links */}

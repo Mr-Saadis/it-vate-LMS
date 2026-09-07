@@ -6,7 +6,7 @@ import { LMSHeader } from '@/components/lms/LMSHeader'
 import { getAllUserEnrollmentsStatus } from '@/lib/api/courses'
 
 export const metadata = {
-  title: 'IT-vate LMS — Student Dashboard',
+  title: 'PDAT Academy — Student Dashboard',
   description: 'Access your enrolled courses, learning materials, and certificates.',
 }
 

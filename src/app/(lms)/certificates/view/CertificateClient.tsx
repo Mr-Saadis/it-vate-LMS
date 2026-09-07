@@ -123,7 +123,7 @@ export function CertificateClient({
                   <span className="text-3xl font-black text-[#F18231]">IT</span>
                 </div>
                 <h1 className="text-[12px] font-black uppercase tracking-[0.3em] text-[#0F172A]">
-                  IT-vate Learning Management System
+                  PDAT Academy Learning Management System
                 </h1>
               </div>
 

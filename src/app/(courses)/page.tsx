@@ -38,7 +38,7 @@ import { UpcomingCohorts, CohortInfo } from '@/components/courses/UpcomingCohort
 
 export const metadata = {
 
-  title: 'Engineering Courses — IT-vate Solutions',
+  title: 'Engineering Courses — PDAT Academy',
 
   description:
 

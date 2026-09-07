@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { CertificateClient } from '../../CertificateClient'
 
 export const metadata = {
-  title: 'Level Certificate — IT-vate LMS',
+  title: 'Level Certificate — PDAT Academy',
 }
 
 interface PageProps {

@@ -29,7 +29,7 @@ interface LMSSidebarProps {
 const navItems = [
   {
     href: '/dashboard',
-    label: 'Analytics',
+    label: 'My Trainings',
     icon: LayoutDashboard,
   },
   {
@@ -60,10 +60,10 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
       {/* Mobile Header */}
       <div className="md:hidden flex w-full items-center justify-between bg-[#0F172A] px-5 py-4 shrink-0">
         <div className="flex items-center gap-2.5">
-          <Image src="/logo2.png" alt="IT-vate LMS" width={28} height={28} className="rounded object-contain bg-white p-0.5" />
+          <Image src="/logo2.png" alt="PDAT Academy" width={28} height={28} className="rounded object-contain bg-white p-0.5" />
           <div className="leading-none">
             <span className="block text-xs font-black text-white tracking-tight">
-              IT-vate LMS
+              PDAT Academy
             </span>
             <span className="block text-[9px] font-medium text-slate-500 uppercase tracking-widest">
               {userRole === 'admin' ? 'Admin Portal' : 'Student Portal'}
@@ -88,10 +88,10 @@ export function LMSSidebar({ userName = 'Student', userRole = 'student' }: LMSSi
         {/* Logo Area */}
         <div className="border-b border-white/10 px-5 py-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Image src="/logo2.png" alt="IT-vate LMS" width={28} height={28} className="rounded object-contain bg-white p-0.5" />
+            <Image src="/logo2.png" alt="PDAT Academy" width={28} height={28} className="rounded object-contain bg-white p-0.5" />
             <div className="leading-none">
               <span className="block text-xs font-black text-white tracking-tight">
-                IT-vate LMS
+                PDAT Academy
               </span>
               <span className="block text-[9px] font-medium text-slate-500 uppercase tracking-widest">
                 {userRole === 'admin' ? 'Admin Portal' : 'Student Portal'}

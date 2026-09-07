@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Terms of Service | IT-vate Solutions',
-  description: 'Terms of Service for IT-vate Solutions.',
+  title: 'Terms of Service | PDAT Academy',
+  description: 'Terms of Service for PDAT Academy.',
 }
 
 export default function TermsPage() {
@@ -15,15 +15,15 @@ export default function TermsPage() {
             Last updated: {new Date().toLocaleDateString()}
           </p>
           <p>
-            Welcome to IT-vate Solutions! These terms and conditions outline the rules and regulations for the use of our educational platform.
+            Welcome to PDAT Academy! These terms and conditions outline the rules and regulations for the use of our educational platform.
           </p>
           <h2 className="text-xl font-bold text-[#0F172A] mt-8 mb-4">1. Acceptance of Terms</h2>
           <p>
-            By accessing this platform, we assume you accept these terms and conditions. Do not continue to use IT-vate Solutions if you do not agree to take all of the terms and conditions stated on this page.
+            By accessing this platform, we assume you accept these terms and conditions. Do not continue to use PDAT Academy if you do not agree to take all of the terms and conditions stated on this page.
           </p>
           <h2 className="text-xl font-bold text-[#0F172A] mt-8 mb-4">2. License to Use</h2>
           <p>
-            Unless otherwise stated, IT-vate Solutions and/or its licensors own the intellectual property rights for all material on the platform. All intellectual property rights are reserved. You may access this from IT-vate Solutions for your own personal educational use subjected to restrictions set in these terms and conditions.
+            Unless otherwise stated, PDAT Academy and/or its licensors own the intellectual property rights for all material on the platform. All intellectual property rights are reserved. You may access this from PDAT Academy for your own personal educational use subjected to restrictions set in these terms and conditions.
           </p>
           <h2 className="text-xl font-bold text-[#0F172A] mt-8 mb-4">3. User Accounts</h2>
           <p>

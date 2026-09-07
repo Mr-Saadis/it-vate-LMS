@@ -69,7 +69,7 @@ export function CircuitGraphic() {
                 <div className="w-2 h-2 rounded bg-[#F18231] flex items-center justify-center">
                   <span className="text-[5px] font-black text-white">IT</span>
                 </div>
-                <span className="text-[8px] font-extrabold tracking-wider text-white">IT-VATE</span>
+                <span className="text-[8px] font-extrabold tracking-wider text-white">PDAT ACADEMY</span>
               </div>
               <span className="text-[7px] font-mono text-slate-400">STM32F4</span>
               <div className="mt-1 flex items-center gap-1 bg-emerald-950/40 border border-emerald-800/30 rounded px-1.5 py-0.5">

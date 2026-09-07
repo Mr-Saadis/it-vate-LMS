@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 
 export const metadata = {
-  title: 'Enrollment Status — IT-vate LMS',
+  title: 'Enrollment Status — PDAT Academy',
 }
 
 interface PageProps {

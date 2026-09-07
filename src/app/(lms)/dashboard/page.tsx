@@ -5,7 +5,7 @@ import { getUserFullProfile } from '@/lib/api/users'
 import { DashboardClient } from './DashboardClient'
 
 export const metadata = {
-  title: 'Analytics — IT-vate LMS',
+  title: 'My Trainings — PDAT Academy',
 }
 
 interface PageProps {

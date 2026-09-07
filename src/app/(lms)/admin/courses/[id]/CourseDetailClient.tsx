@@ -379,7 +379,7 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                 </p>
                 {!search && filter === 'all' && (
                   <Button onClick={openAddLevel} className="mt-4 h-8 bg-[#F18231] hover:bg-[#d96f21] text-xs">
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add First Level
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Level
                   </Button>
                 )}
               </div>

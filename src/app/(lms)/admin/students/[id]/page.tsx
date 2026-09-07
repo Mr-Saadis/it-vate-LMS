@@ -8,8 +8,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const student = await getStudentById(id)
   return {
     title: student
-      ? `${student.name} — Student Detail | IT-vate LMS`
-      : 'Student Not Found | IT-vate LMS',
+      ? `${student.name} — Student Detail | PDAT Academy`
+      : 'Student Not Found | PDAT Academy',
   }
 }
 

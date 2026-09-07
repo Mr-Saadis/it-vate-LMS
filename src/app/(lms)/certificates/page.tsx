@@ -3,7 +3,7 @@ import { getActiveCourses } from '@/lib/api/courses'
 import { CertificatesClient } from './CertificatesClient'
 
 export const metadata = {
-  title: 'Certificates — IT-vate LMS',
+  title: 'Certificates — PDAT Academy',
 }
 
 export default async function CertificatesPage() {
@@ -18,13 +18,16 @@ export default async function CertificatesPage() {
       enroll_no,
       track_type,
       status,
+      is_completed,
+      content_items_id,
       approved_at,
       levels (
         level_id,
         level_title,
         no,
         course_id,
-        courses ( course_id, name, slug )
+        courses ( course_id, name, slug ),
+        content_items ( content_items_id, is_completed )
       )
     `)
     .eq('user_id', user?.id ?? '')

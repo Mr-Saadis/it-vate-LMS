@@ -162,6 +162,20 @@ export function DashboardClient({
 
   const totalCourses = uniqueCourseIds.length
 
+  const sortedCourseIds = [...uniqueCourseIds].sort((a, b) => {
+    const isCompletedA = courseGroups[a].ownedLevels.length > 0 && courseGroups[a].ownedLevels.every(lvlId => {
+      const data = enrolledLevelsData[lvlId];
+      return data && (data.status === 'Completed' || data.is_completed === true || data.content_items?.some((i: any) => i.is_completed === true));
+    });
+    const isCompletedB = courseGroups[b].ownedLevels.length > 0 && courseGroups[b].ownedLevels.every(lvlId => {
+      const data = enrolledLevelsData[lvlId];
+      return data && (data.status === 'Completed' || data.is_completed === true || data.content_items?.some((i: any) => i.is_completed === true));
+    });
+    if (isCompletedA && !isCompletedB) return 1;
+    if (!isCompletedA && isCompletedB) return -1;
+    return 0;
+  });
+
   // User must click a level to view its details (no level is active by default)
   // useEffect removed for initial active state
   const handleLevelClick = (courseId: string, levelId: string, isOwned: boolean, trackType: string, isLockedForExpert: boolean) => {
@@ -325,7 +339,7 @@ export function DashboardClient({
           </div>
         ) : (
           <div className="space-y-8">
-            {uniqueCourseIds.map(courseId => {
+            {sortedCourseIds.map(courseId => {
               const { course, trackType, ownedLevels, enrollNo } = courseGroups[courseId]
               const activeLevelId = activeCourseLevels[courseId] || null
               
@@ -349,6 +363,13 @@ export function DashboardClient({
               let classroomUrl = 'https://classroom.google.com'
               if (batchItem?.url) {
                 classroomUrl = batchItem.url.startsWith('http') ? batchItem.url : `https://${batchItem.url}`
+              }
+
+              let isTargetLevelCompleted = false;
+              if (targetLevelData) {
+                isTargetLevelCompleted = targetLevelData.status === 'Completed' ||
+                                         targetLevelData.is_completed === true ||
+                                         targetLevelData.content_items?.some((i: any) => i.is_completed === true);
               }
 
               let nextUnlockableLevelId: string | null = null
@@ -437,7 +458,7 @@ export function DashboardClient({
                           Contact Admin
                           <ExternalLink className="h-4 w-4 text-[#F18231]" />
                         </a>
-                      ) : (
+                      ) : !isTargetLevelCompleted && (
                         <a
                           href={classroomUrl}
                           target="_blank"
@@ -633,6 +654,11 @@ export function DashboardClient({
                       const activeLevelInfo = sortedLevels.find(l => l.level_id === activeLevelId)
                       const activeLevelData = enrolledLevelsData[activeLevelId]
                       const activeItems = activeLevelData?.content_items || []
+                      const isActiveLevelCompleted = activeLevelData && (
+                        activeLevelData.status === 'Completed' ||
+                        activeLevelData.is_completed === true ||
+                        activeLevelData.content_items?.some((i: any) => i.is_completed === true)
+                      )
                       
                       return (
                         <div className="mt-8 border-t border-slate-100 pt-8 animate-in fade-in duration-300">
@@ -688,7 +714,7 @@ export function DashboardClient({
                                       </div>
                                     </div>
                                     <div className="flex flex-wrap gap-2 mt-1">
-                                      {item.url && (
+                                      {item.url && !isActiveLevelCompleted && (
                                         <a href={item.url.startsWith('http') ? item.url : `https://${item.url}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 hover:bg-[#F18231] hover:text-white hover:border-[#F18231] transition-colors">
                                           <BookOpen className="h-3 w-3" /> Classroom
                                         </a>

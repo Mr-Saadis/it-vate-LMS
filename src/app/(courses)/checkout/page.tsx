@@ -195,7 +195,7 @@ function CheckoutContent() {
           Payment &amp; Bank Transfer Details
         </h1>
         <p className="mt-1 text-xs text-slate-600">
-          Transfer tuition to the IT-vate Solutions corporate account and upload your
+          Transfer tuition to the PDAT Academy corporate account and upload your
           payment receipt to complete enrollment.
         </p>
       </div>
@@ -297,13 +297,14 @@ function CheckoutContent() {
             <CardContent className="p-6 space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-[#0F172A]">
                 <Building2 className="h-4 w-4 text-[#F18231]" />
-                IT-vate Solutions Corporate Account
+                PDAT Academy Corporate Account
               </div>
               <div className="space-y-1.5 text-xs text-slate-700 font-mono">
                 <p><span className="text-slate-400 font-sans">Bank:</span> Habib Bank Limited (HBL)</p>
-                <p><span className="text-slate-400 font-sans">Title:</span> IT-vate Solutions (Pvt) Ltd</p>
-                <p><span className="text-slate-400 font-sans">Account No:</span> 0123-9988776655</p>
-                <p><span className="text-slate-400 font-sans">IBAN:</span> PK36HABB0001239988776655</p>
+                <p><span className="text-slate-400 font-sans">Title:</span> Itvate Soluti</p>
+                <p><span className="text-slate-400 font-sans">Account No:</span> 59167000071503</p>
+                <p><span className="text-slate-400 font-sans">IBAN:</span> PK71HABB0059167000071503</p>
+                <p><span className="text-slate-400 font-sans">Branch Name:</span> IBB Lda Avenue</p>
               </div>
             </CardContent>
           </Card>

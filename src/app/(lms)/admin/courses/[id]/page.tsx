@@ -4,7 +4,7 @@ import { getCourseByIdAdmin } from '@/lib/api/courses'
 import { CourseDetailClient } from './CourseDetailClient'
 
 export const metadata = {
-  title: 'Admin — Course Details | IT-vate LMS',
+  title: 'Admin — Course Details | PDAT Academy',
 }
 
 interface PageProps {

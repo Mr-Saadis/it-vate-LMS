@@ -19,11 +19,11 @@ export function PortfolioFooter() {
           {/* Col 1: Brand Info */}
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center gap-3">
-              <Image src="/logo2.png" alt="IT-vate Icon" width={40} height={40} className="object-cover" />
+              <Image src="/logo2.png" alt="PDAT Academy Icon" width={40} height={40} className="object-cover" />
               {/* <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white text-[#F18231]">
               </div> */}
               <span className="text-xl font-bold tracking-tight text-white">
-                IT-vate <span className="text-[#F18231]">Solutions</span>
+                PDAT <span className="text-[#F18231]">Academy</span>
               </span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
@@ -44,7 +44,6 @@ export function PortfolioFooter() {
 
           {/* Col 3: Quick Links */}
           <div>
-            <h3 className="text-sm font-semibold text-white tracking-wider uppercase">Platform & LMS</h3>
             <ul className="mt-4 space-y-2 text-xs">
               <li><Link href="/courses" className="hover:text-white transition-colors">Browse Courses & Tracks</Link></li>
               <li><Link href="/sustainability" className="hover:text-white transition-colors">SDGs & Sustainability</Link></li>
@@ -67,13 +66,13 @@ export function PortfolioFooter() {
             </div>
             <div className="flex items-center gap-2 text-xs">
               <MapPin className="h-4 w-4 text-[#F18231]" />
-              <span>IT-vate R&D Center, Technology Park</span>
+              <span>PDAT Academy R&D Center, Technology Park</span>
             </div>
           </div>
         </div>
 
         <div className="mt-12 border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} IT-vate Solutions. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} PDAT Academy. A project of IT-vate. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link href="/contact" className="hover:text-slate-400">Contact Us</Link>
             <span className="hover:text-slate-400">Privacy Policy</span>

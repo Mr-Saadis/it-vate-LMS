@@ -3,7 +3,7 @@ import { getLevelWithContents } from '@/lib/api/courses'
 import { LevelContentClient } from './LevelContentClient'
 
 export const metadata = {
-  title: 'Level Content — IT-vate LMS',
+  title: 'Level Content — PDAT Academy',
 }
 
 interface PageProps {

@@ -66,7 +66,7 @@ export default async function VerifyCertificatePage({ params }: VerifyPageProps)
               Certificate Verified
             </h1>
             <p className="text-emerald-50 mt-2 font-medium">
-              This certificate is valid and recognized by IT-vate Solutions.
+              This certificate is valid and recognized by PDAT Academy.
             </p>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default async function VerifyCertificatePage({ params }: VerifyPageProps)
             href="/"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#0F172A] hover:bg-slate-800 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
-            Visit IT-vate Solutions
+            Visit PDAT Academy
             <ArrowRight className="h-4 w-4 text-[#F18231]" />
           </Link>
         </div>

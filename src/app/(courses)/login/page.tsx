@@ -8,22 +8,22 @@ import { signIn, signInWithGoogle } from '@/lib/actions/auth'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Zap, Cpu, Award, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-// ── Left Panel Features (Refined Light/Balanced Badges) ────────────────────────
+// ── Left Panel Features (General) ──────────────────────────────────────────────
 const FEATURES = [
   {
-    icon: <Zap className="h-4 w-4 text-[#F18231]" />,
-    title: 'Real-time OS Architecture',
-    desc: 'FreeRTOS, tasks, semaphores & interrupt-driven design on ARM Cortex-M.',
-  },
-  {
     icon: <Cpu className="h-4 w-4 text-[#F18231]" />,
-    title: 'Hands-on Hardware Interfacing',
-    desc: 'I²C, SPI, UART, CAN Bus & Industrial IoT protocols with real hardware kits.',
+    title: 'Multi-Disciplinary Engineering',
+    desc: 'Covering Embedded Systems, IoT, and high-speed PCB Design in one place.',
   },
   {
     icon: <Award className="h-4 w-4 text-[#F18231]" />,
-    title: 'CPDP-Accredited Certification',
-    desc: 'Industry-recognised certificates on completion of every enrolled track.',
+    title: 'Flexible Learning Tracks',
+    desc: 'Choose from Expert, Progressive, Fast, or 1-on-1 Premium mentorship tracks.',
+  },
+  {
+    icon: <Zap className="h-4 w-4 text-[#F18231]" />,
+    title: 'Hands-On Practical Approach',
+    desc: 'Learn through real-world lab manuals, logic analyzer captures, and GitHub starter codes.',
   },
 ]
 
@@ -96,15 +96,12 @@ function LoginFormContent() {
         {/* Top Logo Header */}
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-3">
-            <Image src="/logo2.png" alt="IT-vate Icon" width={40} height={40} className="object-cover" />
+            <Image src="/logo2.png" alt="PDAT Academy Icon" width={40} height={40} className="object-cover" />
             {/* <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm">
             </div> */}
             <div className="flex flex-col">
               <span className="text-base font-bold text-white tracking-tight leading-tight">
-                IT-vate Solutions
-              </span>
-              <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
-                PLATFORM &amp; LMS
+                PDAT Academy
               </span>
             </div>
           </Link>
@@ -159,10 +156,10 @@ function LoginFormContent() {
         {/* Mobile Header View */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 lg:hidden bg-slate-50">
           <Link href="/" className="inline-flex items-center gap-2">
-            <Image src="/logo2.png" alt="IT-vate Icon" width={32} height={32} className="object-cover" />
+            <Image src="/logo2.png" alt="PDAT Academy Icon" width={32} height={32} className="object-cover" />
             {/* <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
             </div> */}
-            <span className="text-sm font-bold text-slate-900 tracking-tight">IT-vate Solutions</span>
+            <span className="text-sm font-bold text-slate-900 tracking-tight">PDAT Academy</span>
           </Link>
           <Link href="/" className="text-xs font-semibold text-slate-600 hover:text-[#F18231] transition-colors">
             Browse Courses

@@ -1,8 +1,8 @@
 import { Mail, MapPin, Phone, Clock, Globe } from 'lucide-react'
 
 export const metadata = {
-  title: 'Contact Us | IT-vate Solutions',
-  description: 'Get in touch with IT-vate Solutions for inquiries about our engineering courses.',
+  title: 'Contact Us | PDAT Academy',
+  description: 'Get in touch with PDAT Academy for inquiries about our engineering courses.',
 }
 
 const contactCards = [
@@ -21,7 +21,7 @@ const contactCards = [
   {
     icon: MapPin,
     label: 'Office',
-    value: 'IT-vate Solutions Hub',
+    value: 'PDAT Academy Hub',
     sub: 'Pakistan',
   },
   {

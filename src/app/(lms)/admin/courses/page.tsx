@@ -4,7 +4,7 @@ import { AdminCoursesClient } from './AdminCoursesClient'
 import { getAllCoursesWithLevelsAdmin } from '@/lib/api/courses'
 
 export const metadata = {
-  title: 'Admin — Courses Management | IT-vate LMS',
+  title: 'Admin — Courses Management | PDAT Academy',
 }
 
 export default async function AdminCoursesPage() {

@@ -23,12 +23,11 @@ export function DarkFooter() {
           {/* Column 1: Brand & Social */}
           <div className="space-y-3">
             <div className="flex items-center gap-2.5">
-              <Image src="/logo2.png" alt="IT-vate Icon" width={28} height={28} className="object-cover" />
+              <Image src="/logo2.png" alt="PDAT Academy Icon" width={28} height={28} className="object-cover" />
               {/* <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
               </div> */}
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-white tracking-tight">IT-vate Solutions</span>
-                <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Platform & LMS</span>
+                <span className="text-sm font-bold text-white tracking-tight">PDAT Academy</span>
               </div>
             </div>
 
@@ -48,7 +47,7 @@ export function DarkFooter() {
                 <FaLinkedin className="h-4 w-4" />
               </a>
               <a
-                href="https://youtube.com"
+                href="https://www.youtube.com/@IT-vateSolutions"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="YouTube"
@@ -122,7 +121,7 @@ export function DarkFooter() {
         {/* Compact Bottom Bar */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between border-t border-slate-800/80 pt-6 gap-4 text-xs text-slate-500">
           <p>
-            © {new Date().getFullYear()} IT-vate Solutions. All rights reserved.
+            © {new Date().getFullYear()} PDAT Academy. A project of IT-vate. All rights reserved.
           </p>
 
 

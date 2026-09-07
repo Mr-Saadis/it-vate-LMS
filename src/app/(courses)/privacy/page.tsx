@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Privacy Policy | IT-vate Solutions',
-  description: 'Privacy Policy for IT-vate Solutions.',
+  title: 'Privacy Policy | PDAT Academy',
+  description: 'Privacy Policy for PDAT Academy.',
 }
 
 export default function PrivacyPage() {
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
             Last updated: {new Date().toLocaleDateString()}
           </p>
           <p>
-            At IT-vate Solutions, we are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about our policy, or our practices with regards to your personal information, please contact us.
+            At PDAT Academy, we are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about our policy, or our practices with regards to your personal information, please contact us.
           </p>
           <h2 className="text-xl font-bold text-[#0F172A] mt-8 mb-4">1. Information We Collect</h2>
           <p>

@@ -4,7 +4,7 @@ import { getAllAdminPayments } from '@/lib/api/courses'
 import { AdminClient } from './AdminClient'
 
 export const metadata = {
-  title: 'Admin — Payment Verification | IT-vate LMS',
+  title: 'Admin — Payment Verification | PDAT Academy',
 }
 
 export default async function AdminVerificationPage() {

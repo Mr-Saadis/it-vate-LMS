@@ -24,7 +24,7 @@ export async function CoursesNavbar() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center group">
-          <Image src="/logo_h_c.png" alt="IT-vate Solutions" width={130} height={40} className="object-contain" />
+          <Image src="/logo_h_c.png" alt="PDAT Academy" width={130} height={40} className="object-contain" />
         </Link>
 
 

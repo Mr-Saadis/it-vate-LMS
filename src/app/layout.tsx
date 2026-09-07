@@ -14,8 +14,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { RealtimeProvider } from "@/components/RealtimeProvider";
 
 export const metadata: Metadata = {
-  title: "IT-vate Solutions | Engineering R&D & LMS Platform",
-  description: "IT-vate Solutions - Leading Embedded Systems R&D, Industrial IoT Engineering, and CPDP Accredited Technical LMS Platform.",
+  title: "PDAT Academy | Engineering R&D & LMS Platform",
+  description: "PDAT Academy - Leading Embedded Systems R&D, Industrial IoT Engineering, and CPDP Accredited Technical LMS Platform.",
 };
 
 export default function RootLayout({

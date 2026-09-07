@@ -3,8 +3,8 @@ import { DarkFooter } from '@/components/courses/Footer'
 import { ConditionalWrapper } from '@/components/courses/ConditionalWrapper'
 
 export const metadata = {
-  title: 'IT-vate Solutions — Engineering Courses',
-  description: 'Browse and enroll in specialized hardware and firmware engineering courses from IT-vate Solutions.',
+  title: 'PDAT Academy — Engineering Courses',
+  description: 'Browse and enroll in specialized hardware and firmware engineering courses from PDAT Academy.',
 }
 
 export default function CoursesLayout({

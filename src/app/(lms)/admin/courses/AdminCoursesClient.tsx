@@ -357,7 +357,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
 
               <div>
                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Slug URL
+                  Course Shortname
                 </label>
                 <input
                   type="text"

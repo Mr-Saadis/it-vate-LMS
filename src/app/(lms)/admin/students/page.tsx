@@ -4,7 +4,7 @@ import { StudentsClient } from './StudentsClient'
 import { getAllStudents } from '@/lib/api/admin'
 
 export const metadata = {
-  title: 'Admin — Enrolled Students | IT-vate LMS',
+  title: 'Admin — Enrolled Students | PDAT Academy',
 }
 
 export default async function AdminStudentsPage() {

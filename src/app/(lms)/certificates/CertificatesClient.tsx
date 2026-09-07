@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { Course } from '@/lib/types'
-import { Award, BookOpen, Clock, Download, CheckCircle2 } from 'lucide-react'
+import { Award, BookOpen, Clock, Download, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 interface CertificatesClientProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -12,6 +14,37 @@ interface CertificatesClientProps {
 }
 
 export function CertificatesClient({ enrollments, allCourses, userName }: CertificatesClientProps) {
+  const [isDownloadingCert, setIsDownloadingCert] = useState<Record<string, boolean>>({})
+
+  const handleDownloadCertificate = async (levelId: string, courseId: string) => {
+    try {
+      setIsDownloadingCert(prev => ({ ...prev, [levelId]: true }))
+      const res = await fetch(`/api/certificates/download?level_id=${levelId}&course_id=${courseId}`)
+      
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.error || 'Failed to download certificate')
+      }
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Certificate.pdf` 
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      toast.success("Certificate downloaded successfully!")
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || 'An error occurred while downloading the certificate.')
+    } finally {
+      setIsDownloadingCert(prev => ({ ...prev, [levelId]: false }))
+    }
+  }
+
   // Process and group by Course
   const courseGroups: Record<string, {
     course: Course,
@@ -40,6 +73,8 @@ export function CertificatesClient({ enrollments, allCourses, userName }: Certif
       enroll_id: enroll.enroll_id,
       enroll_no: enroll.enroll_no,
       status: enroll.status,
+      is_completed: enroll.is_completed,
+      content_items_id: enroll.content_items_id,
       approved_at: enroll.approved_at,
     })
   })
@@ -82,7 +117,11 @@ export function CertificatesClient({ enrollments, allCourses, userName }: Certif
             {uniqueCourseIds.map(courseId => {
               const { course, trackType, enrolledLevels } = courseGroups[courseId]
               const totalLevelsInCourse = course.levels?.length || 0
-              const completedLevelsCount = enrolledLevels.filter(l => l.status === 'Completed').length
+              const completedLevelsCount = enrolledLevels.filter(l => 
+                l.status === 'Completed' ||
+                l.is_completed === true ||
+                l.content_items?.some((i: any) => i.is_completed === true && i.content_items_id === l.content_items_id)
+              ).length
               
               const isOverallCompleted = totalLevelsInCourse > 0 && completedLevelsCount === totalLevelsInCourse
               const sortedLevels = [...enrolledLevels].sort((a, b) => a.no - b.no)
@@ -108,20 +147,22 @@ export function CertificatesClient({ enrollments, allCourses, userName }: Certif
 
                     {/* Overall Certificate Button */}
                     {isOverallCompleted && (
-                      <Link
-                        href={`/certificates/view/course/${courseId}`}
+                      <button
+                        onClick={() => toast.error('Overall course certificate generation is not implemented yet.')}
                         className="inline-flex items-center gap-2 rounded-xl bg-[#F18231] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#d96f21] transition-colors shadow-sm"
                       >
                         <Award className="h-4 w-4" />
                         Overall Course Certificate
-                      </Link>
+                      </button>
                     )}
                   </div>
 
                   {/* Levels List */}
                   <div className="p-5 md:p-6 grid gap-4">
                     {sortedLevels.map(lvl => {
-                      const isCompleted = lvl.status === 'Completed'
+                      const isCompleted = lvl.status === 'Completed' ||
+                                          lvl.is_completed === true ||
+                                          lvl.content_items?.some((i: any) => i.is_completed === true && i.content_items_id === lvl.content_items_id)
 
                       return (
                         <div 
@@ -155,13 +196,17 @@ export function CertificatesClient({ enrollments, allCourses, userName }: Certif
 
                           <div className="sm:text-right">
                             {isCompleted ? (
-                              <Link
-                                href={`/certificates/view/level/${lvl.enroll_id}`}
-                                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm"
+                              <button
+                                onClick={() => handleDownloadCertificate(lvl.level_id, courseId)}
+                                disabled={isDownloadingCert[lvl.level_id]}
+                                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                View & Download
-                                <Download className="h-3.5 w-3.5 text-[#F18231]" />
-                              </Link>
+                                {isDownloadingCert[lvl.level_id] ? (
+                                  <>Downloading... <Loader2 className="h-3.5 w-3.5 text-[#F18231] animate-spin" /></>
+                                ) : (
+                                  <>Download <Download className="h-3.5 w-3.5 text-[#F18231]" /></>
+                                )}
+                              </button>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-500">
                                 <Clock className="h-3 w-3" />
