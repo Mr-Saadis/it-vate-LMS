@@ -92,6 +92,35 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
   const [deleteInput, setDeleteInput] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Bulk Batch State
+  const [isBulkBatchModalOpen, setIsBulkBatchModalOpen] = useState(false)
+  const [bulkBatchForm, setBulkBatchForm] = useState<{
+    year: string,
+    start_date: string,
+    end_date: string,
+    levelsData: Record<string, { classroomUrl: string, driveUrl: string, youtubeUrl: string }>
+  }>({
+    year: String(new Date().getFullYear()),
+    start_date: '',
+    end_date: '',
+    levelsData: {}
+  })
+  const [bulkPreviewSequences, setBulkPreviewSequences] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (isBulkBatchModalOpen) {
+      const fetchSequences = async () => {
+        const sequences: Record<string, string> = {}
+        for (const level of course.levels || []) {
+          const res = await getNextBatchSequenceAction(level.level_id, bulkBatchForm.year)
+          if (res.success && res.sequence) sequences[level.level_id] = res.sequence
+        }
+        setBulkPreviewSequences(sequences)
+      }
+      fetchSequences()
+    }
+  }, [isBulkBatchModalOpen, bulkBatchForm.year, course.levels])
+
   // Memoized Levels
   const levels = useMemo(() => {
     let list = course.levels || []
@@ -255,6 +284,75 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
     }
   }
 
+  const openBulkBatchModal = () => {
+    const initialLevelsData: Record<string, { classroomUrl: string, driveUrl: string, youtubeUrl: string }> = {}
+    ;(course.levels || []).forEach(l => {
+      initialLevelsData[l.level_id] = { classroomUrl: '', driveUrl: '', youtubeUrl: '' }
+    })
+    setBulkBatchForm({
+      year: String(new Date().getFullYear()),
+      start_date: '',
+      end_date: '',
+      levelsData: initialLevelsData
+    })
+    setIsBulkBatchModalOpen(true)
+  }
+
+  const saveBulkBatch = async () => {
+    if (!bulkBatchForm.start_date || !bulkBatchForm.end_date) {
+      toast.error('Start Date and End Date are required')
+      return
+    }
+
+    const levelsToCreate = (course.levels || []).filter(l => {
+      const data = bulkBatchForm.levelsData[l.level_id]
+      return data && (data.classroomUrl.trim() !== '' || data.driveUrl.trim() !== '' || data.youtubeUrl.trim() !== '')
+    })
+
+    if (levelsToCreate.length === 0) {
+      toast.error('Please enter at least one link for at least one level')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const promises: Promise<any>[] = []
+      
+      levelsToCreate.forEach(level => {
+        const data = bulkBatchForm.levelsData[level.level_id]
+        const seq = bulkPreviewSequences[level.level_id] || '01'
+        const codePrefix = course.slug?.toUpperCase() || 'CRS'
+        const baseTitle = `${codePrefix}-${bulkBatchForm.year}${seq}-L${level.no}`
+
+        promises.push(createContentItemAction({
+          level_id: level.level_id,
+          title: baseTitle,
+          content_type: 'link', // 'link' makes it appear as a Classroom item primarily, but can hold all 3
+          url: data.classroomUrl.trim() || undefined,
+          drive_file_id: data.driveUrl.trim() || undefined,
+          youtube_id: data.youtubeUrl.trim() || undefined,
+          start_date: bulkBatchForm.start_date,
+          end_date: bulkBatchForm.end_date
+        }))
+      })
+
+      const results = await Promise.all(promises)
+      const hasError = results.some(r => !r.success)
+
+      if (hasError) {
+        toast.error('Some batches failed to create')
+      } else {
+        toast.success('Course batches created successfully')
+        setIsBulkBatchModalOpen(false)
+        router.refresh()
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'An error occurred')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const executeDelete = () => {
     if (!deletingItem || deleteInput !== 'DELETE') return
     setIsDeleting(true)
@@ -316,6 +414,9 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
 
         {/* Stats Row */}
         <div className="flex items-center gap-3 flex-wrap">
+          <Button onClick={openBulkBatchModal} className="h-10 bg-[#0F172A] hover:bg-slate-800 text-xs font-bold shadow-sm">
+            <Plus className="h-4 w-4 mr-1.5" /> Add Course Batch
+          </Button>
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm shrink-0">
             <span className="text-slate-700"><Layers className="h-4 w-4" /></span>
             <div>
@@ -888,6 +989,175 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
               <Button onClick={executeDelete} disabled={deleteInput !== 'DELETE' || isDeleting} className="text-xs font-semibold bg-red-600 hover:bg-red-700 text-white">
                 {isDeleting ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 mr-1.5" />}
                 Confirm Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Bulk Batch Form Modal */}
+      {isBulkBatchModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
+              <h3 className="text-lg font-bold text-[#0F172A]">Add Course Batch</h3>
+              <button onClick={() => setIsBulkBatchModalOpen(false)} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-5 space-y-4 overflow-y-auto">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Year</label>
+                  <Select value={bulkBatchForm.year} onValueChange={v => setBulkBatchForm({...bulkBatchForm, year: v || ''})}>
+                    <SelectTrigger className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231]">
+                      <SelectValue placeholder="Select Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[0, 1, 2, 3].map(i => {
+                        const y = String(new Date().getFullYear() + i)
+                        return <SelectItem key={y} value={y}>{y}</SelectItem>
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Start Date</label>
+                    <Popover>
+                      <PopoverTrigger
+                        type="button"
+                        className={cn(
+                          "w-full flex items-center justify-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231]",
+                          !bulkBatchForm.start_date && "text-slate-400"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+                        <span className="truncate">{bulkBatchForm.start_date ? format(parseISO(bulkBatchForm.start_date), "PP") : "Pick a date"}</span>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={bulkBatchForm.start_date ? parseISO(bulkBatchForm.start_date) : undefined}
+                          onSelect={(d) => setBulkBatchForm({ ...bulkBatchForm, start_date: d ? format(d, 'yyyy-MM-dd') : '' })}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">End Date</label>
+                    <Popover>
+                      <PopoverTrigger
+                        type="button"
+                        className={cn(
+                          "w-full flex items-center justify-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231]",
+                          !bulkBatchForm.end_date && "text-slate-400"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+                        <span className="truncate">{bulkBatchForm.end_date ? format(parseISO(bulkBatchForm.end_date), "PP") : "Pick a date"}</span>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={bulkBatchForm.end_date ? parseISO(bulkBatchForm.end_date) : undefined}
+                          onSelect={(d) => setBulkBatchForm({ ...bulkBatchForm, end_date: d ? format(d, 'yyyy-MM-dd') : '' })}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 mt-4">
+                <p className="text-sm font-semibold text-slate-600">Level Classroom Links</p>
+                <p className="text-xs text-slate-500 mb-2">Leave the URL empty for any level where you don't want to create a batch.</p>
+                {(course.levels || []).sort((a, b) => a.no - b.no).map(level => {
+                  const seq = bulkPreviewSequences[level.level_id] || '01'
+                  const codePrefix = course.slug?.toUpperCase() || 'CRS'
+                  const generatedId = `${codePrefix}-${bulkBatchForm.year}${seq}-L${level.no}`
+                  
+                  return (
+                    <div key={level.level_id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600">
+                            L{level.no}
+                          </div>
+                          <span className="text-sm font-bold text-[#0F172A]">{level.level_title}</span>
+                        </div>
+                        <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                          {generatedId}
+                        </span>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-500">Google Classroom URL</label>
+                          <input
+                            type="url"
+                            placeholder="https://classroom.google.com/..."
+                            value={bulkBatchForm.levelsData[level.level_id]?.classroomUrl || ''}
+                            onChange={(e) => setBulkBatchForm({
+                              ...bulkBatchForm,
+                              levelsData: {
+                                ...bulkBatchForm.levelsData,
+                                [level.level_id]: { ...bulkBatchForm.levelsData[level.level_id], classroomUrl: e.target.value }
+                              }
+                            })}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231]"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-500">Google Drive URL/ID</label>
+                            <input
+                              type="text"
+                              placeholder="Folder or file link..."
+                              value={bulkBatchForm.levelsData[level.level_id]?.driveUrl || ''}
+                              onChange={(e) => setBulkBatchForm({
+                                ...bulkBatchForm,
+                                levelsData: {
+                                  ...bulkBatchForm.levelsData,
+                                  [level.level_id]: { ...bulkBatchForm.levelsData[level.level_id], driveUrl: e.target.value }
+                                }
+                              })}
+                              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231]"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-500">YouTube URL/ID</label>
+                            <input
+                              type="text"
+                              placeholder="Video link or ID..."
+                              value={bulkBatchForm.levelsData[level.level_id]?.youtubeUrl || ''}
+                              onChange={(e) => setBulkBatchForm({
+                                ...bulkBatchForm,
+                                levelsData: {
+                                  ...bulkBatchForm.levelsData,
+                                  [level.level_id]: { ...bulkBatchForm.levelsData[level.level_id], youtubeUrl: e.target.value }
+                                }
+                              })}
+                              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-5 shrink-0 bg-slate-50 rounded-b-2xl">
+              <Button variant="outline" onClick={() => setIsBulkBatchModalOpen(false)} className="text-xs">Cancel</Button>
+              <Button 
+                onClick={saveBulkBatch} 
+                disabled={isSaving} 
+                className="text-xs font-semibold bg-[#F18231] hover:bg-[#d96f21]"
+              >
+                {isSaving ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
+                Create Batches
               </Button>
             </div>
           </div>
