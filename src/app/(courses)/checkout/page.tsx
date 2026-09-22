@@ -304,7 +304,6 @@ function CheckoutContent() {
                 <p><span className="text-slate-400 font-sans">Title:</span> Itvate Soluti</p>
                 <p><span className="text-slate-400 font-sans">Account No:</span> 59167000071503</p>
                 <p><span className="text-slate-400 font-sans">IBAN:</span> PK71HABB0059167000071503</p>
-                <p><span className="text-slate-400 font-sans">Branch Name:</span> IBB Lda Avenue</p>
               </div>
             </CardContent>
           </Card>

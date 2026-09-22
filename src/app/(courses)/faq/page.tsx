@@ -23,14 +23,14 @@ const faqs = [
     category: 'Certificates',
     question: 'Do you provide certificates?',
     answer:
-      'Yes, all our engineering courses are CPDP accredited, and you will receive a verifiable certificate upon successful completion that you can share on LinkedIn or your portfolio.',
+      'Yes! Upon successful completion of any course, you will receive an official completion certificate that you can share on LinkedIn or add to your resume and portfolio.',
   },
   {
     icon: CreditCard,
     category: 'Payments',
     question: 'What payment methods are supported?',
     answer:
-      'We support major credit/debit cards and local payment methods via our secure checkout gateway. All transactions are encrypted and processed securely.',
+      'We support major local bank transfers and manual payment methods. Simply submit your payment screenshot after transfer for verification. All requests are processed securely.',
   },
   {
     icon: Users,

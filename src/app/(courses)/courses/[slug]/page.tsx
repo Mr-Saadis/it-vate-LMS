@@ -22,15 +22,15 @@ export default async function CourseDetailPage({
 
   let ownedLevelIds: string[] = []
   let highestCompletedNo = 0
-  
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    
+
     if (user && course.course_id) {
       // Get all level IDs for this course
       const courseLevelIds = (course.levels || []).map(l => l.level_id)
-      
+
       if (courseLevelIds.length > 0) {
         // Find existing non-rejected enrollments for this user and these levels
         const { data: enrollments } = await supabase
@@ -43,10 +43,10 @@ export default async function CourseDetailPage({
           .eq('user_id', user.id)
           .in('level_id', courseLevelIds)
           .neq('status', 'Rejected')
-          
+
         if (enrollments) {
           ownedLevelIds = enrollments.map(e => e.level_id)
-          
+
           for (const enrollment of enrollments) {
             const isCompleted = enrollment.status === 'Completed' || enrollment.is_completed === true
             if (isCompleted) {
@@ -65,7 +65,7 @@ export default async function CourseDetailPage({
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-10 lg:px-8 space-y-10">
-      
+
       {/* 1. Header Banner (Dark Navy Surface) */}
       <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-[#0b1120] p-8 md:p-10 shadow-xl space-y-4">
         {/* Ambient mesh background grid */}
@@ -85,16 +85,6 @@ export default async function CourseDetailPage({
             {course.description}
           </p>
 
-          <div className="pt-2 flex flex-wrap gap-6 text-xs text-slate-400">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-[#F18231]" />
-              <span>CPDP Accredited Curriculum</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-[#F18231]" />
-              <span>Flexible 4-Track System</span>
-            </div>
-          </div>
         </div>
       </div>
 
