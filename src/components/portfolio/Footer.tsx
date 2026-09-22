@@ -72,7 +72,7 @@ export function PortfolioFooter() {
         </div>
 
         <div className="mt-12 border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} PDAT Academy. A project of IT-vate. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} PDAT Academy. A project of IT-vate Solutions (SMC-Pvt) Ltd. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link href="/contact" className="hover:text-slate-400">Contact Us</Link>
             <span className="hover:text-slate-400">Privacy Policy</span>

@@ -788,16 +788,7 @@ export function TrackSelector({ course: initialCourse, allCourses = [], ownedLev
             )}
           </button>
 
-          {/* Security Badge */}
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 pt-1 border-t border-slate-100">
-            <Lock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-            <span>256-Bit Encrypted &amp; Secure Checkout</span>
-          </div>
 
-          <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
-            <ShieldCheck className="h-4 w-4 text-slate-400 shrink-0" />
-            <span>Guaranteed CPDP Enrollment Verification</span>
-          </div>
         </div>
       </div>
 

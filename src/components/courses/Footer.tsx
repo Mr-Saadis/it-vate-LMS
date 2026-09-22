@@ -121,7 +121,7 @@ export function DarkFooter() {
         {/* Compact Bottom Bar */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between border-t border-slate-800/80 pt-6 gap-4 text-xs text-slate-500">
           <p>
-            © {new Date().getFullYear()} PDAT Academy. A project of IT-vate. All rights reserved.
+            © {new Date().getFullYear()} PDAT Academy. A project of IT-vate Solutions (SMC-Pvt) Ltd. All rights reserved.
           </p>
 
 
