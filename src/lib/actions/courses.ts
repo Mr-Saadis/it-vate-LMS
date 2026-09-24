@@ -18,6 +18,10 @@ export async function createCourseAction(courseData: {
   description: string
   slug: string
   is_active: boolean
+  is_expert_track_active?: boolean
+  is_progressive_track_active?: boolean
+  is_fast_track_active?: boolean
+  is_premium_track_active?: boolean
 }) {
   try {
     const supabase = await verifyAdmin()
@@ -40,6 +44,10 @@ export async function updateCourseAction(courseId: string, courseData: {
   description: string
   slug: string
   is_active: boolean
+  is_expert_track_active?: boolean
+  is_progressive_track_active?: boolean
+  is_fast_track_active?: boolean
+  is_premium_track_active?: boolean
 }) {
   try {
     const supabase = await verifyAdmin()

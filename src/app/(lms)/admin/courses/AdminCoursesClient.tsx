@@ -56,7 +56,11 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
     name: '',
     description: '',
     slug: '',
-    is_active: true
+    is_active: true,
+    is_expert_track_active: true,
+    is_progressive_track_active: true,
+    is_fast_track_active: true,
+    is_premium_track_active: true
   })
 
   // Level Form State
@@ -70,7 +74,16 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
   })
 
   const openAddCourse = () => {
-    setCourseForm({ name: '', description: '', slug: '', is_active: true })
+    setCourseForm({ 
+      name: '', 
+      description: '', 
+      slug: '', 
+      is_active: true,
+      is_expert_track_active: true,
+      is_progressive_track_active: true,
+      is_fast_track_active: true,
+      is_premium_track_active: true
+    })
     setEditingCourse(null)
     setIsCourseModalOpen(true)
   }
@@ -80,7 +93,11 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
       name: course.name,
       description: course.description,
       slug: course.slug,
-      is_active: course.is_active
+      is_active: course.is_active,
+      is_expert_track_active: course.is_expert_track_active ?? true,
+      is_progressive_track_active: course.is_progressive_track_active ?? true,
+      is_fast_track_active: course.is_fast_track_active ?? true,
+      is_premium_track_active: course.is_premium_track_active ?? true
     })
     setEditingCourse(course)
     setIsCourseModalOpen(true)
@@ -260,18 +277,6 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
                     </p>
                   </div>
 
-                  {/* Micro-Badges & Course Metadata */}
-                  <div className="flex items-center gap-4 text-slate-500 pt-1">
-                    <div className="flex items-center gap-1 text-[11px] font-medium">
-                      <Clock className="h-3.5 w-3.5 text-slate-400" />
-                      <span>8–12 Weeks</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] font-medium">
-                      <BarChart className="h-3.5 w-3.5 text-slate-400" />
-                      <span>Interm. to Adv.</span>
-                    </div>
-                  </div>
-
                   {/* Level list curriculum breakdown */}
                   <div className="space-y-2 border-t border-slate-100 pt-3">
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
@@ -373,7 +378,7 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
                   Description
                 </label>
                 <textarea
-                  rows={3}
+                  rows={5}
                   value={courseForm.description}
                   onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#0F172A] placeholder-slate-400 focus:border-[#F18231] focus:outline-none focus:ring-1 focus:ring-[#F18231] resize-none"
@@ -390,6 +395,50 @@ export function AdminCoursesClient({ initialCourses }: AdminCoursesClientProps) 
                 <label htmlFor="courseActive" className="text-sm font-semibold text-[#0F172A]">
                   Active (Visible to students)
                 </label>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100">
+                <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Offered Tracks
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="trackExpert"
+                      checked={courseForm.is_expert_track_active}
+                      onCheckedChange={(checked) => setCourseForm({ ...courseForm, is_expert_track_active: checked })}
+                      className="data-[state=checked]:bg-[#F18231]"
+                    />
+                    <label htmlFor="trackExpert" className="text-sm font-semibold text-[#0F172A]">Expert Track</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="trackProgressive"
+                      checked={courseForm.is_progressive_track_active}
+                      onCheckedChange={(checked) => setCourseForm({ ...courseForm, is_progressive_track_active: checked })}
+                      className="data-[state=checked]:bg-[#F18231]"
+                    />
+                    <label htmlFor="trackProgressive" className="text-sm font-semibold text-[#0F172A]">Progressive Track</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="trackFast"
+                      checked={courseForm.is_fast_track_active}
+                      onCheckedChange={(checked) => setCourseForm({ ...courseForm, is_fast_track_active: checked })}
+                      className="data-[state=checked]:bg-[#F18231]"
+                    />
+                    <label htmlFor="trackFast" className="text-sm font-semibold text-[#0F172A]">Fast Track</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="trackPremium"
+                      checked={courseForm.is_premium_track_active}
+                      onCheckedChange={(checked) => setCourseForm({ ...courseForm, is_premium_track_active: checked })}
+                      className="data-[state=checked]:bg-[#F18231]"
+                    />
+                    <label htmlFor="trackPremium" className="text-sm font-semibold text-[#0F172A]">Premium Track</label>
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -502,6 +502,12 @@ export function TrackSelector({ course: initialCourse, allCourses = [], ownedLev
         {/* 2×2 Grid of Track Selection Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {TRACK_OPTIONS.map((track) => {
+            let isTrackActive = true
+            if (track.id === 'Expert') isTrackActive = activeCourse.is_expert_track_active ?? true
+            if (track.id === 'Progressive') isTrackActive = activeCourse.is_progressive_track_active ?? true
+            if (track.id === 'Fast') isTrackActive = activeCourse.is_fast_track_active ?? true
+            if (track.id === 'Premium') isTrackActive = activeCourse.is_premium_track_active ?? true
+
             const isSelected = selectedTrack === track.id
             const hasBatch = isSelected && selectedBatchId !== null
             const isPremium = track.id === 'Premium'
@@ -509,11 +515,13 @@ export function TrackSelector({ course: initialCourse, allCourses = [], ownedLev
             return (
               <div
                 key={track.id}
-                onClick={() => handleTrackCardClick(track.id)}
-                className={`relative flex flex-col justify-between rounded-xl p-5 cursor-pointer transition-all duration-200 ${
-                  isSelected
-                    ? 'border-2 border-[#F18231] ring-2 ring-[#F18231]/20 bg-[#F18231]/5'
-                    : 'border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                onClick={() => isTrackActive && handleTrackCardClick(track.id)}
+                className={`relative flex flex-col justify-between rounded-xl p-5 transition-all duration-200 ${
+                  !isTrackActive
+                    ? 'border border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed'
+                    : isSelected
+                      ? 'border-2 border-[#F18231] ring-2 ring-[#F18231]/20 bg-[#F18231]/5 cursor-pointer'
+                      : 'border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm cursor-pointer'
                 }`}
               >
                 <div className="space-y-2">
@@ -521,7 +529,11 @@ export function TrackSelector({ course: initialCourse, allCourses = [], ownedLev
                     <span className={`text-xs font-bold ${isSelected ? 'text-[#F18231]' : 'text-slate-700'}`}>
                       {track.name}
                     </span>
-                    {track.badge && (
+                    {!isTrackActive ? (
+                      <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                        Not Offered
+                      </span>
+                    ) : track.badge && (
                       <span className="rounded-full bg-[#F18231] px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wide">
                         {track.badge}
                       </span>

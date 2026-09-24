@@ -62,6 +62,10 @@ export const MOCK_COURSES: Course[] = [
     description: 'Master C/C++, ARM Cortex Microcontrollers, FreeRTOS, and Hardware Interfacing from bare-metal to OS level.',
     is_active: true,
     category: 'Hardware Engineering',
+    is_expert_track_active: true,
+    is_progressive_track_active: true,
+    is_fast_track_active: true,
+    is_premium_track_active: true,
     levels: [
       {
         level_id: 'l1',
@@ -103,10 +107,14 @@ export const MOCK_COURSES: Course[] = [
   {
     course_id: 'c2',
     name: 'Industrial IoT & Edge Intelligence',
-    slug: 'industrial-iot-edge-ai',
+    slug: 'IPDP',
     description: 'Build enterprise-grade IoT gateways, MQTT/HTTP protocols, ESP32/Linux edge nodes, and cloud connectivity.',
     is_active: true,
     category: 'Internet of Things',
+    is_expert_track_active: true,
+    is_progressive_track_active: true,
+    is_fast_track_active: true,
+    is_premium_track_active: true,
     levels: [
       {
         level_id: 'l4',
@@ -135,10 +143,14 @@ export const MOCK_COURSES: Course[] = [
   {
     course_id: 'c3',
     name: 'PCB Design & High-Speed Hardware Design',
-    slug: 'pcb-design-hardware',
+    slug: 'CPDP',
     description: 'Comprehensive schematic creation, multi-layer layout, signal integrity, and manufacturing deliverables (Gerbers, BOM).',
     is_active: true,
     category: 'Hardware Design',
+    is_expert_track_active: true,
+    is_progressive_track_active: true,
+    is_fast_track_active: true,
+    is_premium_track_active: true,
     levels: [
       {
         level_id: 'l6',

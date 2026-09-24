@@ -41,6 +41,10 @@ export interface Course {
   is_active: boolean;
   slug: string;
   category?: string;
+  is_expert_track_active?: boolean;
+  is_progressive_track_active?: boolean;
+  is_fast_track_active?: boolean;
+  is_premium_track_active?: boolean;
   levels?: Level[];
 }
 

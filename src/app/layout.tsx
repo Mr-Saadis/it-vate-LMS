@@ -15,7 +15,7 @@ import { RealtimeProvider } from "@/components/RealtimeProvider";
 
 export const metadata: Metadata = {
   title: "PDAT Academy | Engineering R&D & LMS Platform",
-  description: "PDAT Academy - Leading Embedded Systems R&D, Industrial IoT Engineering, and CPDP Accredited Technical LMS Platform.",
+  description: "PDAT Academy - Leading Embedded Systems R&D, Industrial IoT Engineering, and Technical LMS Platform.",
 };
 
 export default function RootLayout({

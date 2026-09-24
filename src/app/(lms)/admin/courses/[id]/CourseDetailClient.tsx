@@ -206,8 +206,8 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
 
   const saveLink = async () => {
     if (!linkTarget) return
-    if (linkForm.type === 'link' && (!linkForm.url || !linkForm.start_date || !linkForm.end_date)) {
-      toast.error('URL, Start Date, and End Date are required for a batch link')
+    if (linkForm.type === 'link' && (!linkForm.start_date || !linkForm.end_date)) {
+      toast.error('Start Date and End Date are required for a batch link')
       return
     }
     if (linkForm.type === 'drive' && (!linkForm.title || !linkForm.drive_file_id)) return
@@ -937,7 +937,7 @@ export function CourseDetailClient({ course }: CourseDetailClientProps) {
                 onClick={saveLink} 
                 disabled={
                   isSaving || 
-                  (linkForm.type === 'link' && (!linkForm.url || !linkForm.start_date || !linkForm.end_date)) || 
+                  (linkForm.type === 'link' && (!linkForm.start_date || !linkForm.end_date)) || 
                   (linkForm.type === 'drive' && (!linkForm.title || !linkForm.drive_file_id)) || 
                   (linkForm.type === 'video' && (!linkForm.title || !linkForm.youtube_id))
                 } 

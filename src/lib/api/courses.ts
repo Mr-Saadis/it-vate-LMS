@@ -69,11 +69,11 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
       .single()
 
     if (error || !data) {
-      return MOCK_COURSES.find((c) => c.slug === slug) ?? null
+      return MOCK_COURSES.find((c) => c.slug.toLowerCase() === slug.toLowerCase()) ?? null
     }
     return data as Course
   } catch {
-    return MOCK_COURSES.find((c) => c.slug === slug) ?? null
+    return MOCK_COURSES.find((c) => c.slug.toLowerCase() === slug.toLowerCase()) ?? null
   }
 }
 

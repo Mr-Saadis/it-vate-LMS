@@ -71,14 +71,14 @@ export default function PendingVerificationPage() {
             Email Us
           </a>
           <a
-            href="tel:+923001234567"
+            href="tel:+923038411166"
             className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold text-[#0F172A] hover:border-[#F18231] hover:bg-orange-50 transition-colors"
           >
             <Phone className="h-4 w-4 text-[#F18231]" />
             Call Us
           </a>
           <a
-            href="https://wa.me/923001234567"
+            href="https://wa.me/923038411166"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold text-[#0F172A] hover:border-green-500 hover:bg-green-50 transition-colors"

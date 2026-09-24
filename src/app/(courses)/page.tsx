@@ -229,14 +229,6 @@ export default async function CoursesLandingPage() {
 
                   <CheckCircle2 className="h-4 w-4 text-[#F18231]" />
 
-                  <span>CPDP Accredited</span>
-
-                </div>
-
-                <div className="flex items-center gap-1.5">
-
-                  <CheckCircle2 className="h-4 w-4 text-[#F18231]" />
-
                   <span>4-Track Selection</span>
 
                 </div>
@@ -358,31 +350,6 @@ export default async function CoursesLandingPage() {
                     </p>
 
                   </div>
-
-
-
-                  {/* Micro-Badges & Course Metadata */}
-
-                  <div className="flex items-center gap-4 text-slate-500 pt-1">
-
-                    <div className="flex items-center gap-1 text-[11px] font-medium">
-
-                      <Clock className="h-3.5 w-3.5 text-slate-400" />
-
-                      <span>8–12 Weeks</span>
-
-                    </div>
-
-                    <div className="flex items-center gap-1 text-[11px] font-medium">
-
-                      <BarChart className="h-3.5 w-3.5 text-slate-400" />
-
-                      <span>Interm. to Adv.</span>
-
-                    </div>
-
-                  </div>
-
 
 
                   {/* Level list curriculum breakdown */}

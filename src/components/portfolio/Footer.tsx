@@ -77,7 +77,6 @@ export function PortfolioFooter() {
             <Link href="/contact" className="hover:text-slate-400">Contact Us</Link>
             <span className="hover:text-slate-400">Privacy Policy</span>
             <span className="hover:text-slate-400">Terms of Service</span>
-            <span className="hover:text-slate-400">CPDP Accreditation</span>
           </div>
         </div>
       </div>

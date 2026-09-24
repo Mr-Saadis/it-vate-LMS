@@ -15,7 +15,7 @@ const contactCards = [
   {
     icon: Phone,
     label: 'Phone',
-    value: '+92 (XXX) XXXXXXX',
+    value: '+92 303 8411166',
     sub: 'Mon – Fri, 9am – 6pm PKT',
   },
   {

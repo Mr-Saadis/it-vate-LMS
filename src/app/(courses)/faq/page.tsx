@@ -30,7 +30,7 @@ const faqs = [
     category: 'Payments',
     question: 'What payment methods are supported?',
     answer:
-      'We support major local bank transfers and manual payment methods. Simply submit your payment screenshot after transfer for verification. All requests are processed securely.',
+      'We support major local bank transfers and manual payment methods. Simply submit your payment screenshot after transfer for verification.',
   },
   {
     icon: Users,
