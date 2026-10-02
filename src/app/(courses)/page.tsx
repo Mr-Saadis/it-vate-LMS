@@ -205,17 +205,19 @@ export default async function CoursesLandingPage() {
 
                 </a>
 
-                <Link
+                {!user && (
+                  <Link
 
-                  href="/signup"
+                    href="/signup"
 
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/50 px-6 py-3 text-sm font-bold text-white transition-colors hover:border-slate-500 hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-[#F18231] focus-visible:outline-none"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/50 px-6 py-3 text-sm font-bold text-white transition-colors hover:border-slate-500 hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-[#F18231] focus-visible:outline-none"
 
-                >
+                  >
 
-                  Create Account
+                    Create Account
 
-                </Link>
+                  </Link>
+                )}
 
               </div>
 
