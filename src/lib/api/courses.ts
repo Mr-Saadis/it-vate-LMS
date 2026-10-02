@@ -32,7 +32,14 @@ export async function getActiveCourses(): Promise<Course[]> {
       .order('name')
 
     if (error || !data || data.length === 0) return MOCK_COURSES
-    return data as Course[]
+    
+    // Sort levels by level number
+    const sortedData = data.map((course: any) => ({
+      ...course,
+      levels: course.levels ? [...course.levels].sort((a: any, b: any) => a.no - b.no) : []
+    }))
+    
+    return sortedData as Course[]
   } catch {
     return MOCK_COURSES
   }
@@ -71,6 +78,12 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
     if (error || !data) {
       return MOCK_COURSES.find((c) => c.slug.toLowerCase() === slug.toLowerCase()) ?? null
     }
+
+    // Sort levels by level number
+    if (data.levels && Array.isArray(data.levels)) {
+      data.levels.sort((a: any, b: any) => a.no - b.no)
+    }
+
     return data as Course
   } catch {
     return MOCK_COURSES.find((c) => c.slug.toLowerCase() === slug.toLowerCase()) ?? null
@@ -334,7 +347,14 @@ export async function getAllCoursesWithLevelsAdmin(): Promise<Course[]> {
       .order('name')
 
     if (error || !data) return []
-    return data as Course[]
+
+    // Sort levels by level number
+    const sortedData = data.map((course: any) => ({
+      ...course,
+      levels: course.levels ? [...course.levels].sort((a: any, b: any) => a.no - b.no) : []
+    }))
+
+    return sortedData as Course[]
   } catch {
     return []
   }
@@ -379,6 +399,12 @@ export async function getCourseByIdAdmin(id: string): Promise<Course | null> {
       .single()
 
     if (error || !data) return null
+
+    // Sort levels by level number
+    if (data.levels && Array.isArray(data.levels)) {
+      data.levels.sort((a: any, b: any) => a.no - b.no)
+    }
+
     return data as Course
   } catch {
     return null
