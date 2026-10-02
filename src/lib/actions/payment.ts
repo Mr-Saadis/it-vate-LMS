@@ -88,16 +88,16 @@ export async function submitPayment(formData: FormData) {
 
   const passedLevels = (formData.get('levels') as string || '').split(',').filter(Boolean)
   if (trackType === 'Expert') {
-    // Expert track: sum all levels at 85% discount (15% off)
+    // Expert track: sum all levels at 80% discount (20% off)
     const totalPrice = dbLevels.reduce((sum, l) => sum + Number(l.price), 0)
     
     if (totalPrice > 0) {
-      discount = Math.round(totalPrice * 0.15)
+      discount = Math.round(totalPrice * 0.20)
       canonicalAmount = totalPrice - discount
       levelIdsToEnroll = dbLevels.map(l => l.level_id)
     } else {
       // Fallback
-      canonicalAmount = levelPrice * 5 * 0.85 
+      canonicalAmount = levelPrice * 5 * 0.80 
     }
   } else if (trackType === 'Premium') {
     const totalPrice = dbLevels.reduce((sum, l) => sum + Number(l.price), 0)

@@ -311,7 +311,7 @@ export function TrackSelector({ course: initialCourse, allCourses = [], ownedLev
     let basePrice = 0
 
     if (selectedTrack === 'Expert') {
-      basePrice = levels.reduce((sum, lvl) => sum + lvl.price, 0) * 0.85
+      basePrice = levels.reduce((sum, lvl) => sum + lvl.price, 0) * 0.80
     } else if (selectedTrack === 'Fast') {
       const selected = levels.filter((lvl) => selectedLevelIds.includes(lvl.level_id))
       basePrice = selected.reduce((sum, lvl) => sum + lvl.price, 0)
