@@ -220,6 +220,17 @@ export function TrackSelector({ course: initialCourse, allCourses = [], ownedLev
 
   // --- Track card click handler ---
   function handleTrackCardClick(trackId: TrackType) {
+    if (selectedTrack === trackId) {
+      // Unselect if clicked again
+      setSelectedTrack(null)
+      setSelectedLevelIds([])
+      setSelectedBatchId(null)
+      setSelectedBatchTitle(null)
+      setSelectedBatchDates(null)
+      setBatchConfirmed(false)
+      return
+    }
+
     if (trackId === 'Fast') {
       // Fast track: just select the track — levels panel appears, user picks levels first
       // Reset batch state since track changed
@@ -334,14 +345,12 @@ export function TrackSelector({ course: initialCourse, allCourses = [], ownedLev
 
   const toggleLevelSelection = (levelId: string) => {
     if (selectedLevelIds.includes(levelId)) {
-      if (selectedLevelIds.length > 1) {
-        setSelectedLevelIds(selectedLevelIds.filter((id) => id !== levelId))
-        // Reset batch since level selection changed
-        setSelectedBatchId(null)
-        setSelectedBatchTitle(null)
-        setSelectedBatchDates(null)
-        setBatchConfirmed(false)
-      }
+      setSelectedLevelIds(selectedLevelIds.filter((id) => id !== levelId))
+      // Reset batch since level selection changed
+      setSelectedBatchId(null)
+      setSelectedBatchTitle(null)
+      setSelectedBatchDates(null)
+      setBatchConfirmed(false)
     } else {
       setSelectedLevelIds([...selectedLevelIds, levelId])
       // Reset batch since level selection changed
@@ -615,7 +624,7 @@ export function TrackSelector({ course: initialCourse, allCourses = [], ownedLev
               </p>
             </div>
             <div className="space-y-2.5">
-              {activeCourse.levels?.filter((lvl) => lvl.no !== 1).map((lvl) => {
+              {activeCourse.levels?.filter((lvl) => lvl.no !== 1 && lvl.is_active).map((lvl) => {
                 const isChecked = selectedLevelIds.includes(lvl.level_id)
                 return (
                   <div
