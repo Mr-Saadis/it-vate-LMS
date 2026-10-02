@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { signUp, signInWithGoogle } from '@/lib/actions/auth'
-import { EnrollmentGuideModal } from '@/components/courses/EnrollmentGuideModal'
+
 import {
   Plus,
   Trash2,
@@ -260,12 +260,15 @@ function SignupFormContent() {
         </div>
 
         <div className="relative z-10 border-t border-slate-800 pt-4 space-y-4">
-          <EnrollmentGuideModal>
-            <button className="flex items-center gap-2 px-4 py-2 bg-[#F18231]/10 border border-[#F18231]/20 rounded-lg text-sm font-semibold text-[#F18231] hover:bg-[#F18231]/20 transition-colors">
-              <BookOpen className="h-4 w-4" />
-              Read Enrollment Guide
-            </button>
-          </EnrollmentGuideModal>
+          <a
+            href="https://docs.google.com/document/d/1MJ9Gsq1i7IoboiPMl7kc0PBuEA_QaZIsZHdrnXZ1TGQ/edit?usp=drivesdk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-max items-center gap-2 px-4 py-2 bg-[#F18231]/10 border border-[#F18231]/20 rounded-lg text-sm font-semibold text-[#F18231] hover:bg-[#F18231]/20 transition-colors"
+          >
+            <BookOpen className="h-4 w-4" />
+            Read Enrollment Guide
+          </a>
           <p className="text-xs text-slate-400 italic">
             &ldquo;Empowering engineers from register-level C to production-grade RTOS deployments.&rdquo;
           </p>
@@ -284,11 +287,14 @@ function SignupFormContent() {
             <span className="text-sm font-bold text-slate-900 tracking-tight">PDAT Academy</span>
           </Link>
           <div className="flex items-center gap-3">
-            <EnrollmentGuideModal>
-              <button className="flex items-center gap-1.5 text-[11px] font-semibold text-[#F18231] bg-[#F18231]/10 px-2.5 py-1.5 rounded-md">
-                <BookOpen className="h-3 w-3" /> Guide
-              </button>
-            </EnrollmentGuideModal>
+            <a
+              href="https://docs.google.com/document/d/1MJ9Gsq1i7IoboiPMl7kc0PBuEA_QaZIsZHdrnXZ1TGQ/edit?usp=drivesdk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-[11px] font-semibold text-[#F18231] bg-[#F18231]/10 px-2.5 py-1.5 rounded-md"
+            >
+              <BookOpen className="h-3 w-3" /> Guide
+            </a>
             <span className="text-xs text-slate-400">Step {step} of 2</span>
           </div>
         </div>
