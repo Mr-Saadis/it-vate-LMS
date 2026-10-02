@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { signUp, signInWithGoogle } from '@/lib/actions/auth'
+import { EnrollmentGuideModal } from '@/components/courses/EnrollmentGuideModal'
 import {
   Plus,
   Trash2,
@@ -19,6 +20,7 @@ import {
   Award,
   Loader2,
   CheckCircle2,
+  BookOpen,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
@@ -257,7 +259,13 @@ function SignupFormContent() {
           </div>
         </div>
 
-        <div className="relative z-10 border-t border-slate-800 pt-4">
+        <div className="relative z-10 border-t border-slate-800 pt-4 space-y-4">
+          <EnrollmentGuideModal>
+            <button className="flex items-center gap-2 px-4 py-2 bg-[#F18231]/10 border border-[#F18231]/20 rounded-lg text-sm font-semibold text-[#F18231] hover:bg-[#F18231]/20 transition-colors">
+              <BookOpen className="h-4 w-4" />
+              Read Enrollment Guide
+            </button>
+          </EnrollmentGuideModal>
           <p className="text-xs text-slate-400 italic">
             &ldquo;Empowering engineers from register-level C to production-grade RTOS deployments.&rdquo;
           </p>
@@ -275,7 +283,14 @@ function SignupFormContent() {
             </div> */}
             <span className="text-sm font-bold text-slate-900 tracking-tight">PDAT Academy</span>
           </Link>
-          <span className="text-xs text-slate-400">Step {step} of 2</span>
+          <div className="flex items-center gap-3">
+            <EnrollmentGuideModal>
+              <button className="flex items-center gap-1.5 text-[11px] font-semibold text-[#F18231] bg-[#F18231]/10 px-2.5 py-1.5 rounded-md">
+                <BookOpen className="h-3 w-3" /> Guide
+              </button>
+            </EnrollmentGuideModal>
+            <span className="text-xs text-slate-400">Step {step} of 2</span>
+          </div>
         </div>
 
         <div className="flex flex-1 items-center justify-center px-6 py-8 lg:px-12 xl:px-16">

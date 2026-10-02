@@ -231,6 +231,16 @@ export function TrackSelector({ course: initialCourse, allCourses = [], ownedLev
       setBatchConfirmed(false)
       return
     }
+    if (trackId === 'Expert') {
+      setSelectedTrack('Expert')
+      const sortedLevels = [...(activeCourse.levels || [])].sort((a, b) => a.no - b.no)
+      setSelectedLevelIds(sortedLevels.map(l => l.level_id))
+      setSelectedBatchId(null)
+      setSelectedBatchTitle(null)
+      setSelectedBatchDates(null)
+      setBatchConfirmed(true)
+      return
+    }
     // All other tracks: open batch dialog immediately
     openBatchDialog(trackId)
   }
@@ -544,7 +554,7 @@ export function TrackSelector({ course: initialCourse, allCourses = [], ownedLev
                 </div>
 
                 {/* Selected batch info shown inside card */}
-                {isSelected && (
+                {isSelected && track.id !== 'Expert' && (
                   <div className="mt-3 pt-3 border-t border-[#F18231]/20">
                     {isPremium ? (
                       <div className="flex items-center gap-1.5">
