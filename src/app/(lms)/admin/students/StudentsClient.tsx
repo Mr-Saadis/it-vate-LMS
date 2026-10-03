@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useTransition } from 'react'
+import { useState, useMemo, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Users,
@@ -8,6 +8,7 @@ import {
   GraduationCap,
   BookOpen,
   ChevronRight,
+  ChevronLeft,
   CheckCircle2,
   Clock,
   XCircle,
@@ -21,6 +22,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { Button } from '@/components/ui/button'
 
 interface Enrollment {
   enroll_id: string
@@ -106,6 +108,12 @@ export function StudentsClient({ students }: StudentsClientProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, filter])
 
   const handleToggleCompletion = (enrollId: string, newStatus: boolean) => {
     startTransition(async () => {
@@ -139,6 +147,12 @@ export function StudentsClient({ students }: StudentsClientProps) {
       return true
     })
   }, [students, search, filter])
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage)
+  const paginatedStudents = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
 
   const selected = selectedId ? students.find((s) => s.id === selectedId) ?? null : null
 
@@ -230,7 +244,7 @@ export function StudentsClient({ students }: StudentsClientProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                {filtered.map((student) => {
+                {paginatedStudents.map((student) => {
                   const hue = getAvatarHue(student.name)
                   const initials = getInitials(student.name)
                   const isActive = student.enrollments.some((e) => e.status === 'Active')
@@ -292,6 +306,52 @@ export function StudentsClient({ students }: StudentsClientProps) {
                     </button>
                   )
                 })}
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between py-4">
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} entries
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="h-8 px-2"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <div className="flex items-center gap-1 overflow-x-auto max-w-[150px] sm:max-w-none scrollbar-hide">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className={`h-8 min-w-[2rem] p-0 text-xs shrink-0 ${
+                              currentPage === page
+                                ? 'bg-[#0F172A] hover:bg-slate-800 text-white border-[#0F172A]'
+                                : 'text-slate-600'
+                            }`}
+                          >
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="h-8 px-2"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -9,6 +9,8 @@ import {
   ShieldCheck,
   Cpu,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -62,6 +64,8 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
   const [initialBatchId, setInitialBatchId] = useState<string>('')
   const [batchChangeReason, setBatchChangeReason] = useState('')
   const [isLoadingBatches, setIsLoadingBatches] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   const handleApproveClick = (payment: Payment) => {
     setApprovePaymentTarget(payment)
@@ -166,6 +170,12 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
   const pending = payments.filter((p) => p.status === 'Pending')
   const processed = payments.filter(
     (p) => p.status === 'Verified' || p.status === 'Rejected'
+  )
+
+  const totalPages = Math.ceil(processed.length / itemsPerPage)
+  const paginatedProcessed = processed.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   )
 
   return (
@@ -577,7 +587,7 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
-                  {processed.map((p) => (
+                  {paginatedProcessed.map((p) => (
                     <tr key={p.payment_id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-4 py-4">
                         <p className="font-semibold text-[#0F172A]">{p.user_name}</p>
@@ -654,6 +664,52 @@ export function AdminClient({ payments: initialPayments }: AdminClientProps) {
               </table>
             </div>
           </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between py-3">
+              <span className="text-xs text-slate-500">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, processed.length)} of {processed.length} entries
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="h-8 px-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-8 w-8 p-0 text-xs ${
+                        currentPage === page
+                          ? 'bg-[#F18231] hover:bg-[#d96f21] border-[#F18231] text-white'
+                          : 'text-slate-600'
+                      }`}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="h-8 px-2"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
