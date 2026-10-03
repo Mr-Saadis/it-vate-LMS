@@ -16,13 +16,26 @@ import {
   ArrowUpRight,
   Layers,
   X,
+  Edit2,
+  Loader2,
 } from 'lucide-react'
-import { toggleEnrollmentCompletionAction } from '@/lib/actions/admin'
+import { 
+  toggleEnrollmentCompletionAction, 
+  getEnrollmentEditInfoAction, 
+  updateEnrollmentTrackLevelAction 
+} from '@/lib/actions/admin'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface Enrollment {
   enroll_id: string
@@ -111,9 +124,94 @@ export function StudentsClient({ students }: StudentsClientProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
+  const [editEnrollId, setEditEnrollId] = useState<string | null>(null)
+  const [editData, setEditData] = useState<{ 
+    levels: {level_id: string, level_title: string, no: number, is_active: boolean}[], 
+    currentLevelId: string, 
+    currentTrackType: string,
+    courseTracks: any
+  } | null>(null)
+  const [selectedEditLevel, setSelectedEditLevel] = useState<string>('')
+  const [selectedEditTrack, setSelectedEditTrack] = useState<string>('')
+  const [isLoadingEdit, setIsLoadingEdit] = useState(false)
+  const allTracks = ['Progressive', 'Fast', 'Premium', 'Expert']
+
   useEffect(() => {
     setCurrentPage(1)
   }, [search, filter])
+
+  const handleEditClick = async (enrollId: string) => {
+    setEditEnrollId(enrollId)
+    setIsLoadingEdit(true)
+    setEditData(null)
+    const res = await getEnrollmentEditInfoAction(enrollId)
+    if (res.error || !res.success) {
+      toast.error(res.error || 'Failed to load enrollment info')
+      setEditEnrollId(null)
+      setIsLoadingEdit(false)
+      return
+    }
+    setEditData({
+      levels: res.levels || [],
+      currentLevelId: res.currentLevelId || '',
+      currentTrackType: res.currentTrackType || '',
+      courseTracks: res.courseTracks || {}
+    })
+    setSelectedEditLevel(res.currentLevelId || '')
+    setSelectedEditTrack(res.currentTrackType || '')
+    setIsLoadingEdit(false)
+  }
+
+  const activeTracks = useMemo(() => {
+    if (!editData) return []
+    const available = []
+    if (editData.courseTracks?.is_progressive_track_active) available.push('Progressive')
+    if (editData.courseTracks?.is_fast_track_active) available.push('Fast')
+    if (editData.courseTracks?.is_premium_track_active) available.push('Premium')
+    if (editData.courseTracks?.is_expert_track_active) available.push('Expert')
+    return available
+  }, [editData])
+
+  const filteredLevels = useMemo(() => {
+    if (!editData) return []
+    return editData.levels.filter(l => {
+      // Must be active, unless it's currently assigned (so it doesn't break)
+      if (!l.is_active && l.level_id !== editData.currentLevelId) return false
+      
+      if (selectedEditTrack === 'Progressive') {
+        return l.no === 1
+      }
+      if (selectedEditTrack === 'Fast') {
+        return l.no > 1
+      }
+      return true
+    })
+  }, [editData, selectedEditTrack])
+
+  // Reset selected level if it becomes invalid due to track change
+  useEffect(() => {
+    if (editData && filteredLevels.length > 0) {
+      const isValid = filteredLevels.some(l => l.level_id === selectedEditLevel)
+      if (!isValid) {
+        setSelectedEditLevel(filteredLevels[0].level_id)
+      }
+    }
+  }, [selectedEditTrack, filteredLevels, editData, selectedEditLevel])
+
+  const handleEditSave = () => {
+    if (!editEnrollId || !selectedEditLevel || !selectedEditTrack) return
+    startTransition(async () => {
+      const res = await updateEnrollmentTrackLevelAction(editEnrollId, selectedEditLevel, selectedEditTrack)
+      if (res.error) {
+        toast.error(res.error)
+      } else {
+        toast.success('Enrollment updated successfully')
+        setEditEnrollId(null)
+        setEditData(null)
+        router.refresh()
+      }
+    })
+  }
 
   const handleToggleCompletion = (enrollId: string, newStatus: boolean) => {
     startTransition(async () => {
@@ -424,7 +522,16 @@ export function StudentsClient({ students }: StudentsClientProps) {
                           <p className="text-xs font-semibold text-[#0F172A] leading-snug flex-1 min-w-0">
                             {enr.course} {enr.level && <span className="text-slate-400 font-normal ml-1">— {enr.level}</span>}
                           </p>
-                          <StatusBadge status={enr.status} />
+                          <div className="flex gap-2 items-center">
+                            <button
+                              onClick={() => handleEditClick(enr.enroll_id)}
+                              className="text-slate-400 hover:text-[#F18231] transition-colors"
+                              title="Edit Track & Level"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </button>
+                            <StatusBadge status={enr.status} />
+                          </div>
                         </div>
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -466,6 +573,86 @@ export function StudentsClient({ students }: StudentsClientProps) {
           )}
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editEnrollId && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-100 p-4">
+              <h3 className="font-bold text-[#0F172A]">Edit Track & Level</h3>
+              <button
+                onClick={() => setEditEnrollId(null)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {isLoadingEdit ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-6 w-6 text-[#F18231] animate-spin" />
+                </div>
+              ) : editData ? (
+                <>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">
+                      Track
+                    </label>
+                    <Select value={selectedEditTrack} onValueChange={setSelectedEditTrack}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select track" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allTracks.map((t) => (
+                          <SelectItem key={t} value={t} disabled={!activeTracks.includes(t)}>
+                            {t} {!activeTracks.includes(t) && '(Inactive)'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">
+                      Level
+                    </label>
+                    <Select value={selectedEditLevel} onValueChange={setSelectedEditLevel}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select level">
+                          {filteredLevels.find(l => l.level_id === selectedEditLevel)?.level_title 
+                            ? `Level ${filteredLevels.find(l => l.level_id === selectedEditLevel)?.no} - ${filteredLevels.find(l => l.level_id === selectedEditLevel)?.level_title}`
+                            : "Select level"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredLevels.map((l) => (
+                          <SelectItem key={l.level_id} value={l.level_id}>
+                            Level {l.no} - {l.level_title} {!l.is_active && '(Inactive)'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="pt-2">
+                    <Button 
+                      className="w-full bg-[#F18231] hover:bg-[#d96f21] font-semibold"
+                      disabled={isPending || !selectedEditLevel || !selectedEditTrack}
+                      onClick={handleEditSave}
+                    >
+                      {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      Save Changes
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-amber-600 font-medium leading-tight text-center mt-2">
+                    Note: Changing track/level will reset the selected batch. Student or admin will need to re-select the batch if applicable.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-red-500 py-4 text-center">Failed to load data.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

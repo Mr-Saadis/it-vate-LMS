@@ -325,3 +325,78 @@ export async function toggleEnrollmentCompletionAction(enrollId: string, isCompl
   revalidatePath('/dashboard')
   return { success: true }
 }
+
+export async function getEnrollmentEditInfoAction(enrollId: string) {
+  const supabase = await createClient()
+  const { user, error: authError } = await requireAdmin(supabase)
+  
+  if (authError || !user) {
+    return { error: authError || 'Unauthenticated' }
+  }
+
+  const { data: enroll } = await supabase
+    .from('enrollments')
+    .select('level_id, track_type')
+    .eq('enroll_id', enrollId)
+    .single()
+
+  if (!enroll) return { error: 'Enrollment not found' }
+
+  const { data: currentLevel } = await supabase
+    .from('levels')
+    .select('course_id')
+    .eq('level_id', enroll.level_id)
+    .single()
+
+  if (!currentLevel) return { error: 'Level not found' }
+
+  const { data: course } = await supabase
+    .from('courses')
+    .select('is_expert_track_active, is_progressive_track_active, is_fast_track_active, is_premium_track_active')
+    .eq('course_id', currentLevel.course_id)
+    .single()
+
+  const { data: levels } = await supabase
+    .from('levels')
+    .select('level_id, level_title, no, is_active')
+    .eq('course_id', currentLevel.course_id)
+    .order('no', { ascending: true })
+
+  return {
+    success: true,
+    currentLevelId: enroll.level_id,
+    currentTrackType: enroll.track_type,
+    levels: levels || [],
+    courseTracks: course || {
+      is_expert_track_active: true,
+      is_progressive_track_active: true,
+      is_fast_track_active: true,
+      is_premium_track_active: true
+    }
+  }
+}
+
+export async function updateEnrollmentTrackLevelAction(enrollId: string, levelId: string, trackType: string) {
+  const supabase = await createClient()
+  const { user, error: authError } = await requireAdmin(supabase)
+  
+  if (authError || !user) {
+    return { error: authError || 'Unauthenticated' }
+  }
+
+  // Update enrollment. Also reset content_items_id because batch is specific to previous level/track
+  const { error: updateError } = await supabase
+    .from('enrollments')
+    .update({ 
+      level_id: levelId, 
+      track_type: trackType,
+      content_items_id: null 
+    })
+    .eq('enroll_id', enrollId)
+
+  if (updateError) return { error: updateError.message }
+  
+  revalidatePath('/admin/students')
+  revalidatePath('/dashboard')
+  return { success: true }
+}
