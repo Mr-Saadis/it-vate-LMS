@@ -598,7 +598,7 @@ export function StudentsClient({ students }: StudentsClientProps) {
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">
                       Track
                     </label>
-                    <Select value={selectedEditTrack} onValueChange={setSelectedEditTrack}>
+                    <Select value={selectedEditTrack} onValueChange={(val) => setSelectedEditTrack(val || '')}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select track" />
                       </SelectTrigger>
@@ -615,7 +615,7 @@ export function StudentsClient({ students }: StudentsClientProps) {
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">
                       Level
                     </label>
-                    <Select value={selectedEditLevel} onValueChange={setSelectedEditLevel}>
+                    <Select value={selectedEditLevel} onValueChange={(val) => setSelectedEditLevel(val || '')}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select level">
                           {filteredLevels.find(l => l.level_id === selectedEditLevel)?.level_title 
